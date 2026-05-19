@@ -193,12 +193,38 @@
     }
 
     // ── Checklist ──────────────────────────────────────────────────────────
-    function openChecklist(evt) {
-        var btn = _root.querySelector('#checklistBtn');
-        var opts = {};
-        if (evt && typeof evt.clientX === 'number') { opts.x = evt.clientX; opts.y = evt.clientY; }
-        else if (btn) { opts.anchorEl = btn; }
-        PxD.utils.showToast('Future enhancement\u2026', opts);
+    function openChecklist() {
+        var existing = document.getElementById('pxd-checklist-notice-modal');
+        if (existing) existing.remove();
+
+        var el = document.createElement('div');
+        el.id = 'pxd-checklist-notice-modal';
+        el.className = 'modal fade';
+        el.setAttribute('tabindex', '-1');
+        el.innerHTML =
+            '<div class="modal-dialog modal-dialog-centered">' +
+              '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                  '<h5 class="modal-title">Checklist</h5>' +
+                  '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>' +
+                '</div>' +
+                '<div class="modal-body">' +
+                  'The checklist panel is a planned feature and will be available in a future update.' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                  '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Got It</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+        document.body.appendChild(el);
+        el.addEventListener('hidden.bs.modal', function () { el.remove(); });
+        try {
+            var modal = new bootstrap.Modal(el);
+            modal.show();
+        } catch (e) {
+            alert('The checklist panel is a planned feature and will be available in a future update.');
+            el.remove();
+        }
     }
 
     function handleChecklistState(state) {
@@ -318,7 +344,7 @@
                 '</div>' +
                 '<div class="control-item">' +
                     '<label class="form-label">Checklist</label>' +
-                    '<button id="checklistBtn" type="button" class="btn btn-info w-100" onclick="window._gcPanel.openChecklist(event)">Open Checklist</button>' +
+                    '<button id="checklistBtn" type="button" class="btn btn-info w-100" onclick="window._gcPanel.openChecklist()">Open Checklist</button>' +
                 '</div>' +
                 '<div class="control-item control-item-action">' +
                     '<label class="form-label">Main Action</label>' +

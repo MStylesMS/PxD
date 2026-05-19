@@ -10,42 +10,41 @@
 
 /* ============================================================
    Design tokens — overridden per-room by pxd.js
-   ============================================================
-   TODO (Phase 2): Replace these Agent22-specific defaults with
-   neutral values (e.g. a mid-grey dark theme) before Houdini
-   migrates. Room themes fully override these at runtime via
-   pxd.js, so the defaults only matter for the brief flash before
-   room.json loads and during development without a room.json.
    ============================================================ */
 :root {
     /* Background palette */
-    --pxd-bg-1:           #041320;
-    --pxd-bg-2:           #0a2d46;
-    --pxd-bg-3:           #133c5a;
+    --pxd-bg-1:           #0c0c0e;
+    --pxd-bg-2:           #1a1a20;
+    --pxd-bg-3:           #252530;
 
     /* Surface */
-    --pxd-panel:          rgba(8, 23, 36, 0.85);
-    --pxd-panel-border:   rgba(108, 223, 255, 0.28);
+    --pxd-panel:          rgba(20, 20, 28, 0.85);
+    --pxd-panel-border:   rgba(200, 200, 220, 0.20);
 
     /* Text */
-    --pxd-ink:            #d8f4ff;
-    --pxd-ink-soft:       #9ad5ea;
+    --pxd-ink:            #e8e8f0;
+    --pxd-ink-soft:       #a0a0b8;
 
     /* Accent colours */
-    --pxd-accent:         #44e0cc;
-    --pxd-accent-alt:     #6de79a;
+    --pxd-accent:         #6f99c8;
+    --pxd-accent-alt:     #7dc989;
 
     /* State colours */
-    --pxd-warn:           #ffcc66;
-    --pxd-danger:         #ff7272;
+    --pxd-warn:           #f5c842;
+    --pxd-danger:         #e06060;
 
     /* Shape */
     --pxd-radius:         14px;
     --pxd-shadow:         0 12px 28px rgba(0, 0, 0, 0.35);
 
     /* Typography */
-    --pxd-font-body:      'TypewriterBold', 'Courier New', monospace;
-    --pxd-font-mono:      'CursedTimer', 'Courier New', monospace;
+    --pxd-font-body:      Arial, sans-serif;
+    --pxd-font-mono:      'Courier New', monospace;
+
+    /* Background ambient glows — full rgba() colour strings.
+       Default is transparent; rooms override via bgGlow1 / bgGlow2 in room.json. */
+    --pxd-bg-glow-1:      transparent;
+    --pxd-bg-glow-2:      transparent;
 }
 
 /* ============================================================
@@ -64,8 +63,8 @@ body {
     font-family: var(--pxd-font-body);
     color: var(--pxd-ink);
     background:
-        radial-gradient(circle at 12% 15%, rgba(68, 224, 204, 0.20) 0, rgba(68, 224, 204, 0) 34%),
-        radial-gradient(circle at 88%  2%, rgba(109, 231, 154, 0.17) 0, rgba(109, 231, 154, 0) 33%),
+        radial-gradient(circle at 12% 15%, var(--pxd-bg-glow-1) 0, transparent 34%),
+        radial-gradient(circle at 88%  2%, var(--pxd-bg-glow-2) 0, transparent 33%),
         linear-gradient(140deg, var(--pxd-bg-1) 0%, var(--pxd-bg-2) 55%, var(--pxd-bg-3) 100%);
     padding: 18px;
 }
@@ -90,14 +89,14 @@ body {
     width: 100%;
     display: block;
     border-radius: 12px;
-    border: 1px solid rgba(154, 213, 234, 0.50);
+    border: 1px solid var(--pxd-panel-border);
     box-shadow: var(--pxd-shadow);
 }
 
 .hero-glow {
     position: absolute;
     inset: -8px;
-    background: radial-gradient(circle at 50% 0%, rgba(68, 224, 204, 0.24), transparent 62%);
+    background: radial-gradient(circle at 50% 0%, var(--pxd-bg-glow-1), transparent 62%);
     filter: blur(14px);
     z-index: -1;
 }
@@ -114,11 +113,13 @@ body {
    Panel card
    ============================================================ */
 .panel {
-    background: linear-gradient(165deg, rgba(8, 23, 36, 0.88), rgba(8, 23, 36, 0.70));
+    background: var(--pxd-panel);
     border: 1px solid var(--pxd-panel-border);
     border-radius: var(--pxd-radius);
     box-shadow: var(--pxd-shadow);
     padding: 14px;
+    container-type: inline-size;
+    min-width: 0;
 }
 
 .panel-header {
@@ -138,7 +139,7 @@ body {
     font-size: 1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #c9f5ff;
+    color: var(--pxd-ink-soft);
 }
 
 /* ============================================================
@@ -146,7 +147,8 @@ body {
    ============================================================ */
 .status-pill,
 .clock-pill {
-    min-width: 350px;
+    flex: 1 1 0;
+    min-width: 0;
     padding: 0.45rem 0.75rem;
     font-size: 1.02rem;
 }
@@ -156,7 +158,7 @@ body {
    ============================================================ */
 .control-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
 }
 
@@ -167,7 +169,7 @@ body {
 }
 
 .control-item-action {
-    min-width: 220px;
+    min-width: 0;
 }
 
 /* ============================================================
@@ -225,20 +227,20 @@ body {
 }
 
 .hint-container {
-    border: 1px solid rgba(154, 213, 234, 0.45);
+    border: 1px solid var(--pxd-panel-border);
     border-radius: 10px;
-    background: rgba(5, 23, 38, 0.95);
+    background: var(--pxd-panel);
     padding: 6px;
 }
 
 .hint-prefix {
-    background: rgba(16, 53, 76, 0.95) !important;
-    border: 1px solid rgba(154, 213, 234, 0.56) !important;
+    background: var(--pxd-panel) !important;
+    border: 1px solid var(--pxd-panel-border) !important;
     border-radius: 8px;
 }
 
-.hint-emoji { color: #e2fbff; }
-.hint-target { color: #bce8f9; }
+.hint-emoji { color: var(--pxd-ink); }
+.hint-target { color: var(--pxd-ink-soft); }
 
 /* ============================================================
    System warnings panel
@@ -294,21 +296,21 @@ h6 {
 
 .form-control,
 .form-select {
-    background: rgba(5, 23, 38, 0.95);
-    border: 1px solid rgba(154, 213, 234, 0.45);
+    background: var(--pxd-panel);
+    border: 1px solid var(--pxd-panel-border);
     border-radius: 10px;
     color: var(--pxd-ink);
     font-family: var(--pxd-font-body);
 }
 
-.form-control::placeholder { color: rgba(154, 213, 234, 0.70); }
+.form-control::placeholder { color: var(--pxd-ink-soft); }
 
 .form-control:focus,
 .form-select:focus {
-    color: #f0feff;
-    background: rgba(6, 30, 49, 0.98);
+    color: var(--pxd-ink);
+    background: var(--pxd-bg-1);
     border-color: var(--pxd-accent);
-    box-shadow: 0 0 0 0.2rem rgba(68, 224, 204, 0.18);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--pxd-accent) 22%, transparent);
 }
 
 /* ============================================================
@@ -350,9 +352,9 @@ h6 {
 }
 
 .btn-primary {
-    background: linear-gradient(180deg, #22c8aa, #1aa38d);
-    border-color: #7ff4df;
-    color: #012019;
+    background: var(--pxd-accent);
+    border-color: var(--pxd-accent);
+    color: #1a1008;
 }
 
 .btn-success {
@@ -388,15 +390,16 @@ h6 {
 
 .btn-outline-secondary,
 .btn-outline-light {
-    background: rgba(7, 27, 43, 0.75);
-    border-color: rgba(154, 213, 234, 0.52);
+    background: var(--pxd-panel);
+    border-color: var(--pxd-panel-border);
     color: var(--pxd-ink);
 }
 
 .btn-outline-secondary:hover,
 .btn-outline-light:hover {
-    background: #2b98aa;
-    color: #f5ffff;
+    background: var(--pxd-accent);
+    border-color: var(--pxd-accent);
+    color: #1a1008;
 }
 
 .btn-group { display: flex; }
@@ -446,56 +449,56 @@ h6 {
    Time input group
    ============================================================ */
 .time-input-group {
-    border: 1px solid rgba(154, 213, 234, 0.45);
+    border: 1px solid var(--pxd-panel-border);
     border-radius: 10px;
     overflow: hidden;
 }
 
 .time-input {
     border: none !important;
-    background: rgba(5, 23, 38, 0.95) !important;
+    background: var(--pxd-panel) !important;
     color: var(--pxd-ink) !important;
 }
 
 .time-adjust-btn {
     border: none;
-    background: rgba(21, 63, 90, 0.92);
+    background: var(--pxd-bg-1);
     color: var(--pxd-ink);
 }
 
 .time-adjust-btn:hover {
-    background: #2c8ca1;
-    color: #effcff;
+    background: var(--pxd-accent);
+    color: #1a1008;
 }
 
 /* ============================================================
    Bootstrap overrides — dropdown
    ============================================================ */
 .dropdown-menu {
-    background: #0a2235;
-    border: 1px solid rgba(154, 213, 234, 0.52);
+    background: var(--pxd-panel);
+    border: 1px solid var(--pxd-panel-border);
     border-radius: 10px;
 }
 
 .dropdown-item { color: var(--pxd-ink); }
 
 .dropdown-item:hover {
-    background: #14405c;
-    color: #e8fcff;
+    background: var(--pxd-bg-2);
+    color: var(--pxd-ink);
 }
 
 /* ============================================================
    Bootstrap overrides — modal
    ============================================================ */
 .modal-content {
-    background: #0b263b;
-    border: 1px solid rgba(154, 213, 234, 0.50);
+    background: var(--pxd-bg-1);
+    border: 1px solid var(--pxd-panel-border);
     color: var(--pxd-ink);
 }
 
 .modal-header,
 .modal-footer {
-    border-color: rgba(154, 213, 234, 0.35);
+    border-color: var(--pxd-panel-border);
 }
 
 /* ============================================================
@@ -516,9 +519,9 @@ h6 {
    Scrollbar
    ============================================================ */
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #0a2438; }
-::-webkit-scrollbar-thumb { background: #4cb4d8; border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: #72cceb; }
+::-webkit-scrollbar-track { background: var(--pxd-bg-1); }
+::-webkit-scrollbar-thumb { background: var(--pxd-panel-border); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pxd-accent); }
 
 /* ============================================================
    Responsive breakpoints
@@ -540,4 +543,28 @@ h6 {
     .send-hint-btn      { min-height: 48px; }
     .time-row           { grid-template-columns: 1fr; gap: 8px; }
     .time-separator     { display: none; }
+}
+
+/* ============================================================
+   Container queries — panel-width breakpoints
+   These come after all @media rules so they win the cascade
+   when a panel is narrower than its viewport width suggests
+   (e.g. the time-lights slot is half the page in two-column
+   layout while the viewport is still > 960px).
+   ============================================================ */
+
+/* Intermediate: clock row spans full width, lights+safety side-by-side.
+   Also wrap the panel header so the clock pill gets its own full-width row
+   rather than squeezing against a potentially wide uppercase title. */
+@container (max-width: 560px) {
+    .time-lights-grid                   { grid-template-columns: 1fr 1fr; }
+    .clock-adjust                       { grid-column: 1 / -1; }
+    .panel-time-lights .panel-header    { flex-wrap: wrap; }
+    .panel-time-lights .clock-pill      { flex: none; width: 100%; }
+}
+
+/* Narrow: fully stacked */
+@container (max-width: 380px) {
+    .time-lights-grid { grid-template-columns: 1fr; }
+    .clock-adjust     { grid-column: auto; }
 }

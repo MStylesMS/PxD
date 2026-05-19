@@ -124,14 +124,19 @@ accommodate something Houdini has and Agent22 doesn't, add it to `pxd-base.css`
 in the same PR.
 
 **Checklist:**
-- [ ] Create `rooms/houdinis-challenge/pxd/` from `templates/rooms/_starter/`.
-- [ ] Extract Houdini's theme values from `rooms/houdinis-challenge/html/index_files/style.css`; populate `room.json → theme`. Do **not** include `widgets` in `panels.include`.
-- [ ] Move PxD media (header image, favicon, alert sounds) to `pxd/media/`.
-- [ ] Move PxD fonts to `pxd/fonts/`.
-- [ ] Add any new theme tokens to `pxd-base.css` and document in `docs/THEMING.md`.
-- [ ] Point Nginx symlink at `rooms/houdinis-challenge/pxd/`; verify all four panels.
-- [ ] Run packager into `rooms/houdinis-challenge/html/`; swing symlink to output.
-- [ ] Delete old hand-coded `rooms/houdinis-challenge/html/*`.
+- [x] Create `rooms/houdinis-challenge/pxd/` from `templates/rooms/_starter/`.
+- [x] Extract Houdini's theme values from `rooms/houdinis-challenge/html/index_files/style.css`; populate `room.json → theme`. Do **not** include `widgets` in `panels.include`.
+- [x] Move PxD media (header image, favicon) to `pxd/media/`.
+- [x] Move PxD fonts (`AlmendraSC-Regular.woff2`) to `pxd/fonts/`.
+- [x] Add `bgGlow1`/`bgGlow2` theme tokens to `pxd-base.css`; document in `docs/THEMING.md`. Neutralised all Agent22-specific hardcodes from `pxd-base.css` in the same pass.
+- [x] Fixed `injectFonts` in `pxd.js` to auto-detect font format from extension (required for `.woff2`; previously always emitted `"truetype"`).
+- [x] Responsive overflow fixes: `layout.css` `minmax(0,1fr)`, `.status-pill` flex shrink, `.control-grid` auto-fit, container queries for `time-lights` (post-`@media` ordering). Applied to both rooms.
+- [x] Checklist button: replaced toast with a centered Bootstrap modal.
+- [x] Time-lights panel header overflow (TypewriterBold / Agent22): removed inline `min-width:120px` from clock pill; added `flex-wrap: wrap` + `width: 100%` on the pill at `≤560px` container.
+- [x] Run packager into `rooms/houdinis-challenge/html/`.
+- [x] Delete old hand-coded `rooms/houdinis-challenge/html/*` (removed via `git rm`; recoverable via git history).
+- [x] Repackage Agent22 (its `room.json` gained `bgGlow1`/`bgGlow2` values in this phase; responsive fixes also applied).
+- [ ] Point Nginx symlink at packager output; verify all four panels on a real Pi. *(manual deployment step — required before Phase 3 begins)*
 
 **Acceptance criteria:**
 - Houdini page is visually indistinguishable from the pre-migration version.

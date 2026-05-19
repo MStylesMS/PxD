@@ -29,7 +29,7 @@
    ----------------------------------------------------------------- */
 @media (min-width: 768px) {
     .dashboard {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         grid-template-areas:
             "game-control  game-control"
             "time-lights   hints"

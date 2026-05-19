@@ -4,30 +4,35 @@ PxD uses CSS custom properties (design tokens) applied to `:root` at boot time b
 
 ## Token reference
 
-> **Note:** The current fallback values in `pxd-base.css` are Agent22-specific.
-> They will be replaced with neutral dark-theme defaults before Phase 2 (Houdini
-> migration). Room themes fully override these at runtime, so the defaults only
-> affect the pre-load flash and development without a `room.json`.
-
 | Token | CSS property | room.json field | Default |
 |---|---|---|---|
-| `--pxd-bg-1` | background 1 | `bgColor1` | `#041320` |
-| `--pxd-bg-2` | background 2 | `bgColor2` | `#0a2d46` |
-| `--pxd-bg-3` | background 3 (page gradient base) | `bgColor3` | `#133c5a` |
-| `--pxd-panel` | panel background | `panel` | `rgba(8,23,36,0.85)` |
-| `--pxd-panel-border` | panel border colour | `panelBorder` | `rgba(108,223,255,0.28)` |
-| `--pxd-ink` | primary text colour | `ink` | `#d8f4ff` |
-| `--pxd-ink-soft` | secondary text colour | `inkSoft` | `#9ad5ea` |
-| `--pxd-accent` | primary accent | `accent` | `#44e0cc` |
-| `--pxd-accent-alt` | secondary accent | `accentAlt` | `#6de79a` |
-| `--pxd-warn` | warning colour | `warn` | `#ffcc66` |
-| `--pxd-danger` | danger colour | `danger` | `#ff7272` |
+| `--pxd-bg-1` | background 1 | `bgColor1` | `#0c0c0e` |
+| `--pxd-bg-2` | background 2 | `bgColor2` | `#1a1a20` |
+| `--pxd-bg-3` | background 3 (page gradient base) | `bgColor3` | `#252530` |
+| `--pxd-panel` | panel background | `panel` | `rgba(20,20,28,0.85)` |
+| `--pxd-panel-border` | panel border colour | `panelBorder` | `rgba(200,200,220,0.20)` |
+| `--pxd-ink` | primary text colour | `ink` | `#e8e8f0` |
+| `--pxd-ink-soft` | secondary text colour | `inkSoft` | `#a0a0b8` |
+| `--pxd-accent` | primary accent (buttons, focus rings) | `accent` | `#6f99c8` |
+| `--pxd-accent-alt` | secondary accent | `accentAlt` | `#7dc989` |
+| `--pxd-warn` | warning colour | `warn` | `#f5c842` |
+| `--pxd-danger` | danger colour | `danger` | `#e06060` |
 | `--pxd-radius` | panel border-radius | `radius` | `14px` |
 | `--pxd-shadow` | panel box-shadow | `shadow` | `0 12px 28px rgba(0,0,0,0.35)` |
-| `--pxd-font-body` | body font stack | `fontBody` | `TypewriterBold, Courier New, monospace` |
-| `--pxd-font-mono` | mono font stack | `fontMono` | `CursedTimer, Courier New, monospace` |
+| `--pxd-font-body` | body font stack | `fontBody` | `Arial, sans-serif` |
+| `--pxd-font-mono` | mono font stack | `fontMono` | `'Courier New', monospace` |
+| `--pxd-bg-glow-1` | first background radial glow colour | `bgGlow1` | `transparent` |
+| `--pxd-bg-glow-2` | second background radial glow colour | `bgGlow2` | `transparent` |
 
-Defaults in `pxd-base.css` are the Agent 22 values. Override any subset in `room.json → theme`.
+`bgGlow1` and `bgGlow2` should be full `rgba()` strings — they are used directly as colour stops in the
+page background radial gradients and the hero glow. Example values:
+
+```json
+"bgGlow1": "rgba(68, 224, 204, 0.20)",
+"bgGlow2": "rgba(109, 231, 154, 0.17)"
+```
+
+Leave them unset (or omit) if you want a flat gradient background with no ambient glow.
 
 ## Custom web fonts
 

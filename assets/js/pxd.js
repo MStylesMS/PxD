@@ -283,7 +283,9 @@
         radius:      '--pxd-radius',
         shadow:      '--pxd-shadow',
         fontBody:    '--pxd-font-body',
-        fontMono:    '--pxd-font-mono'
+        fontMono:    '--pxd-font-mono',
+        bgGlow1:     '--pxd-bg-glow-1',
+        bgGlow2:     '--pxd-bg-glow-2'
     };
 
     function applyTheme(theme) {
@@ -292,10 +294,14 @@
         });
     }
 
+    var FONT_FORMATS = { ttf: 'truetype', otf: 'opentype', woff: 'woff', woff2: 'woff2' };
+
     function injectFonts(fonts) {
         if (!Array.isArray(fonts) || !fonts.length) return;
         var css = fonts.map(function (f) {
-            return '@font-face{font-family:"' + f.family + '";src:url("' + f.src + '") format("truetype");' +
+            var ext = (f.src || '').split('.').pop().toLowerCase();
+            var fmt = FONT_FORMATS[ext] || 'truetype';
+            return '@font-face{font-family:"' + f.family + '";src:url("' + f.src + '") format("' + fmt + '");' +
                 'font-weight:' + (f.weight || 'normal') + ';font-style:' + (f.style || 'normal') + ';}';
         }).join('\n');
         var style = document.createElement('style');

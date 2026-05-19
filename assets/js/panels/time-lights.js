@@ -232,7 +232,7 @@
         return '<section class="panel panel-time-lights">' +
             '<div class="panel-header panel-header-tight">' +
                 '<h2 class="panel-title">Time, Lighting, and Safety</h2>' +
-                '<div id="clockStatus" class="alert alert-warning clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100" style="min-width:120px;">Clock Hidden</div>' +
+                '<div id="clockStatus" class="alert alert-warning clock-pill mb-0 text-center d-flex align-items-center justify-content-center" >Clock Hidden</div>' +
             '</div>' +
             '<div class="time-lights-grid">' +
                 // Clock adjust
