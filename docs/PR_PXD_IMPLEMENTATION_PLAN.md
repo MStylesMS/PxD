@@ -136,7 +136,7 @@ in the same PR.
 - [x] Run packager into `rooms/houdinis-challenge/html/`.
 - [x] Delete old hand-coded `rooms/houdinis-challenge/html/*` (removed via `git rm`; recoverable via git history).
 - [x] Repackage Agent22 (its `room.json` gained `bgGlow1`/`bgGlow2` values in this phase; responsive fixes also applied).
-- [ ] Point Nginx symlink at packager output; verify all four panels on a real Pi. *(manual deployment step — required before Phase 3 begins)*
+- [x] Point Nginx symlink at packager output; verify all four panels on a real Pi. *(confirmed 2026-05-19)*
 
 **Acceptance criteria:**
 - Houdini page is visually indistinguishable from the pre-migration version.
