@@ -1,0 +1,543 @@
+/* PxD Default Dashboard — structural CSS
+ *
+ * Design tokens (CSS custom properties) are defined here with sensible
+ * dark-theme defaults. pxd.js overrides them on <html> with values from
+ * room.json → theme.* so every colour reference below can be themed without
+ * touching this file.
+ *
+ * @font-face declarations are injected by pxd.js from room.json → theme.fonts.
+ */
+
+/* ============================================================
+   Design tokens — overridden per-room by pxd.js
+   ============================================================
+   TODO (Phase 2): Replace these Agent22-specific defaults with
+   neutral values (e.g. a mid-grey dark theme) before Houdini
+   migrates. Room themes fully override these at runtime via
+   pxd.js, so the defaults only matter for the brief flash before
+   room.json loads and during development without a room.json.
+   ============================================================ */
+:root {
+    /* Background palette */
+    --pxd-bg-1:           #041320;
+    --pxd-bg-2:           #0a2d46;
+    --pxd-bg-3:           #133c5a;
+
+    /* Surface */
+    --pxd-panel:          rgba(8, 23, 36, 0.85);
+    --pxd-panel-border:   rgba(108, 223, 255, 0.28);
+
+    /* Text */
+    --pxd-ink:            #d8f4ff;
+    --pxd-ink-soft:       #9ad5ea;
+
+    /* Accent colours */
+    --pxd-accent:         #44e0cc;
+    --pxd-accent-alt:     #6de79a;
+
+    /* State colours */
+    --pxd-warn:           #ffcc66;
+    --pxd-danger:         #ff7272;
+
+    /* Shape */
+    --pxd-radius:         14px;
+    --pxd-shadow:         0 12px 28px rgba(0, 0, 0, 0.35);
+
+    /* Typography */
+    --pxd-font-body:      'TypewriterBold', 'Courier New', monospace;
+    --pxd-font-mono:      'CursedTimer', 'Courier New', monospace;
+}
+
+/* ============================================================
+   Base reset
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family: var(--pxd-font-body);
+    color: var(--pxd-ink);
+    background:
+        radial-gradient(circle at 12% 15%, rgba(68, 224, 204, 0.20) 0, rgba(68, 224, 204, 0) 34%),
+        radial-gradient(circle at 88%  2%, rgba(109, 231, 154, 0.17) 0, rgba(109, 231, 154, 0) 33%),
+        linear-gradient(140deg, var(--pxd-bg-1) 0%, var(--pxd-bg-2) 55%, var(--pxd-bg-3) 100%);
+    padding: 18px;
+}
+
+/* ============================================================
+   Page shell
+   ============================================================ */
+.pxd-shell {
+    width: min(1500px, 100%);
+    margin: 0 auto;
+}
+
+/* ============================================================
+   Hero banner
+   ============================================================ */
+.pxd-hero {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.hero-image {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    border: 1px solid rgba(154, 213, 234, 0.50);
+    box-shadow: var(--pxd-shadow);
+}
+
+.hero-glow {
+    position: absolute;
+    inset: -8px;
+    background: radial-gradient(circle at 50% 0%, rgba(68, 224, 204, 0.24), transparent 62%);
+    filter: blur(14px);
+    z-index: -1;
+}
+
+/* ============================================================
+   Dashboard grid
+   ============================================================ */
+.dashboard {
+    display: grid;
+    gap: 14px;
+}
+
+/* ============================================================
+   Panel card
+   ============================================================ */
+.panel {
+    background: linear-gradient(165deg, rgba(8, 23, 36, 0.88), rgba(8, 23, 36, 0.70));
+    border: 1px solid var(--pxd-panel-border);
+    border-radius: var(--pxd-radius);
+    box-shadow: var(--pxd-shadow);
+    padding: 14px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.panel-header-tight {
+    margin-bottom: 10px;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #c9f5ff;
+}
+
+/* ============================================================
+   Status pills (game status, clock status)
+   ============================================================ */
+.status-pill,
+.clock-pill {
+    min-width: 350px;
+    padding: 0.45rem 0.75rem;
+    font-size: 1.02rem;
+}
+
+/* ============================================================
+   Game control grid
+   ============================================================ */
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-item-action {
+    min-width: 220px;
+}
+
+/* ============================================================
+   Time, lights & safety grid
+   ============================================================ */
+.time-lights-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+}
+
+.clock-adjust,
+.lighting-block,
+.safety-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.time-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.time-separator {
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--pxd-ink-soft);
+}
+
+.shift-buttons {
+    margin-top: 8px;
+}
+
+/* ============================================================
+   Hint panel
+   ============================================================ */
+.hint-select-row {
+    margin-bottom: 10px;
+}
+
+.hint-compose-row {
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.send-hint-btn {
+    height: 100%;
+    min-height: 72px;
+}
+
+.hint-container {
+    border: 1px solid rgba(154, 213, 234, 0.45);
+    border-radius: 10px;
+    background: rgba(5, 23, 38, 0.95);
+    padding: 6px;
+}
+
+.hint-prefix {
+    background: rgba(16, 53, 76, 0.95) !important;
+    border: 1px solid rgba(154, 213, 234, 0.56) !important;
+    border-radius: 8px;
+}
+
+.hint-emoji { color: #e2fbff; }
+.hint-target { color: #bce8f9; }
+
+/* ============================================================
+   System warnings panel
+   ============================================================ */
+.page-warnings {
+    border: 1px solid rgba(255, 213, 111, 0.70);
+    background: rgba(57, 35, 7, 0.60);
+    border-radius: 10px;
+    min-height: 96px;
+    max-height: 130px;
+    overflow-y: auto;
+    padding: 10px;
+    color: var(--pxd-warn);
+}
+
+.pfx-warning-bar {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    font-weight: 600;
+    min-height: 1.2em;
+    color: var(--pxd-warn);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.pxd-footer {
+    margin-top: 12px;
+    text-align: center;
+    color: var(--pxd-ink-soft);
+}
+
+h6 {
+    margin: 0;
+    font-size: 0.82rem;
+    opacity: 0.96;
+}
+
+/* ============================================================
+   Bootstrap overrides — form controls
+   ============================================================ */
+.form-label {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pxd-ink-soft);
+}
+
+.form-control,
+.form-select {
+    background: rgba(5, 23, 38, 0.95);
+    border: 1px solid rgba(154, 213, 234, 0.45);
+    border-radius: 10px;
+    color: var(--pxd-ink);
+    font-family: var(--pxd-font-body);
+}
+
+.form-control::placeholder { color: rgba(154, 213, 234, 0.70); }
+
+.form-control:focus,
+.form-select:focus {
+    color: #f0feff;
+    background: rgba(6, 30, 49, 0.98);
+    border-color: var(--pxd-accent);
+    box-shadow: 0 0 0 0.2rem rgba(68, 224, 204, 0.18);
+}
+
+/* ============================================================
+   Bootstrap overrides — buttons
+   ============================================================ */
+.btn {
+    border-radius: 10px;
+    border-width: 1px;
+    font-family: var(--pxd-font-body);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 120ms ease, filter 120ms ease;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+.btn:disabled,
+.form-select:disabled,
+.form-control:disabled {
+    opacity: 0.58;
+}
+
+#gameSelect,
+#hintSelect {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+#gameSelect:disabled {
+    color: #0b1620 !important;
+    -webkit-text-fill-color: #0b1620;
+    background: #d9edf7;
+    border-color: #8abed0;
+    opacity: 1;
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, #22c8aa, #1aa38d);
+    border-color: #7ff4df;
+    color: #012019;
+}
+
+.btn-success {
+    background: linear-gradient(180deg, #6de79a, #48c27b);
+    border-color: #a9ffd0;
+    color: #032113;
+}
+
+.btn-danger {
+    background: linear-gradient(180deg, #ff7373, #da5555);
+    border-color: #ffb0b0;
+    color: #2e0606;
+}
+
+.btn-info {
+    background: linear-gradient(180deg, #70d1ff, #4eaee3);
+    border-color: #bde9ff;
+    color: #072338;
+}
+
+.btn-warning {
+    background: linear-gradient(180deg, #ffd56f, #f0be47);
+    border-color: #ffe7af;
+    color: #332100;
+}
+
+.btn-secondary,
+.btn-dark {
+    background: linear-gradient(180deg, #3a5163, #2c404f);
+    border-color: #748fa2;
+    color: #dcf6ff;
+}
+
+.btn-outline-secondary,
+.btn-outline-light {
+    background: rgba(7, 27, 43, 0.75);
+    border-color: rgba(154, 213, 234, 0.52);
+    color: var(--pxd-ink);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-light:hover {
+    background: #2b98aa;
+    color: #f5ffff;
+}
+
+.btn-group { display: flex; }
+.btn-group .btn { flex: 1; }
+.w-100 { width: 100%; }
+
+/* ============================================================
+   Bootstrap overrides — alerts
+   ============================================================ */
+.alert {
+    border-radius: 10px;
+    border: 1px solid;
+    margin: 0;
+}
+
+.alert-info {
+    background: rgba(61, 137, 196, 0.30);
+    border-color: rgba(112, 209, 255, 0.60);
+    color: #c2ecff;
+}
+
+.alert-warning {
+    background: rgba(255, 190, 85, 0.25);
+    border-color: rgba(255, 213, 111, 0.68);
+    color: #ffe6ae;
+}
+
+.alert-success {
+    background: rgba(76, 173, 110, 0.30);
+    border-color: rgba(109, 231, 154, 0.62);
+    color: #d3ffe6;
+}
+
+.alert-danger {
+    background: rgba(195, 78, 78, 0.36);
+    border-color: rgba(255, 114, 114, 0.65);
+    color: #ffe0e0;
+}
+
+.alert-secondary {
+    background: rgba(99, 118, 130, 0.30);
+    border-color: rgba(154, 173, 186, 0.50);
+    color: #dbe8ef;
+}
+
+/* ============================================================
+   Time input group
+   ============================================================ */
+.time-input-group {
+    border: 1px solid rgba(154, 213, 234, 0.45);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.time-input {
+    border: none !important;
+    background: rgba(5, 23, 38, 0.95) !important;
+    color: var(--pxd-ink) !important;
+}
+
+.time-adjust-btn {
+    border: none;
+    background: rgba(21, 63, 90, 0.92);
+    color: var(--pxd-ink);
+}
+
+.time-adjust-btn:hover {
+    background: #2c8ca1;
+    color: #effcff;
+}
+
+/* ============================================================
+   Bootstrap overrides — dropdown
+   ============================================================ */
+.dropdown-menu {
+    background: #0a2235;
+    border: 1px solid rgba(154, 213, 234, 0.52);
+    border-radius: 10px;
+}
+
+.dropdown-item { color: var(--pxd-ink); }
+
+.dropdown-item:hover {
+    background: #14405c;
+    color: #e8fcff;
+}
+
+/* ============================================================
+   Bootstrap overrides — modal
+   ============================================================ */
+.modal-content {
+    background: #0b263b;
+    border: 1px solid rgba(154, 213, 234, 0.50);
+    color: var(--pxd-ink);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: rgba(154, 213, 234, 0.35);
+}
+
+/* ============================================================
+   Emergency modal button variants
+   ============================================================ */
+#emergencyBtn { color: #2e0606; }
+
+.emergency-btn-abort             { background-color: #facc15; border-color: #eab308; color: #1f1500; }
+.emergency-btn-sleep             { background-color: #374151; border-color: #4b5563; color: #8bffbe; }
+.emergency-btn-wake              { background-color: #16a34a; border-color: #15803d; color: #eafff1; }
+.emergency-btn-restart-adapters  { background-color: #374151; border-color: #4b5563; color: #ff9d9d; }
+.emergency-btn-restart-software  { background-color: #ea580c; border-color: #c2410c; color: #fff; }
+.emergency-btn-shutdown-software { background-color: #dc2626; border-color: #b91c1c; color: #fff; }
+.emergency-btn-reboot-controller { background-color: #f97316; border-color: #ea580c; color: #fff8ec; }
+.emergency-btn-shutdown-controller { background-color: #b91c1c; border-color: #991b1b; color: #fff; }
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #0a2438; }
+::-webkit-scrollbar-thumb { background: #4cb4d8; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #72cceb; }
+
+/* ============================================================
+   Responsive breakpoints
+   ============================================================ */
+@media (max-width: 960px) {
+    .control-grid       { grid-template-columns: repeat(2, minmax(210px, 1fr)); }
+    .time-lights-grid   { grid-template-columns: 1fr 1fr; }
+    .clock-adjust       { grid-column: 1 / -1; }
+}
+
+@media (max-width: 690px) {
+    body { padding: 10px; }
+    .panel { padding: 12px; }
+    .panel-header { flex-direction: column; align-items: flex-start; }
+    .status-pill, .clock-pill { width: 100%; min-width: 0; }
+    .control-grid,
+    .time-lights-grid   { grid-template-columns: 1fr; }
+    .hint-compose-row   { grid-template-columns: 1fr; }
+    .send-hint-btn      { min-height: 48px; }
+    .time-row           { grid-template-columns: 1fr; gap: 8px; }
+    .time-separator     { display: none; }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "pxd",
+  "version": "0.1.0",
+  "description": "Paradox FX Dashboard — operator control UI framework",
+  "private": true,
+  "scripts": {
+    "package:agent22": "node scripts/package.js --room-dir ../../rooms/agent22/pxd --out ../../rooms/agent22/html",
+    "test": "node scripts/package.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

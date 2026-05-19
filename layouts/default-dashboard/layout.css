@@ -1,0 +1,46 @@
+/* =============================================================
+   default-dashboard — layout-specific structural rules
+   Paint (colours, fonts, shadows) lives in pxd-base.css.
+   This file owns only grid geometry for this layout.
+   ============================================================= */
+
+/* -----------------------------------------------------------------
+   Single-column (default / mobile — ≤767 px)
+   All four slots stack vertically; game-control first.
+   ----------------------------------------------------------------- */
+.dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "game-control"
+        "time-lights"
+        "hints"
+        "system";
+}
+
+[data-slot="game-control"]  { grid-area: game-control; }
+[data-slot="time-lights"]   { grid-area: time-lights;  }
+[data-slot="hints"]         { grid-area: hints;        }
+[data-slot="system"]        { grid-area: system;       }
+
+/* -----------------------------------------------------------------
+   Two-column (tablet and up — ≥768 px)
+   game-control spans both columns; time-lights and hints sit
+   side-by-side; system spans both columns at the bottom.
+   ----------------------------------------------------------------- */
+@media (min-width: 768px) {
+    .dashboard {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "game-control  game-control"
+            "time-lights   hints"
+            "system        system";
+    }
+}
+
+/* -----------------------------------------------------------------
+   Wide single-column (≥1200 px)
+   On very wide operator monitors all panels return to a single
+   column but with a constrained max-width already applied by
+   .pxd-shell in pxd-base.css.  No override needed here — the
+   two-column breakpoint above applies from 768 px upward.
+   ----------------------------------------------------------------- */

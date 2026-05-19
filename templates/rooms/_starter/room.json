@@ -1,0 +1,143 @@
+{
+  "//": [
+    "PxD Room Configuration — Starter Template",
+    "Copy this file to rooms/<game>/pxd/room.json and fill in your values.",
+    "Lines starting with '//' are comments and must be removed from your copy",
+    "(standard JSON does not allow comments).",
+    "",
+    "Required fields are marked REQUIRED. All others have usable defaults."
+  ],
+
+  "//pxdVersion": "REQUIRED — do not change",
+  "pxdVersion": "1",
+
+  "//layout": "Layout to use. 'default-dashboard' is the standard four-panel layout.",
+  "layout": "default-dashboard",
+
+  "//title": "REQUIRED — shown in the browser tab and page header",
+  "title": "My Room Name",
+
+  "//topicRoot": "REQUIRED — all default MQTT topics derive from this prefix",
+  "topicRoot": "paradox/myroom",
+
+  "//mqtt": "Connection settings. 'auto' is correct for nearly all deployments.",
+  "mqtt": {
+    "//broker": "'auto' = window.location.hostname (same Pi as the page)",
+    "broker": "auto",
+    "//port": "'auto' = page port (80 for HTTP, 443 for HTTPS)",
+    "port": "auto",
+    "//wsPath": "Nginx WebSocket proxy path — matches the /mqtt location block",
+    "wsPath": "/mqtt",
+    "//clientIdPrefix": "Optional. Random suffix is appended automatically.",
+    "clientIdPrefix": "pxd_"
+  },
+
+  "//theme": [
+    "Visual theme. All fields are optional — omit any field to use the built-in",
+    "default. See docs/THEMING.md for the full token reference."
+  ],
+  "theme": {
+    "//bgColor1": "Page background (darkest)",
+    "bgColor1": "#041320",
+    "//bgColor2": "Page background (mid-tone)",
+    "bgColor2": "#0a2d46",
+    "//bgColor3": "Page background (gradient base, slightly lighter)",
+    "bgColor3": "#133c5a",
+    "//panel": "Panel card background (usually semi-transparent)",
+    "panel": "rgba(8, 23, 36, 0.85)",
+    "//panelBorder": "Panel card border colour",
+    "panelBorder": "rgba(108, 223, 255, 0.28)",
+    "//ink": "Primary text colour",
+    "ink": "#d8f4ff",
+    "//inkSoft": "Secondary text / label colour",
+    "inkSoft": "#9ad5ea",
+    "//accent": "Primary accent — buttons, focus rings, highlights",
+    "accent": "#44e0cc",
+    "//accentAlt": "Secondary accent — success states, alternate highlights",
+    "accentAlt": "#6de79a",
+    "//warn": "Warning colour",
+    "warn": "#ffcc66",
+    "//danger": "Danger / error colour",
+    "danger": "#ff7272",
+    "//radius": "Panel card border-radius",
+    "radius": "14px",
+    "//shadow": "Panel card box-shadow",
+    "shadow": "0 12px 28px rgba(0,0,0,0.35)",
+    "//fontBody": "Body font stack. Must match a family name declared in 'fonts'.",
+    "fontBody": "Arial, sans-serif",
+    "//fontMono": "Monospace font stack (used for timers, codes, etc.)",
+    "fontMono": "Courier New, monospace",
+    "//fonts": [
+      "Declare @font-face entries for custom web fonts here.",
+      "'src' is relative to the packager output root (html/ directory).",
+      "Font files must be in rooms/<game>/pxd/fonts/ before packaging.",
+      "Remove this block if you are only using system fonts."
+    ],
+    "fonts": []
+  },
+
+  "//media": "Paths are relative to the packager output root.",
+  "media": {
+    "//hero": "Wide banner image shown at the top of the page. Landscape, ~1200x300 px.",
+    "hero": "media/hero.jpg",
+    "//favicon": "Browser tab icon. 32x32 .ico or .png.",
+    "favicon": "media/favicon.ico"
+  },
+
+  "//panels": "Ordered list of panels to include. Determines load and mount order.",
+  "panels": {
+    "include": ["game-control", "time-lights", "hints", "system"]
+  },
+
+  "//gameControl": [
+    "Game-control panel overrides. All fields are optional;",
+    "defaults derive from topicRoot. See docs/ROOMS.md for full reference."
+  ],
+  "gameControl": {
+    "//commandTopic": "Default: topicRoot/commands",
+    "//stateTopic":   "Default: topicRoot/state",
+    "//configTopic":  "Default: topicRoot/config",
+    "//checklistStateTopic": "Default: topicRoot/checklist/state",
+    "//heartbeatTimeoutMs":  "Default: 3000",
+    "//emergencyActions": [
+      "Array of quick-action buttons shown in the emergency modal.",
+      "Each entry: { 'label': 'Unlock Door', 'command': 'unlock', 'param': 'front' }"
+    ],
+    "emergencyActions": []
+  },
+
+  "//timeLights": [
+    "Time-lights panel overrides. All fields are optional.",
+    "See docs/ROOMS.md for full reference."
+  ],
+  "timeLights": {
+    "//lightsStateTopic":     "Default: topicRoot/lights/state",
+    "//lightsScenesTopicRoot": "If set, subscribes to <value>/scenes for a dynamic scene list",
+    "//clockStateTopic":      "Default: topicRoot/clock/state",
+    "//tvStateTopic":         "Default: topicRoot/tv/state"
+  },
+
+  "//hints": "Hints panel overrides.",
+  "hints": {
+    "//hintTopic": "Default: topicRoot/hints"
+  },
+
+  "//system": "System panel configuration.",
+  "system": {
+    "//warningTopics": [
+      "MQTT topics whose messages appear in the warning log.",
+      "Supports wildcards: paradox/myroom/+/warnings"
+    ],
+    "warningTopics": [
+      "paradox/myroom/warnings"
+    ],
+    "//watchZones": [
+      "One entry per service / device you want to monitor.",
+      "A zone goes to 'Disconnected' after timeoutMs ms without a message."
+    ],
+    "watchZones": [
+      { "id": "pfx",       "label": "PFx",       "topic": "paradox/myroom/+/state", "timeoutMs": 12000 },
+      { "id": "wallclock", "label": "Wallclock",  "topic": "paradox/myroom/clock/state", "timeoutMs": 15000 }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "default-dashboard",
+  "description": "Four-panel operator dashboard: game control, time/lights, hints, and system status.",
+  "slots": [
+    { "id": "game-control",  "required": true,  "description": "Game state display, mode selector, start/pause/solve buttons, emergency, checklist." },
+    { "id": "time-lights",   "required": false, "description": "Clock time adjustment and lighting scene selector." },
+    { "id": "hints",         "required": false, "description": "Hint selector and delivery." },
+    { "id": "system",        "required": false, "description": "System warnings log and zone heartbeat status." }
+  ]
+}

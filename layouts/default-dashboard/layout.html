@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="media/favicon.ico">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/pxd-base.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <title>{{PXD_TITLE}}</title>
+</head>
+<body>
+    <div class="pxd-shell">
+        <header class="pxd-hero">
+            <img id="pxd-hero-img" class="hero-image" alt="{{PXD_TITLE}}" src="media/hero.png">
+            <div class="hero-glow" aria-hidden="true"></div>
+        </header>
+
+        <main class="dashboard">
+            <div data-slot="game-control"></div>
+            <div data-slot="time-lights"></div>
+            <div data-slot="hints"></div>
+            <div data-slot="system"></div>
+        </main>
+
+        <footer class="pxd-footer">
+            <h6>Technology by Paradox Productions | Copyright 2015&#x2013;2026</h6>
+        </footer>
+    </div>
+
+    <!-- Portal for panel modals (panels inject <div class="modal"> here) -->
+    <div id="pxd-modals"></div>
+
+    <!-- Toast container -->
+    <div id="pxd-toast-container" style="position:fixed;bottom:16px;right:16px;z-index:1080;pointer-events:none;"></div>
+
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/paho-mqtt.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/pxd.js"></script>
+</body>
+</html>
