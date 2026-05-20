@@ -314,7 +314,6 @@
     <!-- Widget selector -->
     <div class="sb-section">
         <h3>Widget</h3>
-        <label class="sb-label">Template</label>
         <select id="vw-widget-select" class="sb-ctrl">
             <option value="" disabled selected>— select a widget —</option>
         </select>
@@ -791,22 +790,40 @@ document.getElementById('vw-ok-btn').addEventListener('click', function () {
 
 
 // ── Populate widget select ────────────────────────────────────────────────────
-WIDGET_CATALOG.forEach(function (cat, i) {
-    var opt = document.createElement('option');
-    opt.value       = String(i);
-    opt.textContent = cat.label;
-    widgetSelect.appendChild(opt);
+var _TIERS = [
+    { key: 'templates', label: 'Templates' },
+    { key: 'examples',  label: 'Examples'  },
+    { key: 'custom',    label: 'Custom'    }
+];
+
+_TIERS.forEach(function (tier) {
+    var items = WIDGET_CATALOG[tier.key] || [];
+    if (!items.length) return;
+    var group = document.createElement('optgroup');
+    group.label = tier.label;
+    items.forEach(function (cat, i) {
+        var opt = document.createElement('option');
+        opt.value       = tier.key + ':' + i;
+        opt.textContent = cat.label;
+        group.appendChild(opt);
+    });
+    widgetSelect.appendChild(group);
 });
 
 widgetSelect.addEventListener('change', function () {
-    var idx = parseInt(widgetSelect.value, 10);
-    if (!isNaN(idx) && WIDGET_CATALOG[idx]) loadWidget(WIDGET_CATALOG[idx]);
+    var parts = widgetSelect.value.split(':');
+    var items = WIDGET_CATALOG[parts[0]] || [];
+    var cat   = items[parseInt(parts[1], 10)];
+    if (cat) loadWidget(cat);
 });
 
-// Auto-load if there is only one widget in the catalog
-if (WIDGET_CATALOG.length === 1) {
-    widgetSelect.value = '0';
-    loadWidget(WIDGET_CATALOG[0]);
+// Auto-load if there is exactly one widget in the catalog
+var _allCatalogItems = _TIERS.reduce(function (acc, t) {
+    return acc.concat(WIDGET_CATALOG[t.key] || []);
+}, []);
+if (_allCatalogItems.length === 1) {
+    widgetSelect.value = 'templates:0';
+    loadWidget(_allCatalogItems[0]);
 }
 </script>
 

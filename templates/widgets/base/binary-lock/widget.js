@@ -94,6 +94,14 @@
          *  false = passive display only (no commands published on click). */
         INTERACTIVE:          true,
 
+        /** State shown before the first MQTT message arrives.
+         *  'locked' (default — secure assumption) or 'unlocked'. */
+        INITIAL_STATE:        'locked',
+
+        /** ms to wait for MQTT confirmation after a click before reverting the
+         *  display to the last confirmed state.  Set to 0 to wait indefinitely. */
+        PENDING_TIMEOUT_MS:   4000,
+
         /** Card goes 'disconnected' if no MQTT message arrives within this many ms.
          *  Set to 0 to disable the heartbeat watcher. */
         HEARTBEAT_TIMEOUT_MS: 30000,
@@ -135,10 +143,15 @@
 
 
     // ── Internal state ───────────────────────────────────────────────────────
-    let _iconEl    = null;
-    let _labelEl   = null;
-    let _wrapEl    = null;
-    let _isLocked  = true;   // default until first MQTT message
+    const _initialLocked = (String(CONFIG.INITIAL_STATE).toLowerCase() !== 'unlocked');
+
+    let _iconEl         = null;
+    let _labelEl        = null;
+    let _wrapEl         = null;
+    let _isLocked       = _initialLocked;  // current displayed state
+    let _lastConfirmed  = null;            // last MQTT-confirmed state; null = no msg yet
+    let _pending        = false;           // command sent, awaiting MQTT confirmation
+    let _pendingTimer   = null;
 
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -175,14 +188,38 @@
     }
 
     function onMessage(payload) {
+        let isLocked;
         try {
             const parsed = (typeof payload === 'string') ? JSON.parse(payload) : payload;
             const val    = (CONFIG.STATE_FIELD !== null)
                 ? parsed[CONFIG.STATE_FIELD]
                 : parsed;
-            render(String(val) === String(CONFIG.LOCKED_VALUE));
+            isLocked = (String(val) === String(CONFIG.LOCKED_VALUE));
         } catch (_) {
-            render(String(payload) === String(CONFIG.LOCKED_VALUE));
+            isLocked = (String(payload) === String(CONFIG.LOCKED_VALUE));
+        }
+        _lastConfirmed = isLocked;
+        clearPending();
+        render(isLocked);
+    }
+
+
+    // ── Pending state (command sent, awaiting MQTT confirmation) ──────────────
+    function clearPending() {
+        if (_pendingTimer !== null) { clearTimeout(_pendingTimer); _pendingTimer = null; }
+        _pending = false;
+        if (_wrapEl) _wrapEl.classList.remove('wd-pending');
+    }
+
+    function enterPending() {
+        _pending = true;
+        if (_wrapEl) _wrapEl.classList.add('wd-pending');
+        if (CONFIG.PENDING_TIMEOUT_MS > 0) {
+            _pendingTimer = setTimeout(function () {
+                const revertTo = _lastConfirmed !== null ? _lastConfirmed : _initialLocked;
+                clearPending();
+                render(revertTo);
+            }, CONFIG.PENDING_TIMEOUT_MS);
         }
     }
 
@@ -190,8 +227,9 @@
     // ── Command publishing ────────────────────────────────────────────────────
     function onClickHandler() {
         if (!CONFIG.COMMAND_TOPIC) return;
-        // Publish the opposite of the current displayed state.
+        if (_pending) return;  // ignore clicks while awaiting confirmation
         const cmd = _isLocked ? CONFIG.UNLOCK_COMMAND : CONFIG.LOCK_COMMAND;
+        enterPending();
         PxD.mqtt.publish(CONFIG.COMMAND_TOPIC, JSON.stringify({ command: cmd }));
     }
 
@@ -217,7 +255,7 @@
             _iconEl  = bodyEl.querySelector('.wd-lock-icon');
             _labelEl = bodyEl.querySelector('.wd-lock-label');
 
-            render(true);  // show locked until first MQTT message arrives
+            render(_initialLocked);  // show initial state until first MQTT message
 
             PxD.mqtt.subscribe(CONFIG.STATE_TOPIC, onMessage);
 
@@ -227,6 +265,7 @@
         },
 
         unmount() {
+            clearPending();
             if (_wrapEl) _wrapEl.removeEventListener('click', onClickHandler);
             PxD.mqtt.unsubscribe(CONFIG.STATE_TOPIC, onMessage);
             _iconEl = _labelEl = _wrapEl = null;
