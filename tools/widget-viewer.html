@@ -454,27 +454,33 @@
 
 
 // ── Widget catalog ────────────────────────────────────────────────────────────
-// Add an entry here whenever a new base template is created.
-var WIDGET_CATALOG = [
-    {
-        label: 'binary-door — 1×1',
-        js:    '../templates/widgets/base/binary-door/widget.js',
-        css:   '../templates/widgets/base/binary-door/widget.css',
-        quickStates: [
-            { label: 'Open',   payload: '{"state":"open"}',   color: '#dc3545' },
-            { label: 'Closed', payload: '{"state":"closed"}', color: '#198754' }
-        ]
-    },
-    {
-        label: 'binary-lock — 1×1',
-        js:    '../templates/widgets/base/binary-lock/widget.js',
-        css:   '../templates/widgets/base/binary-lock/widget.css',
-        quickStates: [
-            { label: 'Locked',   payload: '{"state":"locked"}',   color: '#198754' },
-            { label: 'Unlocked', payload: '{"state":"unlocked"}',  color: '#dc3545' }
-        ]
-    }
-];
+// Entries are grouped by tier: templates (base templates), examples (room
+// examples), custom (room-local widgets).  Only non-empty groups appear in
+// the selector.  Add an entry here whenever a new template or example is created.
+var WIDGET_CATALOG = {
+    templates: [
+        {
+            label: 'binary-door — 1×1',
+            js:    '../templates/widgets/base/binary-door/widget.js',
+            css:   '../templates/widgets/base/binary-door/widget.css',
+            quickStates: [
+                { label: 'Open',   payload: '{"state":"open"}',   color: '#dc3545' },
+                { label: 'Closed', payload: '{"state":"closed"}', color: '#198754' }
+            ]
+        },
+        {
+            label: 'binary-lock — 1×1',
+            js:    '../templates/widgets/base/binary-lock/widget.js',
+            css:   '../templates/widgets/base/binary-lock/widget.css',
+            quickStates: [
+                { label: 'Locked',   payload: '{"state":"locked"}',   color: '#198754' },
+                { label: 'Unlocked', payload: '{"state":"unlocked"}',  color: '#dc3545' }
+            ]
+        }
+    ],
+    examples: [],
+    custom:   []
+};
 
 
 // ── Theme presets ─────────────────────────────────────────────────────────────
