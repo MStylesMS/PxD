@@ -465,8 +465,16 @@ var WIDGET_CATALOG = [
             { label: 'Open',   payload: '{"state":"open"}',   color: '#dc3545' },
             { label: 'Closed', payload: '{"state":"closed"}', color: '#198754' }
         ]
+    },
+    {
+        label: 'binary-lock — 1×1',
+        js:    '../templates/widgets/base/binary-lock/widget.js',
+        css:   '../templates/widgets/base/binary-lock/widget.css',
+        quickStates: [
+            { label: 'Locked',   payload: '{"state":"locked"}',   color: '#198754' },
+            { label: 'Unlocked', payload: '{"state":"unlocked"}',  color: '#dc3545' }
+        ]
     }
-    // More templates will be added here
 ];
 
 
