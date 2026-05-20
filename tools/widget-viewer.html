@@ -298,6 +298,88 @@
         }
         #vw-status.ok  { border-color: #198754; color: #198754; }
         #vw-status.err { border-color: #dc3545; color: #dc3545; }
+
+        /* ── Card disabled state ─────────────────────────────────────── */
+        /* Widget still renders / receives MQTT; pointer events are blocked */
+        .vw-card.vw-disabled .vw-card-body::after {
+            content:      '';
+            position:     absolute;
+            inset:        0;
+            background:   rgba(0, 0, 0, 0.52);
+            pointer-events: all;
+            z-index:      9;
+        }
+        .vw-card.vw-disabled .vw-card-header { opacity: 0.5; }
+
+        /* ── Context menu popup ──────────────────────────────────────── */
+        .vw-menu-popup {
+            position:     fixed;
+            z-index:      200;
+            background:   rgba(14, 16, 26, 0.97);
+            border:       1px solid var(--vw-border);
+            border-radius: 7px;
+            min-width:    168px;
+            box-shadow:   0 6px 24px rgba(0, 0, 0, 0.55);
+            overflow:     hidden;
+        }
+        .vw-menu-item {
+            padding:      8px 14px;
+            cursor:       pointer;
+            white-space:  nowrap;
+            color:        var(--vw-ink);
+            font-size:    0.73rem;
+            transition:   background 0.1s;
+        }
+        .vw-menu-item:hover    { background: rgba(255, 255, 255, 0.09); }
+        .vw-menu-item.vw-danger { color: #ff7272; }
+        .vw-menu-item.vw-danger:hover { background: rgba(255, 114, 114, 0.10); }
+        .vw-menu-sep  { height: 1px; background: var(--vw-border); margin: 3px 0; }
+
+        /* ── Widget info overlay ─────────────────────────────────────── */
+        .vw-info-overlay {
+            position:      absolute;
+            inset:         0;
+            z-index:       20;
+            background:    rgba(10, 12, 22, 0.95);
+            display:       flex;
+            flex-direction: column;
+            justify-content: center;
+            padding:       12px 14px;
+            gap:           8px;
+        }
+        .vw-info-row {
+            display:  flex;
+            gap:      8px;
+            align-items: baseline;
+        }
+        .vw-info-key {
+            color:          var(--vw-soft);
+            min-width:      82px;
+            flex-shrink:    0;
+            font-size:      0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .vw-info-val {
+            font-family: 'Courier New', monospace;
+            font-size:   0.7rem;
+            word-break:  break-all;
+            color:       var(--vw-ink);
+        }
+        .vw-info-close {
+            position:     absolute;
+            top:          5px;
+            right:        7px;
+            background:   none;
+            border:       none;
+            color:        var(--vw-soft);
+            cursor:       pointer;
+            font-size:    0.9rem;
+            padding:      2px 5px;
+            border-radius: 4px;
+            line-height:  1;
+        }
+        .vw-info-close:hover { background: rgba(255,255,255,0.1); color: var(--vw-ink); }
     </style>
 </head>
 
@@ -403,9 +485,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
-    var _subs   = {};     // topic → [callbacks]
-    var _topics = [];     // ordered list of subscribed topics
-    var _reg    = null;   // captured widget definition
+    var _subs      = {};     // topic → [callbacks]
+    var _topics   = [];     // ordered list of subscribed topics
+    var _reg      = null;   // captured widget definition
+    var _lastMsgAt = null;  // Date of last delivered inbound message
 
     window.PxD = {
         mqtt: {
@@ -434,21 +517,24 @@
 
         // Viewer internals — not part of the production API
         _reset: function () {
-            _subs  = {};
-            _topics = [];
-            _reg   = null;
+            _subs      = {};
+            _topics    = [];
+            _reg       = null;
+            _lastMsgAt = null;
         },
         _deliver: function (topic, raw) {
             var cbs = _subs[topic];
             if (cbs && cbs.length) {
+                _lastMsgAt = new Date();
                 cbs.forEach(function (cb) { cb(raw); });
                 logMsg('rcv', topic, raw);
             } else {
                 logMsg('miss', topic, raw);
             }
         },
-        _getTopics:  function () { return _topics.slice(); },
-        _getWidget:  function () { return _reg; }
+        _getTopics:     function () { return _topics.slice(); },
+        _getWidget:     function () { return _reg; },
+        _getLastMsgAt:  function () { return _lastMsgAt; }
     };
 }());
 
@@ -717,7 +803,12 @@ function buildCard(def, catalog) {
     header.className = 'vw-card-header';
     header.innerHTML =
         '<span class="vw-card-title">' + escHtml(cardTitle.value || 'Widget') + '</span>' +
-        '<button class="vw-menu-btn" title="Widget menu (simulated)">&#x22EF;</button>';
+        '<button class="vw-menu-btn" title="Widget menu">&#x22EF;</button>';
+
+    header.querySelector('.vw-menu-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleCardMenu(this, card, def, catalog);
+    });
 
     var body = document.createElement('div');
     body.className     = 'vw-card-body';
@@ -757,6 +848,140 @@ function buildCard(def, catalog) {
         });
         quickBtns.appendChild(btn);
     });
+}
+
+
+// ── Card context menu ─────────────────────────────────────────────────────────
+var _menuOpen = false;
+
+function closeMenu() {
+    var existing = document.querySelector('.vw-menu-popup');
+    if (existing) existing.remove();
+    _menuOpen = false;
+}
+
+function toggleCardMenu(menuBtn, card, def, catalog) {
+    if (_menuOpen) { closeMenu(); return; }
+    closeMenu();
+    _menuOpen = true;
+
+    var rect   = menuBtn.getBoundingClientRect();
+    var popup  = document.createElement('div');
+    popup.className = 'vw-menu-popup';
+    popup.style.cssText =
+        'top:'   + (rect.bottom + 5) + 'px;' +
+        'right:' + (window.innerWidth - rect.right) + 'px;';
+
+    var isDisabled = card.classList.contains('vw-disabled');
+
+    // ── Enable / Disable ──
+    addMenuItem(popup, isDisabled ? 'Enable widget' : 'Disable widget', function () {
+        card.classList.toggle('vw-disabled');
+        closeMenu();
+    });
+
+    addMenuSep(popup);
+
+    // ── Widget info ──
+    addMenuItem(popup, 'Show info\u2026', function () {
+        closeMenu();
+        showInfoOverlay(card, def);
+    });
+
+    addMenuSep(popup);
+
+    // ── Reload ──
+    addMenuItem(popup, 'Reload widget', function () {
+        closeMenu();
+        loadWidget(catalog);
+    }, 'vw-danger');
+
+    document.body.appendChild(popup);
+
+    // Close on any outside click (deferred so this click doesn't immediately close it)
+    setTimeout(function () {
+        document.addEventListener('click', closeMenu, { once: true });
+    }, 0);
+}
+
+function addMenuItem(popup, label, onClick, extraClass) {
+    var item = document.createElement('div');
+    item.className = 'vw-menu-item' + (extraClass ? ' ' + extraClass : '');
+    item.textContent = label;
+    item.addEventListener('click', function (e) { e.stopPropagation(); onClick(); });
+    popup.appendChild(item);
+}
+
+function addMenuSep(popup) {
+    var sep = document.createElement('div');
+    sep.className = 'vw-menu-sep';
+    popup.appendChild(sep);
+}
+
+
+// ── Widget info overlay ───────────────────────────────────────────────────────
+function showInfoOverlay(card, def) {
+    var body = card.querySelector('.vw-card-body');
+
+    // Toggle: second click on menu closes it
+    var existing = body.querySelector('.vw-info-overlay');
+    if (existing) { existing.remove(); return; }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'vw-info-overlay';
+
+    var topics = PxD._getTopics();
+
+    function timeSince(date) {
+        if (!date) return 'never';
+        var s = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (s < 2)  return 'just now';
+        if (s < 60) return s + 's ago';
+        var m = Math.floor(s / 60);
+        return m + 'm ' + (s % 60) + 's ago';
+    }
+
+    var rows = [
+        { key: 'Topic',       val: topics.join('\n') || '(none)' },
+        { key: 'Last update', val: timeSince(PxD._getLastMsgAt()), live: true },
+        { key: 'Size',        val: def.size        || '1x1'  },
+        { key: 'Interactive', val: def.interactive  ? 'yes' : 'no' },
+        { key: 'Heartbeat',   val: def.heartbeatTimeoutMs
+                                    ? def.heartbeatTimeoutMs + ' ms' : 'off' }
+    ];
+
+    var liveEl = null;
+
+    rows.forEach(function (r) {
+        var row = document.createElement('div');
+        row.className = 'vw-info-row';
+        var valEl = document.createElement('span');
+        valEl.className   = 'vw-info-val';
+        valEl.textContent = r.val;
+        row.innerHTML = '<span class="vw-info-key">' + escHtml(r.key) + '</span>';
+        row.appendChild(valEl);
+        overlay.appendChild(row);
+        if (r.live) liveEl = valEl;
+    });
+
+    // Live-update "last update" every second while the overlay is visible
+    var timer = setInterval(function () {
+        if (!overlay.parentNode) { clearInterval(timer); return; }
+        if (liveEl) liveEl.textContent = timeSince(PxD._getLastMsgAt());
+    }, 1000);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.className   = 'vw-info-close';
+    closeBtn.textContent = '\u2715';
+    closeBtn.title       = 'Close';
+    closeBtn.addEventListener('click', function () {
+        clearInterval(timer);
+        overlay.remove();
+    });
+    overlay.appendChild(closeBtn);
+
+    body.appendChild(overlay);
 }
 
 
