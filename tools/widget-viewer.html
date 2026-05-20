@@ -300,14 +300,26 @@
         #vw-status.err { border-color: #dc3545; color: #dc3545; }
 
         /* ── Card disabled state ─────────────────────────────────────── */
-        /* Widget still renders / receives MQTT; pointer events are blocked */
-        .vw-card.vw-disabled .vw-card-body::after {
-            content:      '';
-            position:     absolute;
-            inset:        0;
-            background:   rgba(0, 0, 0, 0.52);
-            pointer-events: all;
-            z-index:      9;
+        /* Widget still renders / receives MQTT; pointer events are blocked by the overlay div */
+        .vw-disable-overlay {
+            position:        absolute;
+            inset:           0;
+            background:      rgba(0, 0, 0, 0.58);
+            pointer-events:  all;
+            z-index:         50;
+            display:         flex;
+            align-items:     center;
+            justify-content: center;
+        }
+        .vw-disable-badge {
+            font-size:      0.52rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color:          rgba(255, 255, 255, 0.38);
+            border:         1px solid rgba(255, 255, 255, 0.18);
+            padding:        2px 7px;
+            border-radius:  3px;
+            user-select:    none;
         }
         .vw-card.vw-disabled .vw-card-header { opacity: 0.5; }
 
@@ -335,17 +347,21 @@
         .vw-menu-item.vw-danger:hover { background: rgba(255, 114, 114, 0.10); }
         .vw-menu-sep  { height: 1px; background: var(--vw-border); margin: 3px 0; }
 
-        /* ── Widget info overlay ─────────────────────────────────────── */
+        /* ── Widget info overlay (position:fixed to escape card overflow:hidden) ── */
         .vw-info-overlay {
-            position:      absolute;
-            inset:         0;
-            z-index:       20;
-            background:    rgba(10, 12, 22, 0.95);
+            position:      fixed;
+            z-index:       200;
+            background:    rgba(10, 12, 22, 0.96);
+            border:        1px solid var(--vw-border);
+            border-radius: 0 0 var(--pxd-radius,10px) var(--pxd-radius,10px);
             display:       flex;
             flex-direction: column;
-            justify-content: center;
-            padding:       12px 14px;
-            gap:           8px;
+            justify-content: flex-start;
+            padding:       8px 10px;
+            gap:           5px;
+            overflow-y:    auto;
+            min-width:     210px;
+            max-height:    300px;
         }
         .vw-info-row {
             display:  flex;
@@ -876,7 +892,7 @@ function toggleCardMenu(menuBtn, card, def, catalog) {
 
     // ── Enable / Disable ──
     addMenuItem(popup, isDisabled ? 'Enable widget' : 'Disable widget', function () {
-        card.classList.toggle('vw-disabled');
+        toggleDisabled(card);
         closeMenu();
     });
 
@@ -918,17 +934,39 @@ function addMenuSep(popup) {
     popup.appendChild(sep);
 }
 
+function toggleDisabled(card) {
+    var body = card.querySelector('.vw-card-body');
+    var isDisabled = card.classList.toggle('vw-disabled');
+    if (isDisabled) {
+        var overlay = document.createElement('div');
+        overlay.className = 'vw-disable-overlay';
+        var badge = document.createElement('span');
+        badge.className   = 'vw-disable-badge';
+        badge.textContent = 'Disabled';
+        overlay.appendChild(badge);
+        body.appendChild(overlay);
+    } else {
+        var existing = body.querySelector('.vw-disable-overlay');
+        if (existing) existing.remove();
+    }
+}
+
 
 // ── Widget info overlay ───────────────────────────────────────────────────────
 function showInfoOverlay(card, def) {
-    var body = card.querySelector('.vw-card-body');
-
-    // Toggle: second click on menu closes it
-    var existing = body.querySelector('.vw-info-overlay');
+    // Toggle: second "Show info" click dismisses it
+    var existing = document.getElementById('vw-info-float');
     if (existing) { existing.remove(); return; }
 
+    var bodyEl = card.querySelector('.vw-card-body');
+    var rect   = bodyEl.getBoundingClientRect();
+
     var overlay = document.createElement('div');
+    overlay.id        = 'vw-info-float';
     overlay.className = 'vw-info-overlay';
+    overlay.style.cssText =
+        'left:'  + rect.left  + 'px;' +
+        'top:'   + rect.top   + 'px;';
 
     var topics = PxD._getTopics();
 
@@ -981,7 +1019,7 @@ function showInfoOverlay(card, def) {
     });
     overlay.appendChild(closeBtn);
 
-    body.appendChild(overlay);
+    document.body.appendChild(overlay);
 }
 
 
