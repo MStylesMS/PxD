@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<!--
+  PxD Widget Viewer — developer preview tool
+  ─────────────────────────────────────────────────────────────────────────────
+  Usage:
+    From the PxD repo root:
+      python3 -m http.server 9090
+    Then open:
+      http://localhost:9090/tools/widget-viewer.html
+
+  Note: port 8080 is already used by Nginx (packaged room output).
+
+  Chrome requires an HTTP server for cross-directory <script src> loading.
+  Firefox can open this file directly via file://.
+
+  OFFLINE ASSET RULE: widgets loaded in this viewer must not reference
+  external CDN URLs for fonts, CSS, or scripts. Use inline SVG icons or
+  locally vendored files. See docs/WIDGETS.md § Offline assets.
+
+  Adding new widgets:
+    1. Create templates/widgets/base/<name>/widget.js + widget.css
+    2. Add an entry to WIDGET_CATALOG below.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PxD Widget Viewer</title>
+
+    <!-- PxD CSS — provides design tokens and base resets -->
+    <link rel="stylesheet" href="../assets/css/pxd-base.css">
+
+    <style>
+        /* ── Viewer chrome ───────────────────────────────────────────── */
+        :root {
+            --vw-sidebar:  264px;
+            --vw-bg:       var(--pxd-bg-1, #0c0c0e);
+            --vw-surface:  var(--pxd-panel, rgba(20,20,28,0.95));
+            --vw-border:   var(--pxd-panel-border, rgba(200,200,220,0.18));
+            --vw-ink:      var(--pxd-ink, #e8e8f0);
+            --vw-soft:     var(--pxd-ink-soft, #a0a0b8);
+            --vw-accent:   var(--pxd-accent, #6f99c8);
+            --vw-radius:   var(--pxd-radius, 10px);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; font-family: system-ui, Arial, sans-serif; }
+
+        body {
+            display:    flex;
+            background: var(--vw-bg);
+            color:      var(--vw-ink);
+            font-size:  14px;
+        }
+
+        /* ── Sidebar ──────────────────────────────────────────────────── */
+        #vw-sidebar {
+            width:         var(--vw-sidebar);
+            min-width:     var(--vw-sidebar);
+            background:    var(--vw-surface);
+            border-right:  1px solid var(--vw-border);
+            display:       flex;
+            flex-direction: column;
+            overflow-y:    auto;
+            overflow-x:    hidden;
+        }
+
+        .sb-head {
+            padding:     14px 14px 10px;
+            border-bottom: 1px solid var(--vw-border);
+        }
+        .sb-head h1 {
+            font-size:      0.78rem;
+            font-weight:    700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color:          var(--vw-accent);
+            margin:         0 0 2px;
+        }
+        .sb-head p {
+            font-size:  0.65rem;
+            color:      var(--vw-soft);
+            margin:     0;
+        }
+
+        .sb-section {
+            padding:       12px 14px;
+            border-bottom: 1px solid var(--vw-border);
+            display:       flex;
+            flex-direction: column;
+            gap:           6px;
+        }
+        .sb-section h3 {
+            font-size:      0.65rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color:          var(--vw-soft);
+            margin:         0 0 2px;
+        }
+        .sb-label {
+            font-size: 0.7rem;
+            color:     var(--vw-soft);
+        }
+
+        .sb-ctrl {
+            width:        100%;
+            background:   rgba(0,0,0,0.35);
+            border:       1px solid var(--vw-border);
+            color:        var(--vw-ink);
+            border-radius: 5px;
+            padding:      5px 8px;
+            font-size:    0.75rem;
+            font-family:  inherit;
+            outline:      none;
+        }
+        .sb-ctrl:focus { border-color: var(--vw-accent); }
+
+        textarea.sb-ctrl {
+            font-family: 'Courier New', monospace;
+            resize:      vertical;
+            min-height:  70px;
+        }
+
+        .sb-btn {
+            display:       block;
+            width:         100%;
+            background:    rgba(111, 153, 200, 0.12);
+            border:        1px solid var(--vw-border);
+            color:         var(--vw-ink);
+            border-radius: 5px;
+            padding:       6px 10px;
+            font-size:     0.75rem;
+            font-family:   inherit;
+            cursor:        pointer;
+            text-align:    center;
+        }
+        .sb-btn:hover    { background: rgba(111,153,200,0.22); border-color: var(--vw-accent); }
+        .sb-btn.primary  { background: var(--vw-accent); color: #000; border-color: var(--vw-accent); font-weight: 700; }
+        .sb-btn.primary:hover { filter: brightness(1.15); }
+
+        .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+        .quick-btn  {
+            flex:          1 1 auto;
+            padding:       4px 6px;
+            font-size:     0.72rem;
+            border-radius: 4px;
+            cursor:        pointer;
+            border:        1px solid;
+            font-family:   inherit;
+            background:    transparent;
+        }
+
+        #vw-widget-info {
+            font-size:   0.68rem;
+            font-family: 'Courier New', monospace;
+            color:       var(--vw-soft);
+            line-height: 1.7;
+            white-space: pre;
+        }
+
+        /* ── Main area ────────────────────────────────────────────────── */
+        #vw-main {
+            flex:            1;
+            display:         flex;
+            flex-direction:  column;
+            align-items:     center;
+            justify-content: flex-start;
+            padding:         32px 24px;
+            gap:             24px;
+            overflow:        auto;
+        }
+
+        #vw-preview-area {
+            display:        flex;
+            flex-direction: column;
+            align-items:    center;
+            gap:            10px;
+        }
+
+        #vw-size-label {
+            font-size:      0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color:          var(--vw-soft);
+        }
+
+        /* Simulated widget card chrome */
+        .vw-card {
+            background:    var(--pxd-panel, rgba(20,20,28,0.9));
+            border:        1px solid var(--pxd-panel-border, rgba(200,200,220,0.18));
+            border-radius: var(--pxd-radius, 10px);
+            overflow:      hidden;
+            display:       flex;
+            flex-direction: column;
+            box-shadow:    var(--pxd-shadow, 0 12px 28px rgba(0,0,0,0.35));
+            transition:    box-shadow 0.25s;
+        }
+        .vw-card-header {
+            display:         flex;
+            align-items:     center;
+            justify-content: space-between;
+            padding:         4px 8px;
+            height:          28px;
+            background:      rgba(0,0,0,0.25);
+            border-bottom:   1px solid var(--pxd-panel-border, rgba(200,200,220,0.12));
+            gap:             6px;
+            flex-shrink:     0;
+        }
+        .vw-card-title {
+            font-size:      0.63rem;
+            font-weight:    600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color:          var(--pxd-ink-soft, #a0a0b8);
+            flex:           1;
+            white-space:    nowrap;
+            overflow:       hidden;
+            text-overflow:  ellipsis;
+        }
+        .vw-menu-btn {
+            background:    none;
+            border:        none;
+            color:         var(--pxd-ink-soft, #a0a0b8);
+            cursor:        pointer;
+            padding:       0 3px;
+            font-size:     1rem;
+            line-height:   1;
+            border-radius: 3px;
+        }
+        .vw-menu-btn:hover { background: rgba(255,255,255,0.1); }
+
+        .vw-card-body { flex: 1; overflow: hidden; position: relative; }
+
+        /* Stale / disconnected overlay */
+        .vw-card.stale .vw-card-body { opacity: 0.35; }
+        .vw-card.stale .vw-card-header { opacity: 0.5; }
+
+        /* Empty state */
+        #vw-empty {
+            color:      var(--vw-soft);
+            font-size:  0.8rem;
+            text-align: center;
+            padding:    20px;
+        }
+        #vw-empty strong { display: block; font-size: 1rem; margin-bottom: 6px; color: var(--vw-ink); }
+
+        /* ── MQTT log ─────────────────────────────────────────────────── */
+        #vw-log-wrap {
+            width:         100%;
+            max-width:     640px;
+            background:    var(--vw-surface);
+            border:        1px solid var(--vw-border);
+            border-radius: 8px;
+            overflow:      hidden;
+        }
+        #vw-log-head {
+            padding:        6px 12px;
+            font-size:      0.65rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color:          var(--vw-soft);
+            border-bottom:  1px solid var(--vw-border);
+            display:        flex;
+            justify-content: space-between;
+            align-items:    center;
+        }
+        #vw-log {
+            padding:     8px 12px;
+            min-height:  56px;
+            max-height:  160px;
+            overflow-y:  auto;
+            font-family: 'Courier New', monospace;
+            font-size:   0.7rem;
+        }
+        .vw-log-row { margin: 1px 0; }
+        .vw-log-rcv  { color: #66bb6a; }
+        .vw-log-pub  { color: #42a5f5; }
+        .vw-log-miss { color: #888; }
+        .vw-log-ts   { color: var(--vw-soft); }
+        .vw-log-topic { color: #a0d0ff; }
+        .vw-log-payload { color: var(--vw-ink); }
+
+        /* ── Status badge ─────────────────────────────────────────────── */
+        #vw-status {
+            position:      fixed;
+            bottom:        12px;
+            right:         14px;
+            background:    var(--vw-surface);
+            border:        1px solid var(--vw-border);
+            border-radius: 20px;
+            padding:       3px 12px;
+            font-size:     0.65rem;
+            color:         var(--vw-soft);
+            transition:    border-color 0.3s, color 0.3s;
+        }
+        #vw-status.ok  { border-color: #198754; color: #198754; }
+        #vw-status.err { border-color: #dc3545; color: #dc3545; }
+    </style>
+</head>
+
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+<aside id="vw-sidebar">
+
+    <div class="sb-head">
+        <h1>Widget Viewer</h1>
+        <p>PxD dev preview tool</p>
+    </div>
+
+    <!-- Widget selector -->
+    <div class="sb-section">
+        <h3>Widget</h3>
+        <label class="sb-label">Template</label>
+        <select id="vw-widget-select" class="sb-ctrl">
+            <option value="" disabled selected>— select a widget —</option>
+        </select>
+        <label class="sb-label">Card title</label>
+        <input id="vw-card-title" class="sb-ctrl" type="text" value="Door 1" placeholder="Card title">
+    </div>
+
+    <!-- Theme selector -->
+    <div class="sb-section">
+        <h3>Theme</h3>
+        <label class="sb-label">Preset</label>
+        <select id="vw-theme-select" class="sb-ctrl">
+            <option value="default">Default (dark)</option>
+            <option value="agent22">Agent 22</option>
+            <option value="houdini">Houdini's Challenge</option>
+        </select>
+        <button class="sb-btn" id="vw-load-json-btn">Load room.json…</button>
+        <input id="vw-load-json-file" type="file" accept=".json" style="display:none">
+    </div>
+
+    <!-- MQTT state injection -->
+    <div class="sb-section">
+        <h3>MQTT State</h3>
+        <label class="sb-label">Topic (auto-filled)</label>
+        <input id="vw-topic" class="sb-ctrl" type="text" placeholder="load widget first" readonly
+               style="opacity:0.55; cursor:default">
+        <label class="sb-label">Payload — JSON or plain string</label>
+        <textarea id="vw-payload" class="sb-ctrl">{"state":"closed"}</textarea>
+        <button id="vw-send-btn" class="sb-btn primary">Send  ⏎ (Ctrl+Enter)</button>
+        <div class="quick-btns" id="vw-quick-btns"></div>
+    </div>
+
+    <!-- Heartbeat simulation -->
+    <div class="sb-section">
+        <h3>Heartbeat</h3>
+        <button class="sb-btn" id="vw-stale-btn">Mark stale / disconnected</button>
+        <button class="sb-btn" id="vw-ok-btn"    style="margin-top:2px">Clear stale</button>
+    </div>
+
+    <!-- Widget info -->
+    <div class="sb-section">
+        <h3>Widget info</h3>
+        <div id="vw-widget-info">No widget loaded.</div>
+    </div>
+
+</aside>
+
+<!-- ── Main area ────────────────────────────────────────────────────────── -->
+<main id="vw-main">
+
+    <div id="vw-preview-area">
+        <div id="vw-size-label">—</div>
+        <div id="vw-card-container">
+            <div id="vw-empty">
+                <strong>No widget loaded</strong>
+                Select a template in the sidebar to preview it.
+            </div>
+        </div>
+    </div>
+
+    <div id="vw-log-wrap">
+        <div id="vw-log-head">
+            MQTT log
+            <button class="sb-btn" id="vw-log-clear-btn"
+                    style="width:auto;padding:1px 8px;font-size:0.65rem">clear</button>
+        </div>
+        <div id="vw-log"><span style="color:var(--vw-soft);font-size:0.7rem">— no messages yet —</span></div>
+    </div>
+
+</main>
+
+<div id="vw-status">ready</div>
+
+<!-- ── JavaScript ───────────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+// ── PxD mock API ─────────────────────────────────────────────────────────────
+// Mirrors the real pxd.js MQTT surface so widget IIFEs run unchanged.
+// subscribe(topic, cb)     — registers a callback; returns nothing (matches real API)
+// unsubscribe(topic, cb)   — removes a specific callback
+// publish(topic, payload)  — logs the outbound message (active widgets)
+//
+// Internal helpers for the viewer:
+//   PxD._deliver(topic, rawString)  — simulate an inbound MQTT message
+//   PxD._reset()                   — tear down state between widget loads
+// ─────────────────────────────────────────────────────────────────────────────
+
+(function () {
+    var _subs   = {};     // topic → [callbacks]
+    var _topics = [];     // ordered list of subscribed topics
+    var _reg    = null;   // captured widget definition
+
+    window.PxD = {
+        mqtt: {
+            subscribe: function (topic, cb) {
+                if (!_subs[topic]) {
+                    _subs[topic] = [];
+                    _topics.push(topic);
+                }
+                _subs[topic].push(cb);
+            },
+            unsubscribe: function (topic, cb) {
+                var cbs = _subs[topic];
+                if (!cbs) return;
+                var i = cbs.indexOf(cb);
+                if (i >= 0) cbs.splice(i, 1);
+            },
+            publish: function (topic, payload) {
+                logMsg('pub', topic,
+                    typeof payload === 'string' ? payload : JSON.stringify(payload));
+            }
+        },
+
+        widgets: {
+            register: function (def) { _reg = def; }
+        },
+
+        // Viewer internals — not part of the production API
+        _reset: function () {
+            _subs  = {};
+            _topics = [];
+            _reg   = null;
+        },
+        _deliver: function (topic, raw) {
+            var cbs = _subs[topic];
+            if (cbs && cbs.length) {
+                cbs.forEach(function (cb) { cb(raw); });
+                logMsg('rcv', topic, raw);
+            } else {
+                logMsg('miss', topic, raw);
+            }
+        },
+        _getTopics:  function () { return _topics.slice(); },
+        _getWidget:  function () { return _reg; }
+    };
+}());
+
+
+// ── Widget catalog ────────────────────────────────────────────────────────────
+// Add an entry here whenever a new base template is created.
+var WIDGET_CATALOG = [
+    {
+        label: 'binary-door — 1×1',
+        js:    '../templates/widgets/base/binary-door/widget.js',
+        css:   '../templates/widgets/base/binary-door/widget.css',
+        quickStates: [
+            { label: 'Open',   payload: '{"state":"open"}',   color: '#dc3545' },
+            { label: 'Closed', payload: '{"state":"closed"}', color: '#198754' }
+        ]
+    }
+    // More templates will be added here
+];
+
+
+// ── Theme presets ─────────────────────────────────────────────────────────────
+// Token names match pxd.js TOKEN_MAP → CSS variable names.
+var THEMES = {
+    default: {},   // pxd-base.css defaults apply
+    agent22: {
+        '--pxd-bg-1':         '#041320',
+        '--pxd-bg-2':         '#0a2d46',
+        '--pxd-bg-3':         '#133c5a',
+        '--pxd-panel':        'rgba(8,23,36,0.85)',
+        '--pxd-panel-border': 'rgba(108,223,255,0.28)',
+        '--pxd-ink':          '#d8f4ff',
+        '--pxd-ink-soft':     '#9ad5ea',
+        '--pxd-accent':       '#44e0cc',
+        '--pxd-accent-alt':   '#6de79a',
+        '--pxd-warn':         '#ffcc66',
+        '--pxd-danger':       '#ff7272',
+        '--pxd-radius':       '14px',
+        '--pxd-shadow':       '0 12px 28px rgba(0,0,0,0.35)',
+        '--pxd-bg-glow-1':    'rgba(68,224,204,0.20)',
+        '--pxd-bg-glow-2':    'rgba(109,231,154,0.17)'
+    },
+    houdini: {
+        '--pxd-bg-1':         '#2e0f0f',
+        '--pxd-bg-2':         '#4a1818',
+        '--pxd-bg-3':         '#220a0a',
+        '--pxd-panel':        'rgba(28,12,9,0.82)',
+        '--pxd-panel-border': 'rgba(205,164,94,0.46)',
+        '--pxd-ink':          '#f0e5cf',
+        '--pxd-ink-soft':     '#d9c7a4',
+        '--pxd-accent':       '#d4af6d',
+        '--pxd-accent-alt':   '#ead4a0',
+        '--pxd-warn':         '#e5c768',
+        '--pxd-danger':       '#d86d5f',
+        '--pxd-radius':       '14px',
+        '--pxd-shadow':       '0 14px 36px rgba(0,0,0,0.45)',
+        '--pxd-bg-glow-1':    'rgba(212,175,109,0.20)',
+        '--pxd-bg-glow-2':    'rgba(122,42,42,0.28)'
+    }
+};
+
+// All CSS vars that might be overridden (used when clearing a theme)
+var ALL_THEME_VARS = Object.keys(THEMES.agent22);
+
+
+// ── Card size table (unit = 100px body height, 8px gap, 28px header) ─────────
+var SIZE_DIMS = {
+    '1x1': { w: 100,  bh: 100 },
+    '2x1': { w: 208,  bh: 100 },
+    '2x2': { w: 208,  bh: 208 },
+    '4x1': { w: 424,  bh: 100 },
+    '4x2': { w: 424,  bh: 208 }
+};
+var HEADER_H = 28;
+
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+var widgetSelect = document.getElementById('vw-widget-select');
+var themeSelect  = document.getElementById('vw-theme-select');
+var cardTitle    = document.getElementById('vw-card-title');
+var payloadTA    = document.getElementById('vw-payload');
+var topicInput   = document.getElementById('vw-topic');
+var sendBtn      = document.getElementById('vw-send-btn');
+var quickBtns    = document.getElementById('vw-quick-btns');
+var cardContainer = document.getElementById('vw-card-container');
+var sizeLabel    = document.getElementById('vw-size-label');
+var widgetInfo   = document.getElementById('vw-widget-info');
+var statusEl     = document.getElementById('vw-status');
+var logEl        = document.getElementById('vw-log');
+
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+function setStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className   = type || '';
+}
+
+
+// ── MQTT log ──────────────────────────────────────────────────────────────────
+function logMsg(dir, topic, payload) {
+    var ts   = new Date().toLocaleTimeString();
+    var cls  = { rcv: 'rcv', pub: 'pub', miss: 'miss' }[dir] || 'miss';
+    var row  = document.createElement('div');
+    row.className = 'vw-log-row';
+    row.innerHTML =
+        '<span class="vw-log-' + cls + '">[' + dir.toUpperCase() + ']</span> ' +
+        '<span class="vw-log-ts">' + ts + '</span> ' +
+        '<span class="vw-log-topic">' + escHtml(topic) + '</span> ' +
+        '<span class="vw-log-payload">' + escHtml(String(payload)) + '</span>';
+    logEl.prepend(row);
+    while (logEl.children.length > 30) logEl.lastChild.remove();
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('vw-log-clear-btn').addEventListener('click', function () {
+    logEl.innerHTML = '<span style="color:var(--vw-soft);font-size:0.7rem">— cleared —</span>';
+});
+
+
+// ── Theme application ─────────────────────────────────────────────────────────
+function applyThemeTokens(tokens) {
+    ALL_THEME_VARS.forEach(function (v) {
+        document.documentElement.style.removeProperty(v);
+    });
+    Object.keys(tokens).forEach(function (v) {
+        document.documentElement.style.setProperty(v, tokens[v]);
+    });
+}
+
+function applyThemeFromJson(jsonStr) {
+    try {
+        var data   = JSON.parse(jsonStr);
+        var theme  = data.theme || {};
+        var TMAP   = {
+            bgColor1:    '--pxd-bg-1',
+            bgColor2:    '--pxd-bg-2',
+            bgColor3:    '--pxd-bg-3',
+            panel:       '--pxd-panel',
+            panelBorder: '--pxd-panel-border',
+            ink:         '--pxd-ink',
+            inkSoft:     '--pxd-ink-soft',
+            accent:      '--pxd-accent',
+            accentAlt:   '--pxd-accent-alt',
+            warn:        '--pxd-warn',
+            danger:      '--pxd-danger',
+            radius:      '--pxd-radius',
+            shadow:      '--pxd-shadow',
+            fontBody:    '--pxd-font-body',
+            fontMono:    '--pxd-font-mono',
+            bgGlow1:     '--pxd-bg-glow-1',
+            bgGlow2:     '--pxd-bg-glow-2'
+        };
+        var tokens = {};
+        Object.keys(TMAP).forEach(function (k) {
+            if (theme[k]) tokens[TMAP[k]] = theme[k];
+        });
+        applyThemeTokens(tokens);
+        setStatus('theme loaded from room.json', 'ok');
+    } catch (e) {
+        setStatus('invalid room.json: ' + e.message, 'err');
+    }
+}
+
+themeSelect.addEventListener('change', function () {
+    applyThemeTokens(THEMES[themeSelect.value] || {});
+});
+
+document.getElementById('vw-load-json-btn').addEventListener('click', function () {
+    document.getElementById('vw-load-json-file').click();
+});
+document.getElementById('vw-load-json-file').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var rdr = new FileReader();
+    rdr.onload = function (ev) { applyThemeFromJson(ev.target.result); };
+    rdr.readAsText(file);
+});
+
+
+// ── Widget loading ────────────────────────────────────────────────────────────
+var _currentCatalog = null;   // the catalog entry for the loaded widget
+
+function loadWidget(catalog) {
+    setStatus('loading…');
+
+    // Tear down previous widget
+    var prev = PxD._getWidget();
+    if (!prev && _currentCatalog) {
+        // Widget may have already been replaced by reset; try a no-op unmount
+    } else if (prev && prev.unmount) {
+        try { prev.unmount(); } catch (e) { /* ignore */ }
+    }
+    _currentCatalog = null;
+    PxD._reset();
+
+    // Clear old dynamic CSS + JS
+    document.querySelectorAll('.vw-dyn').forEach(function (el) { el.remove(); });
+    cardContainer.innerHTML = '';
+    quickBtns.innerHTML     = '';
+    sizeLabel.textContent   = '—';
+    widgetInfo.textContent  = 'Loading…';
+    topicInput.value        = '';
+
+    // Load widget CSS
+    var link = document.createElement('link');
+    link.rel       = 'stylesheet';
+    link.className = 'vw-dyn';
+    link.href      = catalog.css;
+    document.head.appendChild(link);
+
+    // Load widget JS
+    var script = document.createElement('script');
+    script.className = 'vw-dyn';
+    script.src       = catalog.js;
+    script.onerror   = function () {
+        setStatus('failed to load ' + catalog.js, 'err');
+        cardContainer.innerHTML =
+            '<div style="color:#dc3545;font-size:0.8rem;padding:16px">' +
+            'Error: could not load widget JS.<br>' +
+            'Make sure you are running an HTTP server (see file header).</div>';
+    };
+    script.onload = function () {
+        var def = PxD._getWidget();
+        if (!def) {
+            setStatus('widget JS did not call PxD.widgets.register()', 'err');
+            return;
+        }
+        _currentCatalog = catalog;
+        buildCard(def, catalog);
+        setStatus('ready', 'ok');
+    };
+    document.head.appendChild(script);
+}
+
+function buildCard(def, catalog) {
+    var size = def.size || '1x1';
+    var dims = SIZE_DIMS[size] || SIZE_DIMS['1x1'];
+    var totalH = dims.bh + HEADER_H;
+
+    sizeLabel.textContent =
+        size + '  —  ' + dims.w + '\u00d7' + totalH + 'px  (body: ' + dims.bh + 'px)';
+
+    // Build card chrome
+    var card    = document.createElement('div');
+    card.className = 'vw-card';
+    card.id        = 'vw-active-card';
+    card.style.cssText = 'width:' + dims.w + 'px;height:' + totalH + 'px;';
+
+    var header = document.createElement('div');
+    header.className = 'vw-card-header';
+    header.innerHTML =
+        '<span class="vw-card-title">' + escHtml(cardTitle.value || 'Widget') + '</span>' +
+        '<button class="vw-menu-btn" title="Widget menu (simulated)">&#x22EF;</button>';
+
+    var body = document.createElement('div');
+    body.className     = 'vw-card-body';
+    body.style.cssText = 'height:' + dims.bh + 'px;';
+
+    card.appendChild(header);
+    card.appendChild(body);
+    cardContainer.appendChild(card);
+
+    // Mount widget
+    try {
+        def.mount(body);
+    } catch (e) {
+        setStatus('mount() threw: ' + e.message, 'err');
+        console.error('[PxD Viewer] mount() error:', e);
+    }
+
+    // Update sidebar info
+    var topics = PxD._getTopics();
+    if (topics.length) topicInput.value = topics[0];
+    widgetInfo.textContent =
+        'size:      ' + size + '\n' +
+        'interactive: ' + def.interactive + '\n' +
+        'topic(s): ' + (topics.join(', ') || '(none)') + '\n' +
+        'heartbeat: ' + (def.heartbeatTimeoutMs ? def.heartbeatTimeoutMs + ' ms' : 'off');
+
+    // Quick-state buttons
+    (catalog.quickStates || []).forEach(function (s) {
+        var btn = document.createElement('button');
+        btn.className = 'quick-btn';
+        btn.textContent = s.label;
+        btn.style.cssText = 'border-color:' + s.color + ';color:' + s.color +
+                            ';background:' + s.color + '1a;';
+        btn.addEventListener('click', function () {
+            payloadTA.value = s.payload;
+            sendMessage();
+        });
+        quickBtns.appendChild(btn);
+    });
+}
+
+
+// ── Message sending ───────────────────────────────────────────────────────────
+function sendMessage() {
+    var topics  = PxD._getTopics();
+    var topic   = topics[0];
+    var payload = payloadTA.value.trim();
+    if (!topic)   { setStatus('no topic — load a widget first', 'err'); return; }
+    if (!payload) { setStatus('payload is empty', 'err'); return; }
+    PxD._deliver(topic, payload);
+}
+
+sendBtn.addEventListener('click', sendMessage);
+
+payloadTA.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMessage(); }
+});
+
+
+// ── Card title live update ────────────────────────────────────────────────────
+cardTitle.addEventListener('input', function () {
+    var el = document.querySelector('.vw-card-title');
+    if (el) el.textContent = cardTitle.value;
+});
+
+
+// ── Heartbeat simulation ──────────────────────────────────────────────────────
+document.getElementById('vw-stale-btn').addEventListener('click', function () {
+    var c = document.getElementById('vw-active-card');
+    if (c) c.classList.add('stale');
+});
+document.getElementById('vw-ok-btn').addEventListener('click', function () {
+    var c = document.getElementById('vw-active-card');
+    if (c) c.classList.remove('stale');
+});
+
+
+// ── Populate widget select ────────────────────────────────────────────────────
+WIDGET_CATALOG.forEach(function (cat, i) {
+    var opt = document.createElement('option');
+    opt.value       = String(i);
+    opt.textContent = cat.label;
+    widgetSelect.appendChild(opt);
+});
+
+widgetSelect.addEventListener('change', function () {
+    var idx = parseInt(widgetSelect.value, 10);
+    if (!isNaN(idx) && WIDGET_CATALOG[idx]) loadWidget(WIDGET_CATALOG[idx]);
+});
+
+// Auto-load if there is only one widget in the catalog
+if (WIDGET_CATALOG.length === 1) {
+    widgetSelect.value = '0';
+    loadWidget(WIDGET_CATALOG[0]);
+}
+</script>
+
+</body>
+</html>

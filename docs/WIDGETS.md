@@ -1,39 +1,107 @@
-# PxD Widget System (WIDGETS.md)
+# PxD Widget System
 
-> **Status: Phase 3 — Not yet implemented.**
-
-This document describes the planned widget API for Phase 3.
-
-## What widgets are
+> **Status: Phase 3 — In progress.**
 
 Widgets are small, embeddable UI cards that display real-time game prop state.
 Unlike the four primary panels (game-control, time-lights, hints, system),
-widgets are:
+widgets are room-specific, loaded dynamically, and sized as tiles within the
+widget panel grid.
 
-- Declared in `room.json → widgets` (array)
-- Loaded from `rooms/<game>/pxd/widgets/<id>.js`
-- Mounted into a named **widget slot** — either the central widgets grid
-  (default) or a `data-widget-slot` anchor inside any panel
+---
+
+## Widget source tiers
+
+Widgets come from three tiers, each with a different authoring contract.
+
+| Tier | Location | JS code | Per-instance file | Viewer editable |
+|---|---|---|---|---|
+| **Template** | `apps/PxD/templates/widgets/base/<name>/` | Shared factory, never copied | `config.json` only | All schema-declared fields |
+| **Example** | `apps/PxD/templates/widgets/examples/<name>/` | Self-contained IIFE, copy and optionally extend | Copied `widget.js` + optional `config.json` | Schema-declared fields only |
+| **Custom** | Room `pxd/widgets/<id>/widget.js` | Arbitrary JS | `widget.js` + optional `config.json` | Schema-declared fields if schema present; MQTT simulation otherwise |
+
+### Template tier
+
+A template is a **shared factory**: its JS is loaded once per widget type and
+instantiated once per widget instance with that instance's `config.json`. You
+never copy a template's JS file. A template instance directory contains only:
+
+```
+pxd/widgets/front-door/
+  config.json          ← required: at minimum sets PROP_TOPIC
+  open.gif             ← optional: local assets referenced by filename in config.json
+  closed.gif
+```
+
+### Example tier
+
+An example is a fully-working IIFE that you **copy once and optionally extend**.
+It ships with a `schema` array that tells the viewer which CONFIG fields are
+safe to edit without opening `widget.js`. Fields outside the schema require
+hand-editing the JS.
+
+```
+pxd/widgets/vault-timer/
+  widget.js            ← copied from examples/, optionally modified
+  config.json          ← optional: overrides internal CONFIG defaults
+  assets/
+    tick.mp3
+```
+
+### Custom tier
+
+A custom widget is arbitrary JS with no structural constraints. If its
+`PxD.widgets.register()` call includes a `schema` array, the viewer surfaces
+a schema-driven edit form. If not, the viewer provides MQTT simulation only.
+
+---
+
+## Widget instance directory layout
+
+Every widget instance — regardless of tier — lives in its own directory under
+`pxd/widgets/<id>/`. The `id` must match the directory name exactly.
+
+```
+pxd/widgets/
+  front-door/          ← template instance
+    config.json
+  back-door/           ← template instance with local icon assets
+    config.json
+    open.gif
+    closed.gif
+  vault-timer/         ← example instance
+    widget.js
+    config.json
+  master-lock/         ← custom widget
+    widget.js
+    widget.css
+```
+
+Local image files placed in the instance directory can be referenced in
+`config.json` by filename only (e.g. `"icon": "open.gif"`). The packager
+copies the directory verbatim and the loader resolves filenames relative to
+the instance directory at runtime.
+
+---
 
 ## Declaring widgets in room.json
 
 ```json
 "widgets": [
-  {
-    "id":     "bomb-timer",
-    "type":   "countdown",
-    "topic":  "paradox/agent22/bomb/state",
-    "label":  "Bomb Timer"
-  },
-  {
-    "id":     "front-door",
-    "type":   "binary-input",
-    "topic":  "paradox/agent22/doors/state",
-    "label":  "Front Door",
-    "target": "game-control"
-  }
+  { "id": "bomb-timer",  "type": "countdown",   "name": "Bomb Timer"  },
+  { "id": "front-door",  "type": "binary-door", "name": "Front Door"  },
+  { "id": "vault-lock",  "type": "binary-lock",  "target": "game-control" }
 ]
 ```
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | ✓ | Directory name under `pxd/widgets/`. Unique within the room. |
+| `type` | ✓ | Template or example name. Used at runtime to load the shared factory for **template-tier** widgets; informational for example/custom. |
+| `name` | | Card header label. Falls back to `DISPLAY_NAME` in `config.json`, then `id`. |
+| `target` | | Panel slot for the card (see below). |
+
+> Add `"widgets"` to `panels.include` in `room.json` when any widgets are
+> declared. The panel stays hidden if the array is empty or the key is absent.
 
 ### The `target` field
 
@@ -49,7 +117,7 @@ widgets are:
 | *(any slot id)* | Mounts inside that panel's `data-widget-slot` element |
 
 If the named panel does not contain a `data-widget-slot` element, the widget
-falls back silently to the central widgets grid and a console warning is emitted.
+falls back to the central widgets grid and a console warning is emitted.
 
 ### Panel widget anchors
 
@@ -65,10 +133,6 @@ panels (game-control, time-lights, hints, system) will expose an optional
 
 **Example — clock widget in the header panel:**
 
-A custom `header.js` room-local panel renders the hero image alongside a
-`data-widget-slot` container. A countdown widget with `"target": "header"`
-mounts its card there rather than in the widgets grid.
-
 ```
 ┌──────────────────────────────────────────┐
 │  [Hero image / logo]     [Bomb: 47:22]   │  ← header panel with widget slot
@@ -79,35 +143,460 @@ mounts its card there rather than in the widgets grid.
 
 ---
 
-## Widget JS API
+## Tile sizing
 
-Widget JS files call `PxD.widgets.register()` (same IIFE pattern as panels):
+Widgets live in a 4-unit CSS grid. One unit = 25 % of the widget panel width
+and `var(--pxd-widget-unit, 100px)` in height. The loader sets `data-size` on
+the card element; `pxd-base.css` maps `data-size` to grid span rules.
+
+| `SIZE` | Grid cols | Grid rows | Approx width | Approx height |
+|---|---|---|---|---|
+| `"1x1"` | span 1 | span 1 | 25 % | 100 px |
+| `"2x1"` | span 2 | span 1 | 50 % | 100 px |
+| `"2x2"` | span 2 | span 2 | 50 % | 200 px |
+| `"4x1"` | span 4 | span 1 | 100 % | 100 px |
+| `"4x2"` | span 4 | span 2 | 100 % | 200 px |
+
+---
+
+## Card controls — the ⋯ menu
+
+Every widget card has a `⋯` button in its header. Clicking it (or
+right-clicking the card) opens a Bootstrap Dropdown:
+
+| Item | Action |
+|---|---|
+| **Enable** | Publishes `{"command":"enable"}` to the resolved command topic |
+| **Disable** | Publishes `{"command":"disable"}` to the resolved command topic |
+| **Hide** | Removes the card from the grid until page reload |
+
+The card's visual state updates only when the prop echoes state back via its
+state topic — never optimistically. Passive widgets (`COMMAND_TOPIC: null`)
+show Enable/Disable greyed out; Hide is always available.
+
+---
+
+## Passive vs active widgets
+
+| Type | `INTERACTIVE` | Behaviour |
+|---|---|---|
+| **Passive** | `false` | Display-only; subscribes to state topic; no click handler |
+| **Active** | `true` | Full card area is a click target; publishes toggle command |
+
+Active widgets use `cursor: pointer` and a hover state. The ⋯ menu is
+available on both types.
+
+---
+
+## Topic model
+
+Widget state subscriptions are resolved from three config keys:
+
+| Key | Default | Description |
+|---|---|---|
+| `BASE_TOPIC` | Room's `baseTopic` from `room.json` | Game/room prefix |
+| `PROP_TOPIC` | *(required, no default)* | Prop-specific path segment |
+| `SUFFIX_TOPIC` | `"state"` | Appended last; set to `""` to omit entirely |
+
+The resolved topic is assembled as:
+
+```
+BASE_TOPIC/PROP_TOPIC/SUFFIX_TOPIC   (all three present)
+BASE_TOPIC/PROP_TOPIC                (SUFFIX_TOPIC is "")
+PROP_TOPIC/SUFFIX_TOPIC              (BASE_TOPIC is "")
+PROP_TOPIC                           (both BASE_TOPIC and SUFFIX_TOPIC are "")
+```
+
+No trailing `/` is ever appended. No doubled `/` is inserted.
+
+Command topics follow the same model, replacing `SUFFIX_TOPIC` with
+`CMD_SUFFIX_TOPIC` (default `"commands"`).
+
+### Override with STATE_TOPIC
+
+If `STATE_TOPIC` (or `COMMAND_TOPIC`) is provided in `config.json`, it
+overrides the three-part derivation entirely and is used as the literal
+subscription path. PxD logs a **console warning** on first load when either
+override is present, because full hardcoded paths are fragile if the game's
+topic structure changes.
+
+```json
+{ "STATE_TOPIC": "vendor/sensor/42/status" }
+```
+
+### Common suffix values
+
+| Vendor / system | Typical `SUFFIX_TOPIC` |
+|---|---|
+| Paradox PFx / PxO | `"state"` or `"events"` |
+| Node-RED | `"status"` or `"out"` |
+| Home Assistant | `"state"` |
+| Shelly / raw value | `""` (topic carries the value directly) |
+| Custom / legacy | set explicitly |
+
+---
+
+## State mapping
+
+State mapping translates an inbound MQTT payload into a display state.
+The `STATE_MAP` object is the single mechanism for all widgets that display
+discrete states. It replaces the earlier per-key `OPEN_VALUE` / `OPEN_COLOR`
+pattern.
+
+### STATE_MAP object
+
+Each key in `STATE_MAP` is a **state name** (used in logs and editor labels).
+The value is a state definition object:
+
+```json
+"STATE_MAP": {
+    "open": {
+        "values":  ["open", "1", "HIGH", "true", "opened"],
+        "label":   "OPEN",
+        "color":   "#dc3545",
+        "bg":      "#3d1117",
+        "icon":    "open.gif"
+    },
+    "closed": {
+        "values":  ["closed", "0", "LOW", "false"],
+        "label":   "CLOSED",
+        "color":   "#198754",
+        "bg":      "#0d2818",
+        "icon":    "closed.gif"
+    },
+    "fault": {
+        "label":   "FAULT",
+        "color":   "#ffc107",
+        "bg":      "#332701"
+    },
+    "*": {
+        "label":   "?",
+        "color":   "#6c757d"
+    }
+}
+```
+
+**State definition fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `values` | string array | MQTT values that trigger this state. If absent, the state name key itself is the only match. |
+| `label` | string | Text displayed on the card. |
+| `color` | CSS color | Icon and label foreground color. |
+| `bg` | CSS color \| `null` | Card body background. `null` = transparent (uses theme default). |
+| `icon` | string \| `null` | Icon for this state. Accepts inline SVG, file path (relative to instance directory), or Material Symbols ligature name. `null` = use template default. |
+
+### Match logic
+
+1. For each STATE_MAP key (except `"*"`), check whether the received value
+   appears in that state's `values` array (case-insensitive by default).
+   If `values` is absent, compare directly against the key string.
+2. First match wins; order of keys is preserved.
+3. If no key matches, check for `"*"` (catch-all).
+4. If `"*"` is also absent, the card retains its last rendered state silently.
+
+### Case sensitivity
+
+Matching is **case-insensitive by default**. The received value is lowercased
+before lookup. Set `"CASE_SENSITIVE": true` in `config.json` to require exact
+case.
+
+### STATE_FIELD
+
+`STATE_FIELD` names the JSON field extracted from the payload before STATE_MAP
+lookup:
+
+```json
+{ "STATE_FIELD": "state"  }   // extracts payload.state
+{ "STATE_FIELD": "door"   }   // extracts payload.door
+{ "STATE_FIELD": null     }   // treats the raw payload string as the value
+```
+
+`STATE_FIELD: null` skips JSON parsing entirely. Use this for props that
+publish plain values (`1`, `0`, `HIGH`, `LOW`) with no JSON wrapper. If the
+payload fails JSON.parse for any reason, the raw string is used automatically
+as a fallback regardless of `STATE_FIELD`.
+
+---
+
+## config.json
+
+`config.json` is the per-instance override file. It contains only the keys
+that differ from the template defaults. Unknown keys are ignored with a console
+warning.
+
+**Minimum viable config for a template instance:**
+
+```json
+{
+    "PROP_TOPIC": "houdini/front-door"
+}
+```
+
+**Full example:**
+
+```json
+{
+    "DISPLAY_NAME":  "Front Door",
+    "PROP_TOPIC":    "houdini/front-door",
+    "SUFFIX_TOPIC":  "state",
+    "STATE_FIELD":   "state",
+    "CASE_SENSITIVE": false,
+    "SIZE":          "1x1",
+    "HEARTBEAT_TIMEOUT_MS": 30000,
+    "STATE_MAP": {
+        "open": {
+            "values": ["open", "1", "HIGH"],
+            "label":  "OPEN",
+            "color":  "#dc3545",
+            "bg":     "#3d1117",
+            "icon":   "open.gif"
+        },
+        "closed": {
+            "label":  "CLOSED",
+            "color":  "#198754",
+            "bg":     "#0d2818"
+        },
+        "*": {
+            "label":  "?",
+            "color":  "#6c757d"
+        }
+    }
+}
+```
+
+For **example and custom** tier instances, `config.json` is optional. When
+present, its values are merged over the widget's internal `CONFIG` object
+before `mount()` is called. Keys that appear in the widget's `schema` array
+can be edited via the widget viewer without opening `widget.js`.
+
+---
+
+## Widget factory API (template tier)
+
+Template factories are registered with `PxD.widgetTypes.register()`.
+This call lives in the shared template JS and is never copied per instance.
+
+```js
+PxD.widgetTypes.register('binary-door', {
+
+    // Default CONFIG values — any key may be overridden by instance config.json.
+    defaults: {
+        PROP_TOPIC:           '',           // required — no default
+        SUFFIX_TOPIC:         'state',
+        CMD_SUFFIX_TOPIC:     'commands',
+        STATE_FIELD:          'state',
+        CASE_SENSITIVE:       false,
+        INTERACTIVE:          false,
+        COMMAND_TOPIC:        null,         // explicit override; use sparingly
+        HEARTBEAT_TIMEOUT_MS: 30000,
+        SIZE:                 '1x1',
+        STATE_MAP: {
+            'open':   { values: ['open','1','true'],   label: 'OPEN',   color: '#dc3545' },
+            'closed': { values: ['closed','0','false'], label: 'CLOSED', color: '#198754' },
+            '*':      {                                 label: '?',      color: '#6c757d' }
+        },
+    },
+
+    // Schema — declares which config.json keys the widget viewer may edit.
+    schema: [
+        { key: 'PROP_TOPIC',           type: 'mqtt-topic', label: 'Prop topic',      required: true },
+        { key: 'SUFFIX_TOPIC',         type: 'string',     label: 'State suffix'                    },
+        { key: 'STATE_FIELD',          type: 'string',     label: 'State field',     nullable: true  },
+        { key: 'CASE_SENSITIVE',       type: 'boolean',    label: 'Case-sensitive'                   },
+        { key: 'STATE_MAP',            type: 'state-map',  label: 'State mapping'                   },
+        { key: 'SIZE',                 type: 'select',     label: 'Tile size',
+          options: ['1x1','2x1','2x2','4x1','4x2']                                                   },
+        { key: 'HEARTBEAT_TIMEOUT_MS', type: 'number',     label: 'Heartbeat (ms)',  min: 0          },
+    ],
+
+    // Factory function — called once per widget instance.
+    // cfg = factory defaults merged with instance config.json.
+    // Must return { mount(bodyEl), unmount() }.
+    create(cfg) {
+        // ... implementation ...
+        return { mount, unmount };
+    },
+});
+```
+
+The loader calls `PxD.widgetTypes.get(type).create(mergedCfg)` and passes the
+returned `{ mount, unmount }` to the card lifecycle. `create()` receives the
+fully merged config — it never reads `config.json` directly.
+
+---
+
+## Widget IIFE API (example and custom tiers)
+
+Example and custom widgets are self-contained IIFEs that call
+`PxD.widgets.register()`. The `schema` array is optional but enables the
+viewer's edit form.
 
 ```js
 (function () {
-    PxD.widgets.register('bomb-timer', {
-        mount:   function (cardEl) { /* inject card content */ },
-        unmount: function ()       { /* teardown */ }
+
+    // ── CONFIG ──────────────────────────────────────────────────────────────
+    const CONFIG = {
+        PROP_TOPIC:           '',
+        SUFFIX_TOPIC:         'state',
+        STATE_FIELD:          'state',
+        CASE_SENSITIVE:       false,
+        INTERACTIVE:          false,
+        COMMAND_TOPIC:        null,
+        HEARTBEAT_TIMEOUT_MS: 30000,
+        SIZE:                 '1x1',
+        STATE_MAP:            { /* ... */ },
+    };
+    // ── END CONFIG ───────────────────────────────────────────────────────────
+
+    // ... implementation ...
+
+    PxD.widgets.register({
+        size:                CONFIG.SIZE,
+        interactive:         CONFIG.INTERACTIVE,
+        heartbeatTimeoutMs:  CONFIG.HEARTBEAT_TIMEOUT_MS,
+
+        // Optional: enables the viewer's edit form for schema-declared keys.
+        schema: [
+            { key: 'PROP_TOPIC',   type: 'mqtt-topic', label: 'Prop topic', required: true },
+            { key: 'SUFFIX_TOPIC', type: 'string',     label: 'State suffix'               },
+            { key: 'STATE_MAP',    type: 'state-map',  label: 'State mapping'               },
+        ],
+
+        mount(bodyEl) {
+            // Read merged config from CONFIG (already patched from config.json
+            // by the loader before mount() is called).
+            // Inject HTML into bodyEl; subscribe to MQTT.
+        },
+
+        unmount() {
+            // Unsubscribe; release timers and DOM references.
+        },
     });
-})();
+
+}());
 ```
 
-`mount(cardEl)` receives the wrapping `.widget-card` element already injected
-into the correct slot. The widget injects its own content inside it.
+`PxD.widgets.register()` takes **no `id` argument** — the loader assigns the
+id from `room.json`. `mount(bodyEl)` receives the card's inner content `<div>`
+(below the header).
 
 ---
 
-## Built-in widget templates (Phase 3)
+## Schema field types
 
-Phase 3 ships four base templates in `apps/PxD/templates/widgets/base/`:
+The `schema` array (in both factory and IIFE registrations) uses the following
+`type` values:
 
-| Template | Purpose |
+| `type` | Editor control | Extra options |
+|---|---|---|
+| `mqtt-topic` | Text input | `required: true` |
+| `string` | Text input | `nullable: true` — adds a ∅ toggle for `null` |
+| `color` | Color picker (`<input type="color">`) | — |
+| `icon` | Three-tab picker: SVG preview / file path / ligature | — |
+| `number` | Number input | `min`, `max` |
+| `boolean` | Toggle | — |
+| `select` | Dropdown | `options: ['a', 'b', …]` |
+| `state-map` | Per-state tab editor | — |
+
+The `state-map` editor renders one tab per STATE_MAP key. Each tab exposes
+`label`, `color`, `bg`, and `icon` controls, plus an editable tag list for the
+`values` array. New state keys and the `"*"` catch-all can be added or removed.
+
+---
+
+## Widget CSS
+
+Each widget may include an optional `widget.css` alongside `widget.js`
+(example/custom tier) or as a declared asset of the template factory. The
+loader injects it as a `<link>` before calling `mount()`. CSS classes use a
+`wd-<template>-*` prefix to avoid collisions across widget types.
+
+---
+
+## Available base templates
+
+Templates live in `apps/PxD/templates/widgets/base/`. Create a `config.json`
+in `pxd/widgets/<id>/` to instantiate them — never copy the template JS.
+
+| Template | Size(s) | Type | Description |
+|---|---|---|---|
+| `binary-door` | `1x1`; `2x2` *(planned)* | Passive | Door open / closed indicator |
+| `binary-light` | `1x1`; `2x2` *(planned)* | Passive | Coloured indicator dot |
+| `binary-lock` | `1x1`; `2x2` *(planned)* | Active | Lock icon; click toggles |
+| `countdown` | `2x1`; `2x2` *(planned)* | Passive | Countdown clock with warn colour |
+| `text-display` | `4x1` *(planned)* | Passive | Arbitrary text field |
+| `numeric-gauge` | `2x2` *(planned)* | Passive | Numeric value + threshold bands |
+
+Items marked *planned* are designed but not yet implemented.
+
+Examples live in `apps/PxD/templates/widgets/examples/`.
+
+---
+
+## Authoring a widget instance
+
+### Path A — from a template (config.json only, recommended)
+
+1. Create `rooms/<game>/pxd/widgets/<your-id>/config.json`.
+2. Set `PROP_TOPIC` (required). Override `SUFFIX_TOPIC`, `STATE_MAP`, colours,
+   and size as needed.
+3. Place any local icon/image assets in the same directory and reference them
+   by filename in `config.json`.
+4. Add `{ "id": "<your-id>", "type": "<template>", "name": "Label" }` to
+   `room.json → widgets`.
+5. Add `"widgets"` to `panels.include` if not already present.
+6. Run the packager.
+
+### Path B — from an example (copy, configure, optionally extend)
+
+1. Copy `apps/PxD/templates/widgets/examples/<name>/` to
+   `rooms/<game>/pxd/widgets/<your-id>/`.
+2. Use the widget viewer to edit schema-declared fields, **or** hand-edit the
+   CONFIG block in `widget.js` for fields outside the schema.
+3. Optionally add a `config.json` with overrides — these merge over the
+   internal CONFIG without touching the JS.
+4. Add to `room.json → widgets` and run the packager.
+
+### Path C — custom widget (from scratch)
+
+1. Create `rooms/<game>/pxd/widgets/<your-id>/widget.js`.
+2. Implement the IIFE pattern (see Widget IIFE API above).
+3. Add a `schema` array to `PxD.widgets.register()` if viewer edit support is
+   wanted.
+4. Optionally add `widget.css` for widget-scoped styles.
+5. Add to `room.json → widgets` and run the packager.
+
+---
+
+## Offline assets
+
+> **Hard requirement**: PxD runs on Raspberry Pi kiosks that may have no
+> internet access at runtime. All assets referenced by widgets — icons, fonts,
+> images, scripts — **must be available locally**. Never add a CDN URL,
+> `fonts.googleapis.com` link, or any other external `http://` reference to a
+> widget intended for production deployment.
+
+### Compliant asset formats
+
+| Asset type | Recommended approach |
 |---|---|
-| `binary-input/` | Single true/false indicator (locked/unlocked, open/closed) |
-| `countdown/` | Countdown clock with warn threshold |
-| `text-display/` | Arbitrary text field from a state message |
-| `numeric-gauge/` | Numeric value with warn and danger thresholds |
+| Icon glyphs | Inline SVG string in STATE_MAP (`fill="currentColor"`) |
+| Icon images | File in instance directory, referenced by filename in `config.json` |
+| Icon font (optional) | Vendor WOFF2 + CSS under `assets/fonts/`; point font href to local path |
+| Background images | Relative path to file in packaged output |
+| Third-party JS/CSS | Copy into `assets/` — no remote `<script src>` or `<link href>` |
+
+### Checking compliance
+
+```bash
+# Quick audit: list any external http references in widget files
+grep -r 'https\?://' rooms/*/pxd/widgets/
+```
+
+All base templates ship with inline SVG defaults so they pass this check
+out of the box.
 
 ---
 
-*Phase 3 design proposals live in [docs/proposals/](proposals/) when created.*
+*Design proposals for future widget types live in [docs/proposals/](proposals/).*
