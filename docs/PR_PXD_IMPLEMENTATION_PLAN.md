@@ -216,17 +216,18 @@ that an operator who has never seen PxD before can package and deploy a room.
 quick-reference card.
 
 **Checklist:**
-- [ ] `docs/PACKAGER.md` — full reference: every CLI flag, output structure, manifest format, dry-run usage.
-- [ ] `docs/ROOMS.md` — operator guide: how to start a new room from the starter template, what to edit, in what order.
-- [ ] `docs/MIGRATIONS.md` — empty for v1 (no prior versions); structure documented so future breaking changes have a home.
-- [ ] `scripts/deploy.sh` (optional convenience): wraps `package.js` + `rsync` to Pi + Nginx symlink swap. Documented in `docs/PACKAGER.md`.
+- [x] `docs/PACKAGER.md` — full reference: every CLI flag, output structure, manifest format, deploy.sh usage.
+- [x] `docs/ROOMS.md` — operator guide: expanded "Adding a new room" to a 5-step ordered walkthrough with table.
+- [x] `docs/MIGRATIONS.md` — v1 baseline; structure documented for future breaking changes.
+- [x] `docs/QUICKREF.md` — one-page quick-reference card for the five most common operator tasks.
+- [x] `scripts/deploy.sh` — wraps `package.js` + `rsync` to Pi + Nginx symlink swap; documented in `PACKAGER.md`.
+- [x] `package.json` — added `package:houdinis-challenge` npm shorthand.
 - [ ] End-to-end test on a real Pi (manual):
   - [ ] Fresh checkout on a Pi.
   - [ ] Run packager for Agent22.
   - [ ] Swing Nginx symlink.
   - [ ] Verify page works.
   - [ ] Reload page after a `pxd-base.css` token edit + repackage; verify the change is live.
-- [ ] One-page quick-reference card (`docs/QUICKREF.md`) — "I want to ___: do ___" for the five most common operator tasks.
 
 **Acceptance criteria:**
 - A new operator can deploy Agent22 to a fresh Pi following only `docs/QUICKREF.md` and `docs/PACKAGER.md`.

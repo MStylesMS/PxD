@@ -4,7 +4,8 @@
   "description": "Paradox FX Dashboard — operator control UI framework",
   "private": true,
   "scripts": {
-    "package:agent22": "node scripts/package.js --room-dir ../../rooms/agent22/pxd --out ../../rooms/agent22/html",
+    "package:agent22":            "node scripts/package.js --room-dir ../../rooms/agent22/pxd            --out ../../rooms/agent22/html",
+    "package:houdinis-challenge":  "node scripts/package.js --room-dir ../../rooms/houdinis-challenge/pxd --out ../../rooms/houdinis-challenge/html",
     "test": "node scripts/package.test.js"
   },
   "engines": {

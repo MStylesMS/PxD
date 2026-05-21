@@ -200,8 +200,49 @@ npm run package:<game>
 
 ## Adding a new room
 
-1. Create `rooms/<game>/pxd/room.json` (see template above)
-2. Add media files to `rooms/<game>/pxd/media/`
-3. Add font files to `rooms/<game>/pxd/fonts/` (if custom fonts needed)
-4. Add npm script: `"package:<game>": "node scripts/package.js --room-dir ../../rooms/<game>/pxd --out ../../rooms/<game>/html"`
-5. Run the packager and verify the output
+For a guided walkthrough see [QUICK_START.md](QUICK_START.md).  The condensed
+steps are:
+
+1. Create the source folder and copy the starter template:
+
+```bash
+GAME=myroom
+mkdir -p rooms/$GAME/pxd/{media,fonts}
+cp apps/PxD/templates/rooms/_starter/room.json rooms/$GAME/pxd/room.json
+```
+
+2. Edit `room.json` **in this order** (each step builds on the last):
+
+| # | Field(s) | What to set |
+|---|---|---|
+| 1 | `title` | Display name in the browser tab |
+| 2 | `topicRoot` | Root MQTT prefix (e.g. `paradox/myroom`) |
+| 3 | `mqtt.*` | Leave `"auto"` for same-host Pi; set explicit values for remote broker |
+| 4 | `theme.*` | Colours, fonts, radius — see [THEMING.md](THEMING.md) |
+| 5 | `media.hero` / `media.favicon` | Drop files in `pxd/media/` first |
+| 6 | `panels.include` | Ordered list of panels to mount |
+| 7 | Panel sections | `gameControl`, `timeLights`, `hints`, `system` — topic overrides |
+| 8 | `widgets[]` | One entry per prop widget; add `"widgets"` to `panels.include` |
+
+3. Add a package shorthand to `apps/PxD/package.json`:
+
+```jsonc
+"package:myroom": "node scripts/package.js --room-dir ../../rooms/myroom/pxd --out ../../rooms/myroom/html"
+```
+
+4. Run the packager and serve locally to verify:
+
+```bash
+cd apps/PxD
+npm run package:myroom
+python3 -m http.server 9090 --directory ../../rooms/myroom/html
+```
+
+5. Deploy to a Pi:
+
+```bash
+scripts/deploy.sh --room myroom --host <pi-hostname>
+```
+
+→ See [PACKAGER.md](PACKAGER.md) for packager options and the full `deploy.sh` reference.
+→ See [QUICKREF.md](QUICKREF.md) for one-liner cheat-sheet.
