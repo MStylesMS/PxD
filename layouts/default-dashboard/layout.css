@@ -2,45 +2,32 @@
    default-dashboard — layout-specific structural rules
    Paint (colours, fonts, shadows) lives in pxd-base.css.
    This file owns only grid geometry for this layout.
+
+   No grid-template-areas — slots render in DOM order so that
+   display:none panels truly collapse without leaving empty tracks.
    ============================================================= */
 
 /* -----------------------------------------------------------------
    Single-column (default / mobile — ≤767 px)
-   All four slots stack vertically; game-control first.
+   All slots stack vertically in DOM order.
    ----------------------------------------------------------------- */
 .dashboard {
     grid-template-columns: 1fr;
-    grid-template-areas:
-        "game-control"
-        "time-lights"
-        "hints"
-        "system";
 }
-
-[data-slot="game-control"]  { grid-area: game-control; }
-[data-slot="time-lights"]   { grid-area: time-lights;  }
-[data-slot="hints"]         { grid-area: hints;        }
-[data-slot="system"]        { grid-area: system;       }
 
 /* -----------------------------------------------------------------
    Two-column (tablet and up — ≥768 px)
-   game-control spans both columns; time-lights and hints sit
-   side-by-side; system spans both columns at the bottom.
+   game-control, widgets, and system span both columns.
+   time-lights and hints sit side-by-side in the middle rows.
    ----------------------------------------------------------------- */
 @media (min-width: 768px) {
     .dashboard {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        grid-template-areas:
-            "game-control  game-control"
-            "time-lights   hints"
-            "system        system";
+    }
+
+    [data-slot="game-control"],
+    [data-slot="widgets"],
+    [data-slot="system"] {
+        grid-column: 1 / -1;
     }
 }
-
-/* -----------------------------------------------------------------
-   Wide single-column (≥1200 px)
-   On very wide operator monitors all panels return to a single
-   column but with a constrained max-width already applied by
-   .pxd-shell in pxd-base.css.  No override needed here — the
-   two-column breakpoint above applies from 768 px upward.
-   ----------------------------------------------------------------- */

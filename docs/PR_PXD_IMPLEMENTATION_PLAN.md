@@ -163,45 +163,47 @@ MQTT subscription teardown) produces subtle bugs that Mid can't resolve in two
 attempts.
 
 **Checklist — widget loader:**
-- [ ] Implement `assets/js/panels/widgets.js`:
-  - [ ] Fetch `widgets/manifest.json`; bail silently on 404 or empty array; keep panel hidden if list is empty.
-  - [ ] For each entry: create `<div class="widget-card" data-widget-id="…" data-widget-state="enabled">` with header + three-dot button; fetch and inject `widget.html`; dynamically load `widget.js` and optional `widget.css`.
-  - [ ] Expose `window.PxD.widgets = { register({ id, stateTopic, commandTopic, heartbeatTimeoutMs, onMessage }) }`.
-  - [ ] Heartbeat watcher (1 s tick) flips card to `disconnected` after `heartbeatTimeoutMs` without a state message; clears on next message.
-  - [ ] Three-dot menu publishes `{"command": "enable"}` / `{"command": "disable"}` to `commandTopic`; card visual flips only when prop echoes new state.
-  - [ ] Remove `hidden` from `#panel-widgets` once at least one widget loads.
-- [ ] Add widget card CSS to `assets/css/pxd-base.css`: `.widget-card`, `.widget-card[data-widget-state]`, `.widget-card-header`, `.widget-menu-btn`, `.widget-menu-popover`, `.widgets-grid`.
-- [ ] Add `widgets` to `panels.include` in `rooms/agent22/pxd/room.json` and `rooms/houdinis-challenge/pxd/room.json`.
+- [x] Implement `assets/js/panels/widgets.js`:
+  - [x] Widget list read from `room.json → widgets[]` array via `PxD.config.widgets` *(implementation deviation: no separate `manifest.json`; list is co-located with room config, which is simpler and avoids an extra HTTP fetch)*.
+  - [x] For each entry: create widget card with header + three-dot button; dynamically load `widget.js` and optional `widget.css`; no `widget.html` injection — widgets render entirely from JS into the card body.
+  - [x] Expose `window.PxD.widgets = { register({ size, interactive, commandTopic, heartbeatTimeoutMs, mount, unmount }) }`.
+  - [x] Heartbeat watcher (1 s tick) flips card to `data-state="disconnected"` after `heartbeatTimeoutMs` without a state message; clears on next message.
+  - [x] Three-dot menu: **Enable** / **Disable** publish `{"command":"enable"}` / `{"command":"disable"}` to `commandTopic`; card state flips only when prop echoes new state. **Hide** collapses card visually (reversible via gear overlay).
+  - [x] Slot visible immediately; collapses (`display:none`) only when `widgets[]` is empty, so Houdini gets no dead space.
+  - [x] *(Additional)* Gear icon (inline Material SVG) in panel header opens a visibility overlay listing all declared widgets with checkboxes; **Apply** button shows/hides cards and updates state.
+- [x] Add widget card CSS to `assets/css/pxd-base.css`: `.widget-card`, `.widget-card[data-state]`, `.widget-card-header`, `.widget-card-name`, `.widget-menu-btn`, `.widget-menu-popover`, `.widget-menu-item`, `.widgets-grid`, `.widget-gear-btn`, `.widget-vis-overlay`, `.widget-vis-dialog`, `.widget-vis-row`.
+- [x] Add `widgets` to `panels.include` in `rooms/agent22/pxd/room.json` and `rooms/houdinis-challenge/pxd/room.json`.
 
 **Checklist — base widget templates (`apps/PxD/templates/widgets/base/`):**
-- [ ] `_starter/` — minimal scaffold with placeholder comments; `README.md` documenting rename/edit steps.
-- [ ] `binary-input/` — single true/false indicator.
-  - [ ] Settings block: `STATE_TOPIC`, `COMMAND_TOPIC`, `VALUE_FIELD`, `TRUE_LABEL`, `FALSE_LABEL`, `TRUE_COLOR`, `FALSE_COLOR`, `ALERT_SOUND`, `ALERT_ON_VALUE`, `HEARTBEAT_TIMEOUT_MS`.
-- [ ] `countdown/` — countdown clock.
-  - [ ] Settings block: `STATE_TOPIC`, `COMMAND_TOPIC`, `SECONDS_FIELD`, `WARN_AT_SECONDS`, `WARN_SOUND`, `FORMAT` (`mm:ss` vs `h:mm:ss`), `HEARTBEAT_TIMEOUT_MS`.
-- [ ] `text-display/` — arbitrary text field from a state message.
-  - [ ] Settings block: `STATE_TOPIC`, `TEXT_FIELD`, `LABEL`, `MAX_LENGTH`, `MONO_FONT` (boolean), `HEARTBEAT_TIMEOUT_MS`.
-- [ ] `numeric-gauge/` — numeric value with threshold alert.
-  - [ ] Settings block: `STATE_TOPIC`, `VALUE_FIELD`, `MIN`, `MAX`, `WARN_THRESHOLD`, `DANGER_THRESHOLD`, `UNIT_LABEL`, `HEARTBEAT_TIMEOUT_MS`.
-- [ ] Each base template has its own `README.md` explaining settings and payload shape.
+- [x] `_starter/` — minimal scaffold with placeholder comments; `README.md` documenting rename/edit steps.
+- [x] Binary-state templates *(plan had one `binary-input/`; split into three variants to cover the most common prop patterns)*:
+  - [x] `binary-door/` — open/closed door indicator. Settings: `STATE_TOPIC`, `COMMAND_TOPIC`, `VALUE_FIELD`, `TRUE_LABEL`, `FALSE_LABEL`, `TRUE_COLOR`, `FALSE_COLOR`, `ALERT_SOUND`, `ALERT_ON_VALUE`, `HEARTBEAT_TIMEOUT_MS`.
+  - [x] `binary-light/` — on/off light indicator. Same settings block.
+  - [x] `binary-lock/` — locked/unlocked indicator. Same settings block.
+- [x] `countdown/` — countdown clock. Settings: `STATE_TOPIC`, `COMMAND_TOPIC`, `SECONDS_FIELD`, `WARN_AT_SECONDS`, `WARN_SOUND`, `FORMAT` (`mm:ss` / `h:mm:ss`), `HEARTBEAT_TIMEOUT_MS`.
+- [x] `text-display/` — arbitrary text field. Settings: `STATE_TOPIC`, `TEXT_FIELD`, `LABEL`, `MAX_LENGTH`, `MONO_FONT`, `HEARTBEAT_TIMEOUT_MS`.
+- [x] `numeric-gauge/` — numeric value with threshold alert. Settings: `STATE_TOPIC`, `VALUE_FIELD`, `MIN`, `MAX`, `WARN_THRESHOLD`, `DANGER_THRESHOLD`, `UNIT_LABEL`, `HEARTBEAT_TIMEOUT_MS`.
+- [x] Each base template has its own `README.md` and `widget-meta.json` *(meta added: description, author, size, interactive flags for widget-viewer browser)*.
+- [x] *(Additional)* `tools/widget-viewer.html` — in-browser template gallery that auto-scans all `widget-meta.json` files; committed to `apps/PxD/`.
 
 **Checklist — Agent22 room widgets (`rooms/agent22/pxd/widgets/`):**
-- [ ] `front-door/` — derived from `binary-input/`; `widget.js` registers with `PxD.widgets`; `media/ding.mp3`.
-- [ ] `bomb-timer/` — derived from `countdown/`; `media/warn.mp3`.
-- [ ] `widgets/manifest.json` listing both widgets.
-- [ ] Repackage Agent22; verify widgets panel is visible and both widgets function on a real Pi.
+- [x] `front-door/` — derived from `binary-door/`; `STATE_TOPIC: paradox/agent22/front-door/state`.
+- [x] `bomb-timer/` — derived from `countdown/`; `STATE_TOPIC: paradox/agent22/suitcase/state`; `SECONDS_FIELD: timeRemaining`; size `2x1`.
+- [x] Widget list declared in `rooms/agent22/pxd/room.json → widgets[]` *(no separate manifest.json)*.
+- [x] Repackage Agent22; widgets panel visible with both tiles.
+- [ ] Verify widgets function on a real Pi (hardware test pending).
 
 **Checklist — docs:**
-- [ ] Write `docs/WIDGETS.md` — widget author contract, lifecycle states, settings block convention, full checklist for authoring a new widget.
+- [x] `docs/WIDGETS.md` — widget author contract, lifecycle states, settings block convention, heartbeat, three-dot menu, card sizes, full authoring checklist.
 - [ ] Add end-to-end manual-test recipe for each base template to `docs/WIDGETS.md`.
 
 **Acceptance criteria:**
-- Agent22 page shows the widgets panel with `front-door` and `bomb-timer` functional.
-- Three-dot menu enable/disable publishes correct commands; card state follows prop echo.
-- Heartbeat timeout transitions card to `disconnected` within `HEARTBEAT_TIMEOUT_MS + 1 s`.
-- Each of the four base templates can be copied, renamed, and settings filled in to produce a working widget with no further code edits.
-- Houdini page omits the widget panel gracefully (no error; panel hidden) until widgets are added to its `manifest.json`.
-- `docs/WIDGETS.md` is complete and correct.
+- [x] Agent22 page shows the widgets panel with `front-door` and `bomb-timer` tiles.
+- [x] Three-dot menu enable/disable publishes correct commands; hide is reversible via gear overlay.
+- [ ] Heartbeat timeout transitions card to `disconnected` within `HEARTBEAT_TIMEOUT_MS + 1 s` — Pi hardware test pending.
+- [x] Each base template can be copied, renamed, and settings filled in to produce a working widget with no further code edits.
+- [x] Houdini page omits the widget panel gracefully (slot collapses; no error in console).
+- [x] `docs/WIDGETS.md` is complete and correct.
 
 ---
 
