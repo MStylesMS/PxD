@@ -1,0 +1,9 @@
+{
+    "label": "countdown — 2×1",
+    "quickStates": [
+        { "label": "10 min", "payload": "{\"seconds\":600}", "color": "#e9ecef" },
+        { "label": "45 sec", "payload": "{\"seconds\":45}",  "color": "#fd7e14" },
+        { "label": "20 sec", "payload": "{\"seconds\":20}",  "color": "#dc3545" },
+        { "label": "0",      "payload": "{\"seconds\":0}",   "color": "#dc3545" }
+    ]
+}

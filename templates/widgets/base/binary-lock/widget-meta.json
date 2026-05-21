@@ -1,0 +1,7 @@
+{
+    "label": "binary-lock — 1×1",
+    "quickStates": [
+        { "label": "Locked",   "payload": "{\"state\":\"locked\"}",   "color": "#198754" },
+        { "label": "Unlocked", "payload": "{\"state\":\"unlocked\"}", "color": "#dc3545" }
+    ]
+}

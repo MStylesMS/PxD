@@ -1,0 +1,41 @@
+/* countdown widget — 2×1 tile styles
+   Class prefix: wd-countdown-*
+
+   These styles target the content injected by widget.js into the
+   .widget-card-body element provided by the widget loader.
+*/
+
+.wd-countdown-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         6px 8px;
+    gap:             2px;
+}
+
+.wd-countdown-time {
+    font-size:       2rem;
+    font-weight:     700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing:  0.04em;
+    line-height:     1;
+    color:           #e9ecef;        /* overridden by render() */
+    transition:      color 0.4s ease;
+    white-space:     nowrap;
+}
+
+/* Slightly larger when no label is shown */
+.wd-countdown-wrap:not(.wd-has-label) .wd-countdown-time {
+    font-size: 2.2rem;
+}
+
+.wd-countdown-label {
+    font-size:       0.65rem;
+    font-weight:     600;
+    letter-spacing:  0.08em;
+    text-transform:  uppercase;
+    color:           #6c757d;
+    line-height:     1;
+}

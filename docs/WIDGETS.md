@@ -516,19 +516,19 @@ loader injects it as a `<link>` before calling `mount()`. CSS classes use a
 
 ## Available base templates
 
-Templates live in `apps/PxD/templates/widgets/base/`. Create a `config.json`
-in `pxd/widgets/<id>/` to instantiate them — never copy the template JS.
+Templates live in `apps/PxD/templates/widgets/base/`. Copy a template directory
+to `rooms/<game>/pxd/widgets/<your-id>/`, edit the CONFIG block, and run the
+packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 
-| Template | Size(s) | Type | Description |
+| Template | Default size | Type | Description |
 |---|---|---|---|
-| `binary-door` | `1x1`; `2x2` *(planned)* | Passive | Door open / closed indicator |
-| `binary-light` | `1x1`; `2x2` *(planned)* | Passive | Coloured indicator dot |
-| `binary-lock` | `1x1`; `2x2` *(planned)* | Active | Lock icon; click toggles |
-| `countdown` | `2x1`; `2x2` *(planned)* | Passive | Countdown clock with warn colour |
-| `text-display` | `4x1` *(planned)* | Passive | Arbitrary text field |
-| `numeric-gauge` | `2x2` *(planned)* | Passive | Numeric value + threshold bands |
-
-Items marked *planned* are designed but not yet implemented.
+| `_starter` | `2x1` | — | Blank scaffold; starting point for custom widgets |
+| `binary-door` | `1x1` | Passive | Door open / closed indicator with icon |
+| `binary-light` | `1x1` | Passive | Coloured indicator dot (CSS only) |
+| `binary-lock` | `1x1` | Active | Lock icon; click publishes lock/unlock command |
+| `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
+| `text-display` | `4x1` | Passive | Arbitrary text field from payload |
+| `numeric-gauge` | `2x2` | Passive | Numeric value + threshold colour bands |
 
 Examples live in `apps/PxD/templates/widgets/examples/`.
 
@@ -536,13 +536,14 @@ Examples live in `apps/PxD/templates/widgets/examples/`.
 
 ## Authoring a widget instance
 
-### Path A — from a template (config.json only, recommended)
+### Path A — from a base template (copy, edit CONFIG)
 
-1. Create `rooms/<game>/pxd/widgets/<your-id>/config.json`.
-2. Set `PROP_TOPIC` (required). Override `SUFFIX_TOPIC`, `STATE_MAP`, colours,
-   and size as needed.
+1. Copy `apps/PxD/templates/widgets/base/<name>/` to
+   `rooms/<game>/pxd/widgets/<your-id>/`.
+2. Edit only the CONFIG block near the top of `widget.js` — `STATE_TOPIC` is
+   required; all other keys have sensible defaults.
 3. Place any local icon/image assets in the same directory and reference them
-   by filename in `config.json`.
+   by filename in the CONFIG block.
 4. Add `{ "id": "<your-id>", "type": "<template>", "name": "Label" }` to
    `room.json → widgets`.
 5. Add `"widgets"` to `panels.include` if not already present.

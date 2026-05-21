@@ -1,0 +1,52 @@
+/* numeric-gauge widget — 2×2 tile styles
+   Class prefix: wd-gauge-*
+
+   These styles target the content injected by widget.js into the
+   .widget-card-body element provided by the widget loader.
+*/
+
+.wd-gauge-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         8px 10px;
+    gap:             4px;
+}
+
+.wd-gauge-label {
+    font-size:      0.65rem;
+    font-weight:    600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:          #6c757d;
+    line-height:    1;
+    flex-shrink:    0;
+}
+
+.wd-gauge-row {
+    display:        flex;
+    align-items:    baseline;
+    gap:            4px;
+    line-height:    1;
+}
+
+.wd-gauge-value {
+    font-size:      2.5rem;
+    font-weight:    700;
+    font-variant-numeric: tabular-nums;
+    color:          #e9ecef;    /* overridden by render() */
+    transition:     color 0.4s ease;
+    line-height:    1;
+    white-space:    nowrap;
+}
+
+/* Slightly smaller when a unit label is present */
+.wd-gauge-unit {
+    font-size:      1rem;
+    font-weight:    500;
+    color:          #e9ecef;    /* follows value colour via render() */
+    transition:     color 0.4s ease;
+    opacity:        0.75;
+}

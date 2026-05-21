@@ -555,34 +555,95 @@
 }());
 
 
-// ── Widget catalog ────────────────────────────────────────────────────────────
-// Entries are grouped by tier: templates (base templates), examples (room
-// examples), custom (room-local widgets).  Only non-empty groups appear in
-// the selector.  Add an entry here whenever a new template or example is created.
-var WIDGET_CATALOG = {
-    templates: [
-        {
-            label: 'binary-door — 1×1',
-            js:    '../templates/widgets/base/binary-door/widget.js',
-            css:   '../templates/widgets/base/binary-door/widget.css',
-            quickStates: [
-                { label: 'Open',   payload: '{"state":"open"}',   color: '#dc3545' },
-                { label: 'Closed', payload: '{"state":"closed"}', color: '#198754' }
-            ]
-        },
-        {
-            label: 'binary-lock — 1×1',
-            js:    '../templates/widgets/base/binary-lock/widget.js',
-            css:   '../templates/widgets/base/binary-lock/widget.css',
-            quickStates: [
-                { label: 'Locked',   payload: '{"state":"locked"}',   color: '#198754' },
-                { label: 'Unlocked', payload: '{"state":"unlocked"}',  color: '#dc3545' }
-            ]
+// ── Auto-scan catalog ─────────────────────────────────────────────────────────
+// Discovers widgets by reading Python HTTP server directory listings.
+// No manual updates needed — adding a directory is enough.
+//
+// Tiers:
+//   templates  → templates/widgets/base/<name>/      (config-only, never copy JS)
+//   examples   → templates/widgets/examples/<name>/  (copy JS, optionally extend)
+//   custom     → rooms/<room>/pxd/widgets/<name>/    (room-specific instances)
+//
+// Directories starting with _ (e.g. _starter) are skipped.
+// Each widget dir may contain widget-meta.json with { label, quickStates }.
+
+async function _scanDir(url) {
+    try {
+        var resp = await fetch(url);
+        if (!resp.ok) return [];
+        var html = await resp.text();
+        var dirs = [];
+        var re   = /href="([a-zA-Z0-9][^"]*\/)">/g;
+        var m;
+        while ((m = re.exec(html)) !== null) {
+            var name = m[1].replace(/\/$/, '');
+            if (name !== '..') dirs.push(name);
         }
-    ],
-    examples: [],
-    custom:   []
-};
+        return dirs;
+    } catch (_) { return []; }
+}
+
+async function _loadMeta(jsUrl) {
+    var metaUrl = jsUrl.replace(/widget\.js$/, 'widget-meta.json');
+    try {
+        var resp = await fetch(metaUrl);
+        return resp.ok ? await resp.json() : null;
+    } catch (_) { return null; }
+}
+
+async function _buildEntry(dirUrl, name) {
+    var js  = dirUrl + name + '/widget.js';
+    var css = dirUrl + name + '/widget.css';
+    try {
+        var chk = await fetch(js, { method: 'HEAD' });
+        if (!chk.ok) return null;
+    } catch (_) { return null; }
+    var meta = await _loadMeta(js);
+    return {
+        label:       (meta && meta.label)       || name,
+        js:          js,
+        css:         css,
+        quickStates: (meta && meta.quickStates) || []
+    };
+}
+
+async function _discoverCatalog() {
+    var BASE     = '../templates/widgets/base/';
+    var EXAMPLES = '../templates/widgets/examples/';
+    var ROOMS    = '../rooms/';
+    var cat      = { templates: [], examples: [], custom: [] };
+
+    // Base templates — skip _ prefixed (scaffolds, not runnable)
+    var baseNames = await _scanDir(BASE);
+    for (var i = 0; i < baseNames.length; i++) {
+        if (baseNames[i].startsWith('_')) continue;
+        var e = await _buildEntry(BASE, baseNames[i]);
+        if (e) cat.templates.push(e);
+    }
+
+    // Examples
+    var exNames = await _scanDir(EXAMPLES);
+    for (var j = 0; j < exNames.length; j++) {
+        var e2 = await _buildEntry(EXAMPLES, exNames[j]);
+        if (e2) cat.examples.push(e2);
+    }
+
+    // Room custom widgets
+    var rooms = await _scanDir(ROOMS);
+    for (var r = 0; r < rooms.length; r++) {
+        var widgetsUrl = ROOMS + rooms[r] + '/pxd/widgets/';
+        var wNames     = await _scanDir(widgetsUrl);
+        for (var w = 0; w < wNames.length; w++) {
+            var e3 = await _buildEntry(widgetsUrl, wNames[w]);
+            if (e3) {
+                e3.label = rooms[r] + ' / ' + e3.label;
+                cat.custom.push(e3);
+            }
+        }
+    }
+
+    return cat;
+}
 
 
 // ── Theme presets ─────────────────────────────────────────────────────────────
@@ -1058,42 +1119,70 @@ document.getElementById('vw-ok-btn').addEventListener('click', function () {
 });
 
 
-// ── Populate widget select ────────────────────────────────────────────────────
+// ── Catalog population (async scan) ──────────────────────────────────────────
+var _CATALOG = { templates: [], examples: [], custom: [] };
+
 var _TIERS = [
-    { key: 'templates', label: 'Templates' },
-    { key: 'examples',  label: 'Examples'  },
-    { key: 'custom',    label: 'Custom'    }
+    { key: 'templates', label: 'Templates'    },
+    { key: 'examples',  label: 'Examples'     },
+    { key: 'custom',    label: 'Room widgets' }
 ];
 
-_TIERS.forEach(function (tier) {
-    var items = WIDGET_CATALOG[tier.key] || [];
-    if (!items.length) return;
-    var group = document.createElement('optgroup');
-    group.label = tier.label;
-    items.forEach(function (cat, i) {
-        var opt = document.createElement('option');
-        opt.value       = tier.key + ':' + i;
-        opt.textContent = cat.label;
-        group.appendChild(opt);
+function _populateSelect(catalog) {
+    // Remove any existing optgroups
+    widgetSelect.querySelectorAll('optgroup').forEach(function (g) { g.remove(); });
+    // Remove all non-placeholder options
+    Array.from(widgetSelect.options).forEach(function (o) {
+        if (o.value !== '') o.remove();
     });
-    widgetSelect.appendChild(group);
-});
+
+    var total = 0;
+    _TIERS.forEach(function (tier) {
+        var items = catalog[tier.key] || [];
+        if (!items.length) return;
+        total += items.length;
+        var group = document.createElement('optgroup');
+        group.label = tier.label;
+        items.forEach(function (entry, i) {
+            var opt = document.createElement('option');
+            opt.value       = tier.key + ':' + i;
+            opt.textContent = entry.label;
+            group.appendChild(opt);
+        });
+        widgetSelect.appendChild(group);
+    });
+    return total;
+}
 
 widgetSelect.addEventListener('change', function () {
     var parts = widgetSelect.value.split(':');
-    var items = WIDGET_CATALOG[parts[0]] || [];
-    var cat   = items[parseInt(parts[1], 10)];
-    if (cat) loadWidget(cat);
+    var items = _CATALOG[parts[0]] || [];
+    var entry = items[parseInt(parts[1], 10)];
+    if (entry) loadWidget(entry);
 });
 
-// Auto-load if there is exactly one widget in the catalog
-var _allCatalogItems = _TIERS.reduce(function (acc, t) {
-    return acc.concat(WIDGET_CATALOG[t.key] || []);
-}, []);
-if (_allCatalogItems.length === 1) {
-    widgetSelect.value = 'templates:0';
-    loadWidget(_allCatalogItems[0]);
-}
+(async function () {
+    setStatus('scanning widgets…');
+    _CATALOG = await _discoverCatalog();
+    var total = _populateSelect(_CATALOG);
+    if (total === 0) {
+        setStatus('no widgets found', 'err');
+    } else {
+        setStatus(total + ' widget' + (total === 1 ? '' : 's') + ' found', 'ok');
+    }
+
+    // Auto-load if exactly one widget across all tiers
+    var allItems = _TIERS.reduce(function (acc, t) {
+        return acc.concat(_CATALOG[t.key] || []);
+    }, []);
+    if (allItems.length === 1) {
+        var tier = _TIERS.find(function (t) { return _CATALOG[t.key].length > 0; });
+        if (tier) {
+            widgetSelect.value = tier.key + ':0';
+            loadWidget(_CATALOG[tier.key][0]);
+        }
+    }
+}());
 </script>
 
 </body>

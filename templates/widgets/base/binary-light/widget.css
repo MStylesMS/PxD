@@ -1,0 +1,35 @@
+/* binary-light widget — 1×1 tile styles
+   Class prefix: wd-light-*
+
+   These styles target the content injected by widget.js into the
+   .widget-card-body element provided by the widget loader.
+*/
+
+.wd-light-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         8px 4px 4px;
+    gap:             6px;
+}
+
+.wd-light-dot {
+    width:            32px;
+    height:           32px;
+    border-radius:    50%;
+    flex-shrink:      0;
+    background-color: #6c757d;   /* overridden by render() */
+    transition:       background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wd-light-label {
+    font-size:     0.7rem;
+    font-weight:   600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color:          #6c757d;     /* overridden by render() */
+    transition:     color 0.3s ease;
+    line-height:    1;
+}

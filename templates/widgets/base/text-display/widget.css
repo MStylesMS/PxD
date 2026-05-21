@@ -1,0 +1,49 @@
+/* text-display widget — 4×1 tile styles
+   Class prefix: wd-text-*
+
+   These styles target the content injected by widget.js into the
+   .widget-card-body element provided by the widget loader.
+*/
+
+.wd-text-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     flex-start;
+    justify-content: center;
+    height:          100%;
+    padding:         6px 12px;
+    gap:             3px;
+    overflow:        hidden;
+}
+
+/* When no label: vertically centred single value */
+.wd-text-wrap:not(.wd-has-label) {
+    align-items: center;
+}
+
+.wd-text-label {
+    font-size:      0.65rem;
+    font-weight:    600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:          #6c757d;    /* overridden inline from CONFIG */
+    line-height:    1;
+    flex-shrink:    0;
+}
+
+.wd-text-value {
+    font-size:      1.25rem;
+    font-weight:    500;
+    color:          #e9ecef;    /* overridden inline from CONFIG */
+    line-height:    1.2;
+    white-space:    nowrap;
+    overflow:       hidden;
+    text-overflow:  ellipsis;
+    max-width:      100%;
+}
+
+/* Monospace variant */
+.wd-text-value.wd-text-mono {
+    font-family:    monospace;
+    letter-spacing: 0.05em;
+}

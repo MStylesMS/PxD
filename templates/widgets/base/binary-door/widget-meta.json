@@ -1,0 +1,7 @@
+{
+    "label": "binary-door — 1×1",
+    "quickStates": [
+        { "label": "Open",   "payload": "{\"state\":\"open\"}",   "color": "#dc3545" },
+        { "label": "Closed", "payload": "{\"state\":\"closed\"}", "color": "#198754" }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "label": "numeric-gauge — 2×2",
+    "quickStates": [
+        { "label": "42",  "payload": "{\"value\":42}", "color": "#e9ecef" },
+        { "label": "75",  "payload": "{\"value\":75}", "color": "#fd7e14" },
+        { "label": "95",  "payload": "{\"value\":95}", "color": "#dc3545" },
+        { "label": "0",   "payload": "{\"value\":0}",  "color": "#e9ecef" }
+    ]
+}

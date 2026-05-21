@@ -1,0 +1,32 @@
+/* _starter widget — placeholder styles
+   Class prefix: starter-*
+
+   Replace these with your widget's own styles.
+   Use a unique class prefix to avoid collisions with other widgets.
+*/
+
+.starter-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         8px;
+    gap:             4px;
+}
+
+.starter-label {
+    font-size:      0.65rem;
+    font-weight:    600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:          #6c757d;
+    line-height:    1;
+}
+
+.starter-value {
+    font-size:      1.5rem;
+    font-weight:    600;
+    color:          #e9ecef;
+    line-height:    1;
+}

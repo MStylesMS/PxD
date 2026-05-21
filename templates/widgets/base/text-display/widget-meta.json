@@ -1,0 +1,9 @@
+{
+    "label": "text-display — 4×1",
+    "quickStates": [
+        { "label": "Code",   "payload": "{\"value\":\"ALPHA-7\"}",                 "color": "#e9ecef" },
+        { "label": "Status", "payload": "{\"value\":\"LOCKED\"}",                  "color": "#198754" },
+        { "label": "Error",  "payload": "{\"value\":\"ERR-0x42\"}",                "color": "#dc3545" },
+        { "label": "Long",   "payload": "{\"value\":\"SYSTEM OVERRIDE ACCEPTED\"}", "color": "#6c757d" }
+    ]
+}
