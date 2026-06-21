@@ -23,6 +23,8 @@
     var _tvLastSeen = 0;
     var _clockLastSeen = 0;
     var _lastKnownLightScene = null;
+    var _tvStaleMs    = 16000;  // mirror/state: PFx publishes zone state every 10s → ~1.6× window
+    var _clockStaleMs = 8000;   // clock/state:  PxC publishes every 5s → ~1.6× window
 
     var _root = null;
 
@@ -51,28 +53,35 @@
     }
 
     // Effective clock visibility: true | false | null (unknown/stale)
+    // Each source is checked against its own independent staleness window so the
+    // two publishers need not be in sync.  Unknown only if either source has gone
+    // silent beyond its own threshold or has never been heard from.
     function getEffectiveClockVisible() {
-        var stale = 8000;
         var now = Date.now();
         if (_tvLastSeen === 0 || _clockLastSeen === 0) return null;
-        if ((now - _tvLastSeen) > stale || (now - _clockLastSeen) > stale) return null;
+        if ((now - _tvLastSeen)    > _tvStaleMs)    return null;
+        if ((now - _clockLastSeen) > _clockStaleMs) return null;
         return _tvBrowserVisible && _clockDisplayVisible;
     }
 
     // ── Clock status indicator ─────────────────────────────────────────────
+    // Computes effective clock visibility and notifies the Hint panel. The local
+    // badge was removed from this panel's header; if it ever exists again it is
+    // still updated, but the event dispatch is the primary output.
     function updateClockStatus() {
-        var el = _root && _root.querySelector('#clockStatus');
-        if (!el) return;
         var v = getEffectiveClockVisible();
-        if (v === null) {
-            el.className = 'alert alert-secondary clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
-            el.innerHTML = 'Clock Unknown';
-        } else if (v) {
-            el.className = 'alert alert-success clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
-            el.innerHTML = 'Clock Visible';
-        } else {
-            el.className = 'alert alert-warning clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
-            el.innerHTML = 'Clock Hidden';
+        var el = _root && _root.querySelector('#clockStatus');
+        if (el) {
+            if (v === null) {
+                el.className = 'alert alert-secondary clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
+                el.innerHTML = 'Clock Unknown';
+            } else if (v) {
+                el.className = 'alert alert-success clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
+                el.innerHTML = 'Clock Visible';
+            } else {
+                el.className = 'alert alert-warning clock-pill mb-0 text-center d-flex align-items-center justify-content-center h-100';
+                el.innerHTML = 'Clock Hidden';
+            }
         }
         // Notify hints panel of clock visibility change
         document.dispatchEvent(new CustomEvent('pxd:clockVisibilityChanged', { detail: { visible: v } }));
@@ -213,7 +222,15 @@
 
     function onTvState(payload) {
         if (payload && payload.browser && typeof payload.browser.focused !== 'undefined') {
-            _tvBrowserVisible = payload.browser.focused;
+            _tvBrowserVisible = !!payload.browser.focused;
+            _tvLastSeen = Date.now();
+            updateClockStatus();
+            return;
+        }
+
+        // Legacy fallback: some integrations report browser/kiosk visibility as `kiosk`.
+        if (payload && typeof payload.kiosk !== 'undefined') {
+            _tvBrowserVisible = !!payload.kiosk;
             _tvLastSeen = Date.now();
             updateClockStatus();
         }
@@ -221,7 +238,23 @@
 
     function onClockState(payload) {
         if (payload && typeof payload.visible !== 'undefined') {
-            _clockDisplayVisible = payload.visible;
+            _clockDisplayVisible = !!payload.visible;
+            _clockLastSeen = Date.now();
+            updateClockStatus();
+            return;
+        }
+
+        // Backward compatibility: older clock payloads used a numeric `visibility`.
+        if (payload && typeof payload.visibility === 'number') {
+            _clockDisplayVisible = payload.visibility > 50;
+            _clockLastSeen = Date.now();
+            updateClockStatus();
+            return;
+        }
+
+        // Legacy fallback: accept `kiosk` as a best-effort visibility signal.
+        if (payload && typeof payload.kiosk !== 'undefined') {
+            _clockDisplayVisible = !!payload.kiosk;
             _clockLastSeen = Date.now();
             updateClockStatus();
         }
@@ -232,7 +265,6 @@
         return '<section class="panel panel-time-lights">' +
             '<div class="panel-header panel-header-tight">' +
                 '<h2 class="panel-title">Time, Lighting, and Safety</h2>' +
-                '<div id="clockStatus" class="alert alert-warning clock-pill mb-0 text-center d-flex align-items-center justify-content-center" >Clock Hidden</div>' +
             '</div>' +
             '<div class="time-lights-grid">' +
                 // Clock adjust
@@ -279,6 +311,8 @@
         _config = cfg.timeLights || {};
         _topicRoot = cfg.topicRoot || '';
         _lightsCommandTopic = topic('lights/commands', _config.lightsCommandTopic);
+        _tvStaleMs    = Number.isFinite(Number(_config.tvStaleMs))    && Number(_config.tvStaleMs)    > 0 ? Number(_config.tvStaleMs)    : 16000;
+        _clockStaleMs = Number.isFinite(Number(_config.clockStaleMs)) && Number(_config.clockStaleMs) > 0 ? Number(_config.clockStaleMs) : 8000;
 
         _root = slotEl;
         slotEl.innerHTML = buildHTML();
