@@ -23,6 +23,7 @@
     var _tvLastSeen = 0;
     var _clockLastSeen = 0;
     var _lastKnownLightScene = null;
+    var _liveScenes = null;     // scene metadata last received from lights/scenes (MQTT), if any
     var _tvStaleMs    = 16000;  // mirror/state: PFx publishes zone state every 10s → ~1.6× window
     var _clockStaleMs = 8000;   // clock/state:  PxC publishes every 5s → ~1.6× window
 
@@ -126,7 +127,17 @@
         var a = document.createElement('a');
         a.className = 'dropdown-item d-flex align-items-center';
         a.href = '#';
-        a.onclick = function (e) { e.preventDefault(); onClickFn(id); };
+        a.onclick = function (e) {
+            e.preventDefault();
+            var toggleBtn = _root && _root.querySelector('#colorBtn');
+            if (toggleBtn && window.bootstrap && bootstrap.Dropdown) {
+                // Close first: setColorScene() disables the toggle button for its
+                // "setting…" pending state, and Dropdown.hide() is a no-op on a
+                // disabled toggle.
+                bootstrap.Dropdown.getOrCreateInstance(toggleBtn).hide();
+            }
+            onClickFn(id);
+        };
         if (swatchColor) {
             var swatch = document.createElement('span');
             swatch.style.cssText = 'background:' + swatchColor + ';width:16px;height:16px;display:inline-block;border:1px solid #444;margin-right:8px;border-radius:2px;flex-shrink:0;';
@@ -155,12 +166,32 @@
         if (!dropdown || !btn) return;
         var scenes = payload.scenes || [];
         if (!Array.isArray(scenes) || scenes.length === 0) return;
+        _liveScenes = scenes;
         dropdown.innerHTML = '';
         scenes.forEach(function (scene) {
             dropdown.appendChild(buildDropdownItem(scene.id, scene.label || scene.id, scene.swatch || null, setColorScene));
         });
         btn.disabled = false;
         updateColorButton(_lastKnownLightScene);
+    }
+
+    // Look up display metadata (label + swatch colour) for a scene id.
+    // Prefers the live list published on lights/scenes (device-authoritative);
+    // falls back to the hardcoded COLOR_SCENES table when no live match is found
+    // (e.g. before the first scenes message arrives, or for zones that don't
+    // publish a scenes list at all).
+    function findSceneMeta(sceneId) {
+        if (sceneId == null) return null;
+        var lower = String(sceneId).toLowerCase();
+        if (_liveScenes) {
+            var live = _liveScenes.find(function (s) { return s.id === sceneId; }) ||
+                       _liveScenes.find(function (s) { return (s.id || '').toLowerCase() === lower; });
+            if (live) return { label: live.label || live.id, color: live.swatch || null };
+        }
+        var fallback = COLOR_SCENES.find(function (s) { return s.id === sceneId; }) ||
+                       COLOR_SCENES.find(function (s) { return s.id.toLowerCase() === lower; });
+        if (fallback) return { label: fallback.colorLabel, color: fallback.color };
+        return null;
     }
 
     function updateColorButton(currentColor) {
@@ -179,12 +210,15 @@
         }
         if (currentColor == null) return;
 
-        var scene = COLOR_SCENES.find(function (s) { return s.id === currentColor; }) ||
-                    COLOR_SCENES.find(function (s) { return s.id.toLowerCase() === (currentColor || '').toLowerCase(); });
-        if (scene) {
-            btn.textContent = scene.colorLabel;
+        var scene = findSceneMeta(currentColor);
+        if (scene && scene.color) {
+            btn.textContent = scene.label;
             btn.style.background = scene.color;
             btn.style.color = PxD.utils.getContrastColor(scene.color);
+        } else if (scene) {
+            btn.textContent = scene.label;
+            btn.style.background = '#d3d3d3';
+            btn.style.color = '#000000';
         } else {
             btn.textContent = currentColor;
             btn.style.background = '#d3d3d3';
@@ -213,7 +247,14 @@
 
     // ── MQTT handlers ──────────────────────────────────────────────────────
     function onLightsState(payload) {
-        if (payload && payload.lighting) updateColorButton(payload.lighting.activeScene);
+        if (!payload) return;
+        // Preferred shape: top-level `scene` field (e.g. px-wifi-light firmware).
+        if (payload.scene !== undefined) {
+            updateColorButton(payload.scene);
+            return;
+        }
+        // Legacy/alternate shape: active scene nested under `lighting`.
+        if (payload.lighting) updateColorButton(payload.lighting.activeScene);
     }
 
     function onLightsScenes(payload) {
