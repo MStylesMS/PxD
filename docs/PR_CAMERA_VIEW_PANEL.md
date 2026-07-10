@@ -59,4 +59,9 @@ See `docs/ROOMS.md` → `cameraView` for the authoritative field reference. Summ
 - WebRTC/HLS/MJPEG delivery modes (MSE only for v1).
 - Cross-reload persistence of "which camera is main" (low priority, adds `localStorage` complexity for little benefit).
 - A PxP-driven automated installer for `go2rtc.service` (PxP repo is not yet scaffolded in this workspace; `config/go2rtc.yaml.example` + `config/go2rtc.service` are ready for it to consume whenever that lands).
-- Houdini's Challenge's 3-camera template (Agent 22's 2-camera template ships in this pass as the reference implementation).
+
+## Shipped reference configs
+- Agent 22 (`rooms/agent22/pxd/room.json`) — 2 cameras, sidebar right.
+- Houdini's Challenge (`rooms/houdinis-challenge/pxd/room.json`) — 3 cameras, sidebar right.
+
+Both use placeholder `wsUrl` values (`ws://REPLACE-WITH-ROOM-PI-IP:1984/api/ws?src=...`) — no cameras are physically deployed at either room yet. Replace once real cameras and each room's persistent go2rtc service are online, using `apps/PxD/tools/camera-finder/` to confirm working URLs first.
