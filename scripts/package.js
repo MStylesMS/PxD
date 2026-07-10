@@ -83,23 +83,35 @@ function uniquePaneTypes(site, page) {
 }
 
 // ── Theme resolution ────────────────────────────────────────────────────────
-// config.theme is "<name>" or { base: "<name>", overrides: {...} }. Resolves
-// to a flat token object (pxd.js's runtime applyTheme expects flat tokens).
+// config.theme is "<name>" or { base: "<name>", overrides: {...}, fonts: [...] }.
+// Resolves to { tokens, fonts, themeFontsDir }: `tokens` is a flat token object
+// (pxd.js's runtime applyTheme expects flat tokens), `fonts` is the merged
+// @font-face list (the named theme's own fonts, plus any room.json
+// theme.fonts entries added/overriding by family name), and `themeFontsDir` is
+// the on-disk folder (if any) the named theme's own font FILES live in, so
+// buildPxdSite can copy them into the site output alongside the room's own
+// `fonts/` folder.
 function resolveTheme(config, fwDir) {
     const themeCfg = config.theme;
-    if (!themeCfg) return {};
+    if (!themeCfg) return { tokens: {}, fonts: [], themeFontsDir: null };
 
     const baseName = typeof themeCfg === 'string' ? themeCfg : themeCfg.base;
     const overrides = (typeof themeCfg === 'object' && themeCfg.overrides) || {};
-    const fonts = (typeof themeCfg === 'object' && themeCfg.fonts) || undefined;
+    const roomFonts = (typeof themeCfg === 'object' && Array.isArray(themeCfg.fonts)) ? themeCfg.fonts : [];
 
     let tokens = {};
+    let themeFonts = [];
+    let themeFontsDir = null;
     if (baseName) {
-        const themePath = path.join(fwDir, 'themes', baseName, 'theme.json');
+        const themeDir = path.join(fwDir, 'themes', baseName);
+        const themePath = path.join(themeDir, 'theme.json');
         if (fs.existsSync(themePath)) {
             try {
                 const theme = JSON.parse(fs.readFileSync(themePath, 'utf8'));
                 tokens = Object.assign({}, theme.tokens || {});
+                themeFonts = Array.isArray(theme.fonts) ? theme.fonts : [];
+                const candidateFontsDir = path.join(themeDir, 'fonts');
+                if (fs.existsSync(candidateFontsDir)) themeFontsDir = candidateFontsDir;
             } catch (e) {
                 console.warn(`  [warn]   Failed to parse theme "${baseName}": ${e.message}`);
             }
@@ -111,11 +123,18 @@ function resolveTheme(config, fwDir) {
         tokens = Object.assign({}, themeCfg);
         delete tokens.base;
         delete tokens.overrides;
+        delete tokens.fonts;
     }
 
-    const resolved = Object.assign({}, tokens, overrides);
-    if (fonts) resolved.fonts = fonts;
-    return resolved;
+    // Merge fonts: the named theme's own fonts first, then any room.json
+    // theme.fonts entries — matched by `family` so a room can add an extra
+    // face or override a theme font's src without losing the rest.
+    const fontMap = {};
+    themeFonts.forEach((f) => { if (f && f.family) fontMap[f.family] = f; });
+    roomFonts.forEach((f) => { if (f && f.family) fontMap[f.family] = f; });
+    const mergedFonts = Object.keys(fontMap).map((k) => fontMap[k]);
+
+    return { tokens: Object.assign({}, tokens, overrides), fonts: mergedFonts, themeFontsDir };
 }
 
 // ── Framework asset copy (shared by every pxd site) ─────────────────────────
@@ -156,7 +175,7 @@ function copyFrameworkAssets(fwDir, siteOutDir, paneTypes, roomDir, layoutId) {
 }
 
 // ── Build a single `pxd` site ────────────────────────────────────────────────
-function buildPxdSite(site, config, roomDir, outDir, fwDir, resolvedThemeTokens) {
+function buildPxdSite(site, config, roomDir, outDir, fwDir, theme) {
     const siteOutDir = path.join(outDir, site.id);
     const layoutId = config.layout || 'default-dashboard';
     const layoutDir = path.join(fwDir, 'layouts', layoutId);
@@ -203,13 +222,19 @@ function buildPxdSite(site, config, roomDir, outDir, fwDir, resolvedThemeTokens)
         if (idx === 0) writeFile(path.join(siteOutDir, 'index.html'), html); // default page for this site
     });
 
-    // Site-local room.json copy, with the theme resolved to flat tokens so
-    // pxd.js's runtime applyTheme() (unchanged since v1) works as-is.
-    const siteRoomJson = Object.assign({}, config, { theme: resolvedThemeTokens });
+    // Site-local room.json copy, with the theme resolved to flat tokens (+
+    // merged font list) so pxd.js's runtime applyTheme()/injectFonts() (both
+    // unchanged since v1/early v2) work as-is.
+    const siteRoomJson = Object.assign({}, config, {
+        theme: Object.assign({}, theme.tokens, theme.fonts.length ? { fonts: theme.fonts } : {})
+    });
     writeFile(path.join(siteOutDir, 'room.json'), JSON.stringify(siteRoomJson, null, 2));
 
     const mediaSrc = path.join(roomDir, 'media');
     if (fs.existsSync(mediaSrc)) copyDir(mediaSrc, path.join(siteOutDir, 'media'));
+    // Theme fonts first (named theme's own font files), then room-local
+    // fonts/ (room can add extra faces or override a same-named file).
+    if (theme.themeFontsDir) copyDir(theme.themeFontsDir, path.join(siteOutDir, 'fonts'));
     const fontsSrc = path.join(roomDir, 'fonts');
     if (fs.existsSync(fontsSrc)) copyDir(fontsSrc, path.join(siteOutDir, 'fonts'));
     const widgetsSrc = path.join(roomDir, 'widgets');
@@ -299,7 +324,7 @@ function main() {
     }
 
     const sites = resolveSites(config);
-    const resolvedThemeTokens = resolveTheme(config, fwDir);
+    const theme = resolveTheme(config, fwDir);
 
     console.log('PxD Packager v2');
     console.log(`  Room:    ${roomDir}`);
@@ -310,7 +335,7 @@ function main() {
 
     for (const site of sites) {
         if (site.type === 'pxd' || !site.type) {
-            buildPxdSite(Object.assign({ type: 'pxd' }, site), config, roomDir, outDir, fwDir, resolvedThemeTokens);
+            buildPxdSite(Object.assign({ type: 'pxd' }, site), config, roomDir, outDir, fwDir, theme);
         } else if (site.type === 'manual') {
             console.log(`  [site]   "${site.id}" is manual — not touched.`);
         } else if (site.type === 'external') {

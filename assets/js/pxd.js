@@ -424,7 +424,7 @@
         accent: '--pxd-accent', accentAlt: '--pxd-accent-alt',
         warn: '--pxd-warn', danger: '--pxd-danger',
         radius: '--pxd-radius', shadow: '--pxd-shadow',
-        fontBody: '--pxd-font-body', fontMono: '--pxd-font-mono',
+        fontTitle: '--pxd-font-title', fontBody: '--pxd-font-body', fontMono: '--pxd-font-mono',
         bgGlow1: '--pxd-bg-glow-1', bgGlow2: '--pxd-bg-glow-2'
     };
 

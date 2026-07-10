@@ -15,6 +15,7 @@
     "danger": "#b23a2b",
     "radius": "14px",
     "shadow": "0 8px 20px rgba(30, 37, 48, 0.12)",
+    "fontTitle": "Arial, sans-serif",
     "fontBody": "Arial, sans-serif",
     "fontMono": "'Courier New', monospace",
     "bgGlow1": "rgba(43, 95, 150, 0.08)",

@@ -1,6 +1,6 @@
 {
   "name": "haunted-manor",
-  "description": "Old, historic, haunted-house mood — warm-brown darkness with candlelight amber and a ghostly cold-teal accent. Color theory: near-analogous warm-brown base (hue ~30 deg) with an amber primary accent for warmth/light sources, and a desaturated cold teal secondary accent for a near-complementary supernatural pop. Verified WCAG AA+ contrast for body text; warn/danger separated by luminance (not hue alone) for color-blind accessibility.",
+  "description": "Old, historic, haunted-house mood — warm-brown darkness with candlelight amber and a ghostly cold-teal accent. Color theory: near-analogous warm-brown base (hue ~30 deg) with an amber primary accent for warmth/light sources, and a desaturated cold teal secondary accent for a near-complementary supernatural pop. Verified WCAG AA+ contrast for body text; warn/danger separated by luminance (not hue alone) for color-blind accessibility. Two custom faces, per the 2-font rule: URW Algerian for panel titles/headings (an ornate display face already used for Houdini's PxC clock numerals, restored here for titles), AlmendraSC for body text/labels/buttons (an elegant gothic small-caps face, Houdini's original body font).",
   "tokens": {
     "bgColor1": "#1a1310",
     "bgColor2": "#241a15",
@@ -15,9 +15,14 @@
     "danger": "#d35f45",
     "radius": "14px",
     "shadow": "0 14px 36px rgba(0, 0, 0, 0.50)",
-    "fontBody": "Arial, sans-serif",
+    "fontTitle": "URWAlgerian, Georgia, serif",
+    "fontBody": "AlmendraSC, Georgia, serif",
     "fontMono": "'Courier New', monospace",
     "bgGlow1": "rgba(212, 162, 74, 0.18)",
     "bgGlow2": "rgba(127, 176, 166, 0.14)"
-  }
+  },
+  "fonts": [
+    { "family": "URWAlgerian", "src": "fonts/URWAlgerian.ttf", "weight": "normal", "style": "normal" },
+    { "family": "AlmendraSC", "src": "fonts/AlmendraSC-Regular.woff2", "weight": "normal", "style": "normal" }
+  ]
 }

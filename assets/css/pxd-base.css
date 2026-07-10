@@ -37,7 +37,11 @@
     --pxd-radius:         14px;
     --pxd-shadow:         0 12px 28px rgba(0, 0, 0, 0.35);
 
-    /* Typography */
+    /* Typography — 2 custom faces per theme by convention: `fontTitle` for
+       panel titles/headings, `fontBody` for everything else (labels, body
+       text, buttons, inputs). `fontMono` is a plain system-monospace
+       fallback for error/debug text only, not part of that 2-font budget. */
+    --pxd-font-title:     Arial, sans-serif;
     --pxd-font-body:      Arial, sans-serif;
     --pxd-font-mono:      'Courier New', monospace;
 
@@ -140,6 +144,11 @@ body {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--pxd-ink-soft);
+    font-family: var(--pxd-font-title);
+}
+
+h1, h2, h3, h4, h5 {
+    font-family: var(--pxd-font-title);
 }
 
 /* ============================================================

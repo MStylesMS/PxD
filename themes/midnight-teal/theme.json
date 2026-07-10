@@ -1,6 +1,6 @@
 {
   "name": "midnight-teal",
-  "description": "Cool blue-teal control room look (Agent 22's original palette, codified as a named theme).",
+  "description": "Cool blue-teal control room look (Agent 22's original palette, codified as a named theme). Two custom faces, per the 2-font rule: CursedTimer for panel titles/headings (a distinctive glitchy display face, reused nowhere else), TypewriterBold for body text/labels/buttons (dossier/typewriter vibe, doubles as the 'in-between' face for anything not a title).",
   "tokens": {
     "bgColor1": "#041320",
     "bgColor2": "#0a2d46",
@@ -15,9 +15,15 @@
     "danger": "#ff7272",
     "radius": "14px",
     "shadow": "0 12px 28px rgba(0, 0, 0, 0.35)",
-    "fontBody": "Arial, sans-serif",
+    "fontTitle": "CursedTimer, 'Courier New', monospace",
+    "fontBody": "TypewriterBold, 'Courier New', monospace",
     "fontMono": "'Courier New', monospace",
     "bgGlow1": "rgba(68, 224, 204, 0.20)",
     "bgGlow2": "rgba(109, 231, 154, 0.17)"
-  }
+  },
+  "fonts": [
+    { "family": "TypewriterBold", "src": "fonts/TypewriterBold.ttf", "weight": "normal", "style": "normal" },
+    { "family": "CursedTimer", "src": "fonts/CursedTimer.ttf", "weight": "normal", "style": "normal" }
+  ]
 }
+

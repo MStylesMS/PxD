@@ -57,8 +57,9 @@ were verified this way.
 | `--pxd-danger` | danger colour | `danger` | `#e06060` |
 | `--pxd-radius` | panel border-radius | `radius` | `14px` |
 | `--pxd-shadow` | panel box-shadow | `shadow` | `0 12px 28px rgba(0,0,0,0.35)` |
-| `--pxd-font-body` | body font stack | `fontBody` | `Arial, sans-serif` |
-| `--pxd-font-mono` | mono font stack | `fontMono` | `'Courier New', monospace` |
+| `--pxd-font-title` | title/heading font stack (panel titles, h1-h5) | `fontTitle` | `Arial, sans-serif` |
+| `--pxd-font-body` | body font stack (everything else: labels, buttons, inputs) | `fontBody` | `Arial, sans-serif` |
+| `--pxd-font-mono` | plain system-monospace fallback, error/debug text only | `fontMono` | `'Courier New', monospace` |
 | `--pxd-bg-glow-1` | first background radial glow colour | `bgGlow1` | `transparent` |
 | `--pxd-bg-glow-2` | second background radial glow colour | `bgGlow2` | `transparent` |
 
@@ -72,24 +73,57 @@ page background radial gradients and the hero glow. Example values:
 
 Leave them unset (or omit) if you want a flat gradient background with no ambient glow.
 
-## Custom web fonts
+## The 2-font rule
 
-Declare fonts in `room.json → theme.fonts`:
+By design, a theme should declare **at most two custom display faces**:
 
-```json
-"fonts": [
-  {
-    "family": "TypewriterBold",
-    "src": "fonts/TypewriterBold.ttf",
-    "weight": "normal",
-    "style": "normal"
-  }
-]
+- **`fontTitle`** — used for panel titles (`.panel-title`) and heading tags
+  (`h1`-`h5`). Pick something with presence/character — this is where a
+  theme's "vibe" shows most.
+- **`fontBody`** — used for everything else: body text, form labels, button
+  labels, inputs. Should stay readable at small sizes since it carries most
+  of the UI's actual text.
+
+Any "in-between" element (subheadings, `h6`, small print) intentionally has
+no font-family rule of its own and inherits `fontBody` from `body` — reuse
+one of the two rather than introducing a third face. `fontMono` is a plain
+system-monospace fallback used only for the rare pane-load-error placeholder;
+it isn't part of this budget and rarely needs a custom face.
+
+## Custom web fonts — packaged with the theme
+
+A named theme can ship its own font **files**, not just font-family names.
+Put them in `apps/PxD/themes/<name>/fonts/`, and declare them in
+`themes/<name>/theme.json` alongside `tokens`:
+
+```jsonc
+{
+  "name": "haunted-manor",
+  "tokens": {
+    "fontTitle": "URWAlgerian, Georgia, serif",
+    "fontBody": "AlmendraSC, Georgia, serif",
+    ...
+  },
+  "fonts": [
+    { "family": "URWAlgerian", "src": "fonts/URWAlgerian.ttf", "weight": "normal", "style": "normal" },
+    { "family": "AlmendraSC", "src": "fonts/AlmendraSC-Regular.woff2", "weight": "normal", "style": "normal" }
+  ]
+}
 ```
 
-`pxd.js` injects a `<style>` tag with `@font-face` rules at boot. `src` is relative to the packager output root.
+The packager copies `themes/<name>/fonts/*` into every site that uses this
+theme, and merges the theme's `fonts[]` into the room's own
+`room.json → theme.fonts` (matched by `family` — a room can add an extra
+face or override a theme font's `src` without losing the theme's fonts).
+Always declare a plausible **system-font fallback** after the custom family
+(`, Georgia, serif` etc.) in the token value itself, in case the font file
+fails to load. `pxd.js` injects a `<style>` tag with `@font-face` rules at
+boot from the merged font list; `src` is relative to the site's output root.
 
-Font files must be placed in `rooms/<game>/pxd/fonts/` and will be copied to the output `fonts/` directory.
+A room can still declare its own one-off fonts (not tied to any shipped
+theme) in `room.json → theme.fonts`, with matching files in
+`rooms/<game>/pxd/fonts/` — these are copied to the output `fonts/`
+directory the same way, and layer on top of the theme's own fonts.
 
 ## Applying tokens in CSS
 
@@ -102,6 +136,9 @@ All structural CSS in `pxd-base.css` references tokens. Custom panel CSS should 
   border-radius: var(--pxd-radius);
   color: var(--pxd-ink);
   font-family: var(--pxd-font-body);
+}
+.my-panel-title {
+  font-family: var(--pxd-font-title);
 }
 ```
 
