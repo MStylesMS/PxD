@@ -179,7 +179,20 @@ instance (see `docs/PR_CAMERA_VIEW_PANEL.md` and
 |---|---|---|
 | `layout` | `1` | Number of camera slots, 1–5. `1` = single full view, no sidebar |
 | `sidebarPosition` | `"right"` | `left`\|`right`\|`top`\|`bottom` — ignored when `layout` is `1` |
-| `cameras` | `[]` | Array of `{ id, label, wsUrl, main? }`. `wsUrl` is the go2rtc WebSocket URL (`ws://<room-pi-ip>:1984/api/ws?src=<stream-name>`). Exactly one entry may set `"main": true` to choose the default main view (first entry if omitted) |
+| `cameras` | `[]` | Array of `{ id, label, wsUrl, main?, transform? }`. `wsUrl` is the go2rtc WebSocket URL (`ws://<room-pi-ip>:1984/api/ws?src=<stream-name>`). Exactly one entry may set `"main": true` to choose the default main view (first entry if omitted) |
+
+`transform` (optional, per-camera) corrects a physically-mounted camera's
+orientation entirely on the client — no go2rtc transcoding involved:
+
+| Field | Default | Description |
+|---|---|---|
+| `rotate` | `0` | `0`\|`90`\|`180`\|`270`, clockwise |
+| `flipH` | `false` | Mirror horizontally (applied after rotation) |
+| `flipV` | `false` | Mirror vertically (applied after rotation) |
+
+```jsonc
+{ "id": "vault", "label": "Vault", "wsUrl": "ws://...", "transform": { "rotate": 90, "flipH": true } }
+```
 
 Only the main view ever plays audio (starts muted at 50% volume, with a
 visible mute indicator — click to unmute). Sidebar thumbnails are always

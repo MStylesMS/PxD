@@ -43,10 +43,15 @@ See `docs/ROOMS.md` → `cameraView` for the authoritative field reference. Summ
   "sidebarPosition": "right",  // left|right|top|bottom (layout > 1 only)
   "cameras": [
     { "id": "front-door", "label": "Front Door", "wsUrl": "ws://10.0.0.50:1984/api/ws?src=front-door", "main": true },
-    { "id": "vault",      "label": "Vault",      "wsUrl": "ws://10.0.0.50:1984/api/ws?src=vault" }
+    { "id": "vault",      "label": "Vault",      "wsUrl": "ws://10.0.0.50:1984/api/ws?src=vault", "transform": { "rotate": 90, "flipH": true } }
   ]
 }
 ```
+
+`transform` (optional, per camera) corrects a physically-mounted camera's
+orientation entirely client-side (CSS rotate/flip on the video element) —
+deliberately kept out of go2rtc so there's no transcoding cost. See
+`docs/ROOMS.md` → `cameraView` for the full `rotate`/`flipH`/`flipV` reference.
 
 ## Runtime behavior
 - **1 camera**: single full-width view + control bar (refresh, mute, volume, gear). No sidebar.

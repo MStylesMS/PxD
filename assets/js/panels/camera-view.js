@@ -188,6 +188,48 @@
         return null;
     }
 
+    // ── Orientation (rotate/flip) ───────────────────────────────────────────
+    // cam.transform: { rotate: 0|90|180|270, flipH?: bool, flipV?: bool }.
+    // Applied entirely in CSS/JS on the client — no transcoding in go2rtc.
+    // Rotation is done on an inner wrapper (not the <video> itself) so a
+    // 90/270 rotation can swap its measured box to match the tile's aspect
+    // ratio. Sizing that swap requires clientWidth/clientHeight, which are
+    // only meaningful once the tile is attached to the document — callers
+    // must invoke the returned `initialResize()` after that attach (see
+    // render()). A ResizeObserver (plus a window-resize fallback, in case
+    // ResizeObserver is unavailable or delayed) keeps it in sync afterward.
+    var ROTATE_VALUES = [0, 90, 180, 270];
+
+    function applyTransform(wrap, inner, transform) {
+        var rotate = ROTATE_VALUES.indexOf(transform && transform.rotate) !== -1 ? transform.rotate : 0;
+        var scaleX = (transform && transform.flipH) ? -1 : 1;
+        var scaleY = (transform && transform.flipV) ? -1 : 1;
+        var swapped = (rotate === 90 || rotate === 270);
+
+        inner.style.transform = 'translate(-50%, -50%) rotate(' + rotate + 'deg) scale(' + scaleX + ', ' + scaleY + ')';
+
+        if (!swapped) return null; // default CSS sizing (100% x 100%) is already correct
+
+        function resize() {
+            var w = wrap.clientWidth, h = wrap.clientHeight;
+            if (!w || !h) return; // not attached/laid out yet — nothing to measure
+            inner.style.width = h + 'px';
+            inner.style.height = w + 'px';
+        }
+
+        var ro = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(resize) : null;
+        if (ro) ro.observe(wrap);
+        window.addEventListener('resize', resize);
+
+        return {
+            initialResize: resize,
+            dispose: function () {
+                if (ro) ro.disconnect();
+                window.removeEventListener('resize', resize);
+            }
+        };
+    }
+
     function buildViewTile(cam, isMain) {
         var tile = document.createElement('div');
         tile.className = 'cv-tile' + (isMain ? ' cv-tile-main' : ' cv-tile-thumb');
@@ -196,6 +238,10 @@
         var videoWrap = document.createElement('div');
         videoWrap.className = 'cv-video-wrap';
 
+        var inner = document.createElement('div');
+        inner.className = 'cv-video-inner';
+        videoWrap.appendChild(inner);
+
         var video = document.createElement('video');
         video.playsInline = true;
         // Both main and thumbnails start muted (browser autoplay policy +
@@ -203,7 +249,9 @@
         // view's control bar exposes a mute toggle.
         video.muted = true;
         video.volume = 0.5;
-        videoWrap.appendChild(video);
+        inner.appendChild(video);
+
+        var transformHandle = applyTransform(videoWrap, inner, cam.transform);
 
         var noSignal = document.createElement('div');
         noSignal.className = 'cv-no-signal';
@@ -226,7 +274,7 @@
         var handle = connectMse(video, resolveCameraUrl(cam), {
             onStatus: function (s) { tile.classList.toggle('cv-offline', s !== 'live'); }
         });
-        _streams[cam.id] = { handle: handle, video: video };
+        _streams[cam.id] = { handle: handle, video: video, transformHandle: transformHandle };
 
         return tile;
     }
@@ -279,6 +327,7 @@
         // Tear down existing streams before re-rendering
         Object.keys(_streams).forEach(function (id) {
             _streams[id].handle.disconnect();
+            if (_streams[id].transformHandle) _streams[id].transformHandle.dispose();
         });
         _streams = {};
 
@@ -311,6 +360,13 @@
         section.innerHTML = '<div class="panel-header panel-header-tight"><h2 class="panel-title">Cameras</h2></div>';
         section.appendChild(wrap);
         _root.appendChild(section);
+
+        // Tiles with a 90/270 rotation need one measurement pass now that
+        // they're actually attached to the document (clientWidth/Height are
+        // meaningless before this point — see applyTransform()).
+        Object.keys(_streams).forEach(function (id) {
+            if (_streams[id].transformHandle) _streams[id].transformHandle.initialResize();
+        });
     }
 
     // ── Settings modal (gear icon — session-only overrides) ────────────────
@@ -380,7 +436,10 @@
     }
 
     function unmount() {
-        Object.keys(_streams).forEach(function (id) { _streams[id].handle.disconnect(); });
+        Object.keys(_streams).forEach(function (id) {
+            _streams[id].handle.disconnect();
+            if (_streams[id].transformHandle) _streams[id].transformHandle.dispose();
+        });
         _streams = {};
         if (_root) _root.innerHTML = '';
     }

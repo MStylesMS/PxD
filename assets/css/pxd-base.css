@@ -856,7 +856,20 @@ h6 {
     border-radius: var(--pxd-radius, 8px);
     overflow: hidden;
 }
-.cv-video-wrap video {
+/* Rotation/flip is applied to this inner wrapper (see camera-view.js
+   applyTransform()), not the <video> itself, so a 90/270 rotation can
+   swap its measured box to fill the tile correctly. Default (no rotation)
+   sizing is 100% x 100%; a ResizeObserver overrides width/height inline
+   for the 90/270 case. */
+.cv-video-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform-origin: center center;
+}
+.cv-video-inner video {
     width: 100%;
     height: 100%;
     display: block;

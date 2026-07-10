@@ -105,7 +105,10 @@
       "One entry per camera. 'wsUrl' is the go2rtc WebSocket URL, e.g.",
       "ws://<room-pi-ip>:1984/api/ws?src=<stream-name> - copy it from",
       "apps/PxD/tools/camera-finder/'s 'Embed URL' button. Mark exactly one",
-      "camera 'main': true to set the default main view (first entry if omitted)."
+      "camera 'main': true to set the default main view (first entry if omitted).",
+      "Optional 'transform': { rotate: 0|90|180|270, flipH, flipV } corrects a",
+      "physically-mounted camera's orientation entirely client-side (no",
+      "go2rtc transcoding). See docs/ROOMS.md -> cameraView."
     ],
     "cameras": []
   },
