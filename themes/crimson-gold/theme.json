@@ -1,0 +1,23 @@
+{
+  "name": "crimson-gold",
+  "description": "Reserved for SpyCatcher Moscow (not yet applied — that room has no pxd/ config yet). Dark red-black with gold and crimson accents. Color theory: gold (warm, high-value metal) as primary accent against a desaturated dark red base, crimson as a near-analogous secondary accent for tension. warn/danger separated by luminance for color-blind accessibility.",
+  "tokens": {
+    "bgColor1": "#14090a",
+    "bgColor2": "#1e0d0f",
+    "bgColor3": "#281114",
+    "panel": "rgba(40, 17, 20, 0.85)",
+    "panelBorder": "rgba(212, 175, 55, 0.30)",
+    "ink": "#f5e9d8",
+    "inkSoft": "#d8c3a8",
+    "accent": "#d4af37",
+    "accentAlt": "#d64550",
+    "warn": "#e8c74a",
+    "danger": "#e8604e",
+    "radius": "14px",
+    "shadow": "0 14px 36px rgba(0, 0, 0, 0.50)",
+    "fontBody": "Arial, sans-serif",
+    "fontMono": "'Courier New', monospace",
+    "bgGlow1": "rgba(212, 175, 55, 0.16)",
+    "bgGlow2": "rgba(214, 69, 80, 0.14)"
+  }
+}

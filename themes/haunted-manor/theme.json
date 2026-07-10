@@ -1,0 +1,23 @@
+{
+  "name": "haunted-manor",
+  "description": "Old, historic, haunted-house mood — warm-brown darkness with candlelight amber and a ghostly cold-teal accent. Color theory: near-analogous warm-brown base (hue ~30 deg) with an amber primary accent for warmth/light sources, and a desaturated cold teal secondary accent for a near-complementary supernatural pop. Verified WCAG AA+ contrast for body text; warn/danger separated by luminance (not hue alone) for color-blind accessibility.",
+  "tokens": {
+    "bgColor1": "#1a1310",
+    "bgColor2": "#241a15",
+    "bgColor3": "#2e211a",
+    "panel": "rgba(46, 33, 26, 0.85)",
+    "panelBorder": "rgba(212, 162, 74, 0.30)",
+    "ink": "#f0e6d2",
+    "inkSoft": "#c9b998",
+    "accent": "#d4a24a",
+    "accentAlt": "#7fb0a6",
+    "warn": "#f2c94c",
+    "danger": "#d35f45",
+    "radius": "14px",
+    "shadow": "0 14px 36px rgba(0, 0, 0, 0.50)",
+    "fontBody": "Arial, sans-serif",
+    "fontMono": "'Courier New', monospace",
+    "bgGlow1": "rgba(212, 162, 74, 0.18)",
+    "bgGlow2": "rgba(127, 176, 166, 0.14)"
+  }
+}

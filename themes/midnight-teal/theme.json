@@ -1,0 +1,23 @@
+{
+  "name": "midnight-teal",
+  "description": "Cool blue-teal control room look (Agent 22's original palette, codified as a named theme).",
+  "tokens": {
+    "bgColor1": "#041320",
+    "bgColor2": "#0a2d46",
+    "bgColor3": "#133c5a",
+    "panel": "rgba(8, 23, 36, 0.85)",
+    "panelBorder": "rgba(108, 223, 255, 0.28)",
+    "ink": "#d8f4ff",
+    "inkSoft": "#9ad5ea",
+    "accent": "#44e0cc",
+    "accentAlt": "#6de79a",
+    "warn": "#ffcc66",
+    "danger": "#ff7272",
+    "radius": "14px",
+    "shadow": "0 12px 28px rgba(0, 0, 0, 0.35)",
+    "fontBody": "Arial, sans-serif",
+    "fontMono": "'Courier New', monospace",
+    "bgGlow1": "rgba(68, 224, 204, 0.20)",
+    "bgGlow2": "rgba(109, 231, 154, 0.17)"
+  }
+}

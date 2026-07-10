@@ -1,0 +1,23 @@
+{
+  "name": "parchment-light",
+  "description": "Generic light theme, warm off-white base. Color theory: classic blue/orange complementary pairing (calm blue primary + warm orange secondary) — this pairing remains distinguishable for all common forms of color blindness because the two hues also differ strongly in luminance, not just hue.",
+  "tokens": {
+    "bgColor1": "#f6f4ef",
+    "bgColor2": "#ecebe4",
+    "bgColor3": "#e1dfd6",
+    "panel": "rgba(255, 255, 255, 0.72)",
+    "panelBorder": "rgba(30, 37, 48, 0.14)",
+    "ink": "#1e2530",
+    "inkSoft": "#4a5568",
+    "accent": "#2b5f96",
+    "accentAlt": "#b25c14",
+    "warn": "#b07a0b",
+    "danger": "#b23a2b",
+    "radius": "14px",
+    "shadow": "0 8px 20px rgba(30, 37, 48, 0.12)",
+    "fontBody": "Arial, sans-serif",
+    "fontMono": "'Courier New', monospace",
+    "bgGlow1": "rgba(43, 95, 150, 0.08)",
+    "bgGlow2": "rgba(178, 92, 20, 0.06)"
+  }
+}
