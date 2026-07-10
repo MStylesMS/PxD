@@ -204,6 +204,16 @@ function main() {
         console.log('  [widgets] widgets/ copied');
     }
 
+    // ── 11. Copy camera-view local override (optional, hand-maintained) ──
+    // Not part of room.json — lets an operator persist camera URL tweaks
+    // (edit the source file, or the deployed copy directly) without needing
+    // a full repackage-and-redeploy cycle to see them take effect.
+    const cvLocalSrc = path.join(roomDir, 'camera-view.local.json');
+    if (fs.existsSync(cvLocalSrc)) {
+        copyFile(cvLocalSrc, path.join(outDir, 'camera-view.local.json'));
+        console.log('  [camera] camera-view.local.json copied');
+    }
+
     console.log(`\nDone. Output: ${outDir}`);
 }
 

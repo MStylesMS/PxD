@@ -1,0 +1,45 @@
+api:
+  listen: ":1984"
+
+rtsp:
+  listen: ":8554"
+
+webrtc:
+  listen: ":8555"
+
+streams:
+  # Amcrest / Dahua RTSP URL pattern:
+  #   rtsp://USER:PASSWORD@CAMERA_IP:554/cam/realmonitor?channel=1&subtype=0   (main stream, higher quality)
+  #   rtsp://USER:PASSWORD@CAMERA_IP:554/cam/realmonitor?channel=1&subtype=1   (substream, lower quality)
+  #
+  # Replace USER / PASSWORD below for each camera, then run:
+  #   docker restart camera-lab-go2rtc
+  #
+  # Add more channel/subtype pairs as more cameras come online. Keep the
+  # naming convention <camera>_main / <camera>_sub so the test page's stream
+  # dropdown stays readable.
+
+  # Houdini-Study — 10.0.0.148
+  # NOTE: not reachable on the network as of the last check (ping + port 554
+  # both failed). Confirm the camera is powered on and on this subnet before
+  # testing this stream.
+  houdini_study_main: rtsp://admin:Camer0nS@10.0.0.148:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
+  houdini_study_sub: rtsp://admin:Camer0nS@10.0.0.148:554/cam/realmonitor?channel=1&subtype=1#backchannel=0
+
+  # Mine-Exit — 10.0.0.29
+  # Confirmed reachable: RTSP (554) and HTTP (80) both open. Still needs real
+  # RTSP credentials below.
+  mine_exit_main: rtsp://admin:Camer0nS@10.0.0.29:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
+  mine_exit_sub: rtsp://admin:Camer0nS@10.0.0.29:554/cam/realmonitor?channel=1&subtype=1#backchannel=0
+
+  # These cameras only send H.264/AAC. go2rtc's MJPEG *output* mode requires an
+  # actual MJPEG-codec source — it does not transcode for free. These extra
+  # `_mjpeg` entries ask go2rtc to spin up an FFmpeg process (bundled in the
+  # image) to decode+re-encode to MJPEG on demand, so the test page's MJPEG
+  # option has something real to show. Expect notably higher CPU on these
+  # compared to WebRTC/MSE/HLS, which are cheap repackaging only — that
+  # difference is itself a useful data point for the streams-per-Pi budget.
+  houdini_study_sub_mjpeg:
+    - ffmpeg:houdini_study_sub#video=mjpeg
+  mine_exit_sub_mjpeg:
+    - ffmpeg:mine_exit_sub#video=mjpeg

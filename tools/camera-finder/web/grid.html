@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Tile Load Test - Camera Streaming Lab</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="grid.css">
+</head>
+<body>
+<header>
+  <h1>Multi-Tile Load Test</h1>
+  <div id="resource-stats">
+    <span>go2rtc CPU: <strong id="stat-cpu">–</strong></span>
+    <span>Mem: <strong id="stat-mem">–</strong></span>
+    <span>Net I/O: <strong id="stat-net">–</strong></span>
+    <span id="stat-error" class="error"></span>
+  </div>
+  <nav><a href="index.html">← Back to comparison view</a></nav>
+</header>
+
+<div class="grid-controls">
+  <label>Tile count
+    <select id="tile-count">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="4" selected>4</option>
+      <option value="6">6</option>
+      <option value="8">8</option>
+      <option value="12">12</option>
+      <option value="16">16</option>
+      <option value="20">20</option>
+      <option value="24">24</option>
+    </select>
+  </label>
+
+  <label>Stream assignment
+    <select id="stream-assignment">
+      <option value="cycle">Cycle through all configured streams</option>
+      <option value="fixed">Same stream in every tile</option>
+    </select>
+  </label>
+
+  <label id="fixed-stream-label" class="hidden">Stream
+    <select id="fixed-stream"></select>
+  </label>
+
+  <label>Delivery method
+    <select id="tile-mode">
+      <option value="webrtc,mse,hls,mjpeg">Auto (best available)</option>
+      <option value="webrtc">WebRTC (UDP)</option>
+      <option value="webrtc/tcp">WebRTC (TCP)</option>
+      <option value="mse" selected>MSE</option>
+      <option value="hls">HLS</option>
+      <option value="mp4">MP4 progressive</option>
+      <option value="mjpeg">MJPEG</option>
+    </select>
+  </label>
+
+  <button type="button" id="start-btn">Start</button>
+  <button type="button" id="stop-btn">Stop all</button>
+
+  <span id="active-count">Active tiles: 0</span>
+</div>
+
+<main id="tile-grid" class="tile-grid"></main>
+
+<template id="tile-template">
+  <div class="tile">
+    <div class="tile-label"></div>
+    <div class="tile-video"></div>
+  </div>
+</template>
+
+<script type="module" src="vendor/video-stream.js"></script>
+<script type="module" src="grid.js"></script>
+</body>
+</html>

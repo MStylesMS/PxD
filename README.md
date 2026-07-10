@@ -28,6 +28,7 @@ Nginx serves the output directory. No web server changes are required.
 | [docs/THEMING.md](docs/THEMING.md) | CSS tokens and custom fonts |
 | [docs/LAYOUTS.md](docs/LAYOUTS.md) | Layout system and creating new layouts |
 | [docs/WIDGETS.md](docs/WIDGETS.md) | Widget API (Phase 3) |
+| [docs/PR_CAMERA_VIEW_PANEL.md](docs/PR_CAMERA_VIEW_PANEL.md) | Camera View panel spec |
 | [docs/SPEC.md](docs/SPEC.md) | Functional specification |
 
 ## Phase 1 status
@@ -42,6 +43,7 @@ Phase 1 ships a fully working dashboard for Agent 22. Houdini's Challenge migrat
 | time-lights panel | ✅ |
 | hints panel | ✅ |
 | system panel | ✅ |
+| camera-view panel | ✅ (MSE only; see [docs/PR_CAMERA_VIEW_PANEL.md](docs/PR_CAMERA_VIEW_PANEL.md)) |
 | Agent 22 room | ✅ |
 | Houdini room | Phase 2 |
 | Widget loader | Phase 3 |
@@ -63,6 +65,9 @@ apps/PxD/
   layouts/
     default-dashboard/      Four-panel operator layout
   docs/                     Documentation
+  tools/
+    widget-viewer.html      Widget dev preview tool
+    camera-finder/          Camera discovery/tuning tool (launch on demand, not a service)
   scripts/
     package.js              Packager
     package.test.js         Packager tests
@@ -72,6 +77,7 @@ rooms/<game>/pxd/           Room sources (one per room)
   media/                    Hero image, favicon, room media
   fonts/                    Room-specific web fonts
   widgets/                  Widget sources (Phase 3)
+  camera-view.local.json    Optional, hand-maintained camera URL overrides
 ```
 
 ## Key references

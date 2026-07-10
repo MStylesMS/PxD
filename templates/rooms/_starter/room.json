@@ -89,6 +89,27 @@
     "include": ["game-control", "time-lights", "hints", "system"]
   },
 
+  "//cameraView": [
+    "Optional. Embeds live go2rtc camera streams. Add 'camera-view' to",
+    "panels.include above to enable it (omit both to hide it entirely).",
+    "This panel is a CONSUMER of an existing go2rtc instance - it does not",
+    "run/manage go2rtc. Discover cameras and confirm working stream URLs with",
+    "apps/PxD/tools/camera-finder/ first. See docs/PR_CAMERA_VIEW_PANEL.md."
+  ],
+  "cameraView": {
+    "//layout": "Number of camera slots, 1-5. 1 = single full view, no sidebar.",
+    "layout": 2,
+    "//sidebarPosition": "left|right|top|bottom - ignored when layout is 1",
+    "sidebarPosition": "right",
+    "//cameras": [
+      "One entry per camera. 'wsUrl' is the go2rtc WebSocket URL, e.g.",
+      "ws://<room-pi-ip>:1984/api/ws?src=<stream-name> - copy it from",
+      "apps/PxD/tools/camera-finder/'s 'Embed URL' button. Mark exactly one",
+      "camera 'main': true to set the default main view (first entry if omitted)."
+    ],
+    "cameras": []
+  },
+
   "//gameControl": [
     "Game-control panel overrides. All fields are optional;",
     "defaults derive from topicRoot. See docs/ROOMS.md for full reference."

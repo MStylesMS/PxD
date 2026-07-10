@@ -168,6 +168,31 @@ Ordered list of panel IDs. Panels are loaded and mounted in this order. Unknown 
 |---|---|---|
 | `hintTopic` | `topicRoot/hints` | Topic to publish hints to |
 
+### cameraView
+
+Optional. Add `"camera-view"` to `panels.include` to enable. Embeds live
+go2rtc camera streams; this panel only *consumes* an existing go2rtc
+instance (see `docs/PR_CAMERA_VIEW_PANEL.md` and
+`apps/PxD/tools/camera-finder/`) — it does not run or manage go2rtc.
+
+| Field | Default | Description |
+|---|---|---|
+| `layout` | `1` | Number of camera slots, 1–5. `1` = single full view, no sidebar |
+| `sidebarPosition` | `"right"` | `left`\|`right`\|`top`\|`bottom` — ignored when `layout` is `1` |
+| `cameras` | `[]` | Array of `{ id, label, wsUrl, main? }`. `wsUrl` is the go2rtc WebSocket URL (`ws://<room-pi-ip>:1984/api/ws?src=<stream-name>`). Exactly one entry may set `"main": true` to choose the default main view (first entry if omitted) |
+
+Only the main view ever plays audio (starts muted at 50% volume, with a
+visible mute indicator — click to unmute). Sidebar thumbnails are always
+muted. Clicking a sidebar thumbnail swaps it into the main slot.
+
+Camera URL persistence has three tiers (lowest to highest precedence):
+1. `room.json` → `cameraView.cameras[].wsUrl` — the shipped default.
+2. `pxd/camera-view.local.json` (optional) — operator-maintained override,
+   copied verbatim by the packager if present. Persists across reloads and
+   repackages. Shape: `{ "overrides": { "<camera-id>": "ws://..." } }`.
+3. The panel's gear-icon settings dialog — this browser tab's session only
+   (`sessionStorage`), cleared on close. Not durable; for quick testing only.
+
 ### system.watchZones
 
 Array of zone objects:
