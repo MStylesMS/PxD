@@ -90,6 +90,8 @@
 
         function open() {
             status('connecting');
+            sb = null;
+            queue = [];
             ms = new MediaSource();
             videoEl.src = URL.createObjectURL(ms);
 
