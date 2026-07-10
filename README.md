@@ -1,13 +1,13 @@
 # PxD — Paradox FX Dashboard Framework
 
-**PxD** is a vendor-independent, offline-capable operator control UI framework for Paradox escape-room rooms. It produces a static self-contained web page per room by combining a shared framework, a named layout, and room-specific configuration.
+**PxD** is a vendor-independent, offline-capable operator control UI framework for Paradox escape-room rooms. It produces one or more static, self-contained sites per room, each built from a shared framework, a named theme, and a configurable tree of pages and panes.
 
 ## Quick start
 
 See [docs/QUICK_START.md](docs/QUICK_START.md) for a step-by-step first-room walkthrough.
 
 ```bash
-# From apps/PxD/ — package a room
+# From apps/PxD/ — package a room (writes one subfolder per site under --out)
 node scripts/package.js \
   --room-dir ../../rooms/agent22/pxd \
   --out      ../../rooms/agent22/html
@@ -23,30 +23,32 @@ Nginx serves the output directory. No web server changes are required.
 | Document | Purpose |
 |---|---|
 | [docs/QUICK_START.md](docs/QUICK_START.md) | New room in under 10 minutes |
-| [docs/USERS_GUIDE.md](docs/USERS_GUIDE.md) | Full guide — theming, layouts, panels, widgets |
-| [docs/ROOMS.md](docs/ROOMS.md) | room.json field reference |
-| [docs/THEMING.md](docs/THEMING.md) | CSS tokens and custom fonts |
-| [docs/LAYOUTS.md](docs/LAYOUTS.md) | Layout system and creating new layouts |
-| [docs/WIDGETS.md](docs/WIDGETS.md) | Widget API (Phase 3) |
-| [docs/PR_CAMERA_VIEW_PANEL.md](docs/PR_CAMERA_VIEW_PANEL.md) | Camera View panel spec |
-| [docs/SPEC.md](docs/SPEC.md) | Functional specification |
+| [docs/ROOMS.md](docs/ROOMS.md) | room.json field reference — sites, pages, panes, glossary |
+| [docs/PANES.md](docs/PANES.md) | Pane library reference + how to add a new pane type |
+| [docs/THEMING.md](docs/THEMING.md) | Named themes, CSS tokens, custom fonts |
+| [docs/WIDGETS.md](docs/WIDGETS.md) | Widget authoring (widget-grid panes) |
+| [docs/USERS_GUIDE.md](docs/USERS_GUIDE.md) | Full narrative guide (some v1-era snippets — see its v2 note) |
+| [docs/PR_FLEXIBLE_SITES_AND_PANES.md](docs/archive/PR_FLEXIBLE_SITES_AND_PANES.md) | v2 redesign spec/rationale (archived, implemented) |
+| [docs/SPEC.md](docs/SPEC.md) | Original functional specification (background/history) |
 
-## Phase 1 status
+## Status
 
-Phase 1 ships a fully working dashboard for Agent 22. Houdini's Challenge migrates in Phase 2. Widget support is Phase 3.
+PxD v2 ("Flexible Sites, Pages & Panes") is implemented and both Paradox
+rooms with a `pxd/` config are migrated.
 
 | Feature | Status |
 |---|---|
-| Framework scaffold | ✅ |
-| default-dashboard layout | ✅ |
-| game-control panel | ✅ |
-| time-lights panel | ✅ |
-| hints panel | ✅ |
-| system panel | ✅ |
-| camera-view panel | ✅ (MSE only; see [docs/PR_CAMERA_VIEW_PANEL.md](docs/PR_CAMERA_VIEW_PANEL.md)) |
-| Agent 22 room | ✅ |
-| Houdini room | Phase 2 |
-| Widget loader | Phase 3 |
+| Multi-site / multi-page / pane-tree framework core | ✅ |
+| Responsive width system (full / two-thirds / half / third) | ✅ |
+| Collapsible sections (`divider` panes) | ✅ |
+| Named themes (midnight-teal, haunted-manor, crimson-gold, parchment-light) | ✅ |
+| Multi-instance `widget-grid` panes | ✅ |
+| Multi-instance `camera-view` panes (MSE only) | ✅ |
+| `content`, `nav` panes | ✅ |
+| Packager v2 (multi-site, theme-resolving, marker-file-safe) | ✅ |
+| Agent 22 room (`simple` + `live` sites) | ✅ |
+| Houdini's Challenge room (`simple` + `live` sites) | ✅ |
+| SpyCatcher room | Not migrated — no `pxd/` config exists for this room |
 
 ## Repo layout
 
@@ -60,23 +62,31 @@ apps/PxD/
       jquery.min.js         Vendored jQuery
       paho-mqtt.js          Vendored Eclipse Paho MQTT
       bootstrap.bundle.min.js  Vendored Bootstrap 5.3.3 JS bundle
-      pxd.js                Framework core runtime
-      panels/               Panel JS modules
+      pxd.js                Framework core runtime (sites/pages/panes)
+      panes/                Pane type modules (game-control, time-lights,
+                             hints, system, widget-grid, camera-view,
+                             content, nav)
+  themes/
+    <name>/theme.json        Named theme token bundles
   layouts/
-    default-dashboard/      Four-panel operator layout
-  docs/                     Documentation
+    default-dashboard/       HTML shell template
+  docs/                      Documentation
+  templates/
+    rooms/_starter/          Starter room.json + README for new rooms
+    widgets/                 Widget base templates + examples
   tools/
-    widget-viewer.html      Widget dev preview tool
-    camera-finder/          Camera discovery/tuning tool (launch on demand, not a service)
+    widget-viewer.html       Widget dev preview tool
+    camera-finder/           Camera discovery/tuning tool (launch on demand, not a service)
   scripts/
-    package.js              Packager
-    package.test.js         Packager tests
+    package.js               Packager (v2)
+    package.test.js          Packager tests
 
 rooms/<game>/pxd/           Room sources (one per room)
-  room.json                 Room configuration
+  room.json                 Room configuration (sites, pages, panes, theme)
   media/                    Hero image, favicon, room media
   fonts/                    Room-specific web fonts
-  widgets/                  Widget sources (Phase 3)
+  widgets/                  Widget sources
+  panes/                    Optional room-local pane overrides/additions
   camera-view.local.json    Optional, hand-maintained camera URL overrides
 ```
 
@@ -84,8 +94,8 @@ rooms/<game>/pxd/           Room sources (one per room)
 
 | Doc | Purpose |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | Functional specification |
-| [docs/ROOMS.md](docs/ROOMS.md) | Room configuration guide |
-| [docs/LAYOUTS.md](docs/LAYOUTS.md) | Layout system reference |
-| [docs/THEMING.md](docs/THEMING.md) | CSS token theming reference |
-| [docs/WIDGETS.md](docs/WIDGETS.md) | Widget system (Phase 3, stub) |
+| [docs/ROOMS.md](docs/ROOMS.md) | Room configuration guide (sites/pages/panes glossary + fields) |
+| [docs/PANES.md](docs/PANES.md) | Pane library reference |
+| [docs/THEMING.md](docs/THEMING.md) | Named themes and CSS token reference |
+| [docs/WIDGETS.md](docs/WIDGETS.md) | Widget system |
+| [docs/SPEC.md](docs/SPEC.md) | Original functional specification (background) |

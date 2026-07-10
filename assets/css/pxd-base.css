@@ -1061,3 +1061,15 @@ h6 {
     color: var(--pxd-ink);
     font-weight: 600;
 }
+
+/* ============================================================
+   Hero banner (used via a content pane's `html`, e.g.
+   <img class="pxd-hero-banner" src="media/hero.jpg">)
+   ============================================================ */
+.pxd-hero-banner {
+    width: 100%;
+    display: block;
+    border-radius: var(--pxd-radius, 12px);
+    border: 1px solid var(--pxd-panel-border);
+    box-shadow: var(--pxd-shadow);
+}

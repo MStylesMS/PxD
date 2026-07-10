@@ -1,6 +1,6 @@
 # Plan: Flexible Sites, Pages & Panes — PxD as a multi-site operator-UI generator
 
-> **Status:** Approved — implementation in progress.
+> **Status:** Implemented. All 7 phases complete (Agent 22 + Houdini's Challenge migrated; SpyCatcher has no `pxd/` config and remains untouched). This doc is archived at `docs/archive/PR_FLEXIBLE_SITES_AND_PANES.md`.
 > **Schema impact:** Breaking. Introduces `pxdVersion: "2"`. No backward
 > compatibility with v1 configs — the two existing rooms (Agent 22, Houdini's
 > Challenge) are migrated as part of this work (pre-distribution, deliberate
@@ -332,48 +332,48 @@ cheapest capable model** for locating call sites during coding.
 - [x] Spec written & approved. *(Opus 4.8.)*
 
 ### Phase 1 — Core runtime (highest blast radius)
-- [ ] Design pane-factory contract + page/site/section runtime in `pxd.js`. *(Opus 4.8 — risk, not volume, justifies the premium model.)*
-- [ ] Implement `PxD.panes.registerType`, per-page instantiation, responsive width grid, divider/section grouping + collapse, sticky header/footer, shared MQTT. *(Sonnet 5.)*
-- [ ] Opus review checkpoint on merged core before dependents build on it. *(Opus 4.8.)*
+- [x] Design pane-factory contract + page/site/section runtime in `pxd.js`. *(Opus 4.8 — risk, not volume, justifies the premium model.)*
+- [x] Implement `PxD.panes.registerType`, per-page instantiation, responsive width grid, divider/section grouping + collapse, sticky header/footer, shared MQTT. *(Sonnet 5.)*
+- [x] Opus review checkpoint on merged core before dependents build on it. *(Opus 4.8.)*
 
 ### Phase 2 — Pane library
-- [ ] Port `game-control`, `time-lights`, `hints`, `system` to the factory contract. *(Sonnet 5.)*
-- [ ] `widget-grid` pane: multi-instance, per-instance widget set, default-shown + gear show/hide. *(Sonnet 5.)*
-- [ ] Adapt `camera-view` to the factory contract; remove temp `localStorage`. *(Sonnet 5.)*
-- [ ] New `nav` pane (auto-built from site pages + optional external links). *(Sonnet 5.)*
-- [ ] New `content` pane (raw HTML or structured text/image/button list). *(Sonnet 5.)*
-- [ ] New `divider` pane + section collapse logic. *(Sonnet 5.)*
-- [ ] Responsive 12-col width CSS + collapse rules in `pxd-base.css`. *(Sonnet 5.)*
-- [ ] Locate every call site of old `PxD.panels.register`/`panels.include`. *(Explore sub-agent, cheapest model.)*
+- [x] Port `game-control`, `time-lights`, `hints`, `system` to the factory contract. *(Sonnet 5.)*
+- [x] `widget-grid` pane: multi-instance, per-instance widget set, default-shown + gear show/hide. *(Sonnet 5.)*
+- [x] Adapt `camera-view` to the factory contract; remove temp `localStorage`. *(Sonnet 5.)*
+- [x] New `nav` pane (auto-built from site pages + optional external links). *(Sonnet 5.)*
+- [x] New `content` pane (raw HTML or structured text/image/button list). *(Sonnet 5.)*
+- [x] New `divider` pane + section collapse logic. *(Sonnet 5.)*
+- [x] Responsive 12-col width CSS + collapse rules in `pxd-base.css`. *(Sonnet 5.)*
+- [x] Locate every call site of old `PxD.panels.register`/`panels.include`. *(Explore sub-agent, cheapest model.)*
 
 ### Phase 3 — Themes
-- [ ] Ship `apps/PxD/themes/` with `midnight-teal`, `haunted-manor`, `crimson-gold`, `parchment-light`; verify WCAG AA + luminance-separated status colors. *(Sonnet 5; Opus 4.8 spot-check on the color-blind/contrast reasoning if a palette needs tuning.)*
-- [ ] Theme resolution (name + overrides) in `pxd.js`/packager. *(Sonnet 5.)*
+- [x] Ship `apps/PxD/themes/` with `midnight-teal`, `haunted-manor`, `crimson-gold`, `parchment-light`; verify WCAG AA + luminance-separated status colors. *(Sonnet 5; Opus 4.8 spot-check on the color-blind/contrast reasoning if a palette needs tuning.)*
+- [x] Theme resolution (name + overrides) in `pxd.js`/packager. *(Sonnet 5.)*
 
 ### Phase 4 — Packager & sites
-- [ ] Multi-site build: per-`pxd`-site subfolder, per-page HTML generation, asset copy. *(Sonnet 5.)*
-- [ ] Clean-and-rebuild for `pxd` subfolders via explicit allow-list; never touch `manual`; skip `external`. *(Sonnet 5 — correctness-sensitive deletion; keep off Haiku.)*
-- [ ] Landing-page generator (single-site redirect vs multi-site link list). *(Sonnet 5.)*
-- [ ] Update packager tests for the new model. *(Sonnet 5.)*
+- [x] Multi-site build: per-`pxd`-site subfolder, per-page HTML generation, asset copy. *(Sonnet 5.)*
+- [x] Clean-and-rebuild for `pxd` subfolders via explicit allow-list; never touch `manual`; skip `external`. *(Sonnet 5 — correctness-sensitive deletion; keep off Haiku.)*
+- [x] Landing-page generator (single-site redirect vs multi-site link list). *(Sonnet 5.)*
+- [x] Update packager tests for the new model. *(Sonnet 5.)*
 
 ### Phase 5 — Migrate rooms
-- [ ] Migrate Agent 22 → v2, two sites (`simple`, `live` with 2-view camera), `midnight-teal`, remove temp pane. *(Sonnet 5.)*
-- [ ] Migrate Houdini's Challenge → v2, two sites (`simple`, `live` with 3-view camera), `haunted-manor`. *(Sonnet 5.)*
-- [ ] Repackage both rooms; run packager tests. *(Haiku.)*
-- [ ] Live visual verification in a real browser (note: headless can't decode camera AAC/MSE — verify tiles connect, judge visuals in a normal browser). *(Sonnet 5.)*
+- [x] Migrate Agent 22 → v2, two sites (`simple`, `live` with 2-view camera), `midnight-teal`, remove temp pane. *(Sonnet 5.)*
+- [x] Migrate Houdini's Challenge → v2, two sites (`simple`, `live` with 3-view camera), `haunted-manor`. *(Sonnet 5.)*
+- [x] Repackage both rooms; run packager tests. *(Haiku.)*
+- [x] Live visual verification in a real browser (note: headless can't decode camera AAC/MSE — verify tiles connect, judge visuals in a normal browser). *(Sonnet 5.)*
 
 ### Phase 6 — Documentation & AI instructions (near the end)
-- [ ] Rewrite `docs/ROOMS.md` for the v2 site/page/pane/section model + §2 glossary. *(Sonnet 5.)*
-- [ ] New `docs/PANES.md` — pane library reference **and the "how to add a new pane type" guide (§5.6)**. *(Sonnet 5.)*
-- [ ] Update `docs/THEMING.md` — named themes, full token table, the four themes, accessibility rule. *(Sonnet 5.)*
-- [ ] Update `docs/WIDGETS.md` — widgets live in `widget-grid` panes, multi-instance, default visibility. *(Sonnet 5.)*
-- [ ] Update `README.md` status/repo-layout/doc index. *(Haiku.)*
-- [ ] Update PxD AI-instruction files (`AI-INSTRUCTIONS.md`, `AI-DETAILED-OVERVIEW.md`, `CLAUDE.md`) with the model + glossary. *(Sonnet 5.)*
-- [ ] Add a short PxD-capability note to sibling repos' AI-instruction files where useful (PxO, room repos). *(Haiku.)*
+- [x] Rewrite `docs/ROOMS.md` for the v2 site/page/pane/section model + §2 glossary. *(Sonnet 5.)*
+- [x] New `docs/PANES.md` — pane library reference **and the "how to add a new pane type" guide (§5.6)**. *(Sonnet 5.)*
+- [x] Update `docs/THEMING.md` — named themes, full token table, the four themes, accessibility rule. *(Sonnet 5.)*
+- [x] Update `docs/WIDGETS.md` — widgets live in `widget-grid` panes, multi-instance, default visibility. *(Sonnet 5.)*
+- [x] Update `README.md` status/repo-layout/doc index. *(Haiku.)*
+- [ ] Update PxD AI-instruction files (`AI-INSTRUCTIONS.md`, `AI-DETAILED-OVERVIEW.md`, `CLAUDE.md`) with the model + glossary. *(Sonnet 5.)* — deferred: PxD has no `.github/copilot-instructions.md`/`AI-INSTRUCTIONS.md` yet in this workspace; not created in this pass.
+- [ ] Add a short PxD-capability note to sibling repos' AI-instruction files where useful (PxO, room repos). *(Haiku.)* — deferred, optional/light-touch, not done in this pass.
 
 ### Phase 7 — Close-out
-- [ ] Create `docs/archive/` if absent; move this PR doc there; mark "Implemented". *(Haiku.)*
-- [ ] Also relocate any other already-completed `docs/PR_*.md` to `docs/archive/`. *(Haiku.)*
+- [x] Create `docs/archive/` if absent; move this PR doc there; mark "Implemented". *(Haiku.)*
+- [x] Also relocate any other already-completed `docs/PR_*.md` to `docs/archive/`. *(Haiku.)* — checked: `PR_PXD_IMPLEMENTATION_PLAN.md` still has open items (SpyCatcher migration, hardware tests) and was NOT archived; `PR_CAMERA_VIEW_PANEL.md` and `PR_PROP_WIDGETS.md` left as-is pending a closer completion review.
 
 ### Autopilot note
 Ordered so each phase builds on a verified predecessor. The two Opus checkpoints

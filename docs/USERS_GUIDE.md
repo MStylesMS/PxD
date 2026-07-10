@@ -4,6 +4,16 @@ PxD is the operator-control UI framework for Paradox escape rooms. This guide
 walks through everything from creating your first room to writing custom layouts,
 themes, and widgets.
 
+> **v2 note**: This guide predates the "Flexible Sites, Pages & Panes"
+> redesign (`pxdVersion: "2"`). Several sections below (`panels.include`,
+> `pxdVersion: "1"`, room-local `pxd/panels/<id>.js`) describe the original
+> v1 model, which is no longer supported by the packager. For the current
+> schema and authoring model, use [ROOMS.md](ROOMS.md) (fields),
+> [PANES.md](PANES.md) (pane library + "add a new pane type" guide), and
+> [THEMING.md](THEMING.md) (named themes) as the authoritative references;
+> treat this guide's narrative/conceptual sections as still broadly correct,
+> but its exact field names and code snippets as historical.
+
 **Faster path**: If you just want to get something running, start with
 [QUICK_START.md](QUICK_START.md) and come back here when you want to understand
 the full picture.

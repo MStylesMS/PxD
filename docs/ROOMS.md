@@ -1,145 +1,157 @@
 # PxD — Room Configuration Guide (ROOMS.md)
 
-Each room has a `pxd/` folder inside its repo root:
+PxD builds one or more **sites** for a room from a single `room.json` config
+file. See `docs/PANES.md` for the pane library reference and how to add new
+pane types, and `docs/THEMING.md` for the theme/token reference.
+
+## Glossary
+
+| Term | Definition |
+|---|---|
+| **Site** | A deployable UI variant for a game. The designer picks its `id` (used as the output subfolder name) and title freely — there is no default/reserved site name. A site is `pxd` (PxD-generated), `external` (a link to an off-PxD URL), or `manual` (an operator-maintained subfolder PxD never writes to or deletes). |
+| **Page** | One generated HTML file within a `pxd` site (`<pageId>.html`; the site's first page is also aliased `index.html`). Scrolls vertically. Multiple pages in a site are navigated via an auto-built `nav` pane. Scrolling panes and navigable pages are independent — freely combine both. |
+| **Pane** | A card/section within a page, instantiated from the pane library by `type`. Config order = on-screen order. Each pane has a configurable `width` and, if its type declares one, a gear-icon settings menu (session-only, never persisted). |
+| **Section / Divider** | A `divider` pane entry starts a collapsible section (title, alignment, collapse toggle). The section owns every pane after it until the next divider, the footer, or the frozen footer. |
+| **Pane library** | The fixed set of pane types PxD ships (see `docs/PANES.md`). Config selects and configures instances; new pane types can be added by developers. |
+| **Widget** | An MQTT-bound prop/puzzle tile. Widgets live inside a `widget-grid` pane. A page may contain multiple `widget-grid` panes, each with its own widget set. |
+| **Theme** | A named bundle of visual design tokens. Rooms reference a theme by name and may override individual tokens. See `docs/THEMING.md`. |
+| **Header / Footer** | Optional site-level sticky regions, each holding one pane. Applied to every page in the site. |
+| **Landing page** | The always-generated `/html/index.html`. A single-site room redirects straight into it; a multi-site room shows the room logo and a link to every site (including `external` and `manual` sites). |
+
+## Room source layout
 
 ```
 rooms/<game>/pxd/
-  room.json      # required
-  media/         # optional — hero, favicon, images
-  fonts/         # optional — web font files
-  panels/        # optional — room-local or override panels
-  widgets/       # optional, Phase 3
+  room.json                    # required
+  media/                       # hero image, favicon, other images
+  fonts/                       # web font files referenced by theme.fonts
+  panes/                       # optional — room-local pane overrides
+  widgets/                     # widget instance sources (see docs/WIDGETS.md)
+  camera-view.local.json       # optional — operator-maintained camera URL overrides
 ```
 
-### Room-local panels (`panels/`)
+### Room-local panes (`panes/`)
 
-Place custom panel JS files here. The packager checks this directory **before**
-the framework panels directory, so:
-
-- A file named `time-lights.js` here replaces the framework `time-lights.js`
-  for this room only.
-- A file with a new name (e.g. `header.js`) adds a new panel; it must also
-  appear in `panels.include` and have a matching `data-slot` in the layout.
-
-See [USERS_GUIDE.md § Creating custom and room-local panels](USERS_GUIDE.md)
-for a full walkthrough.
-
----
+Place custom pane JS files here. The packager checks this directory **before**
+the framework's `assets/js/panes/`, so a file named `time-lights.js` here
+replaces the framework `time-lights.js` for this room only. See
+`docs/PANES.md § Adding a new pane type` for the authoring contract.
 
 ## room.json structure
 
 ```jsonc
 {
-  // Required
-  "pxdVersion": "1",
-  "layout": "default-dashboard",
-  "title": "Agent 22",
-  "topicRoot": "paradox/agent22",
+  "pxdVersion": "2",
+  "title": "My Room",
+  "topicRoot": "paradox/myroom",
 
-  // MQTT connection settings
   "mqtt": {
     "broker": "auto",       // "auto" = window.location.hostname
-    "port": "auto",         // "auto" = window.location.port  
+    "port": "auto",         // "auto" = window.location.port
     "wsPath": "/mqtt",      // WebSocket path (Nginx proxy)
-    "clientIdPrefix": "agent22_ui_"  // optional, default "pxd_"
+    "clientIdPrefix": "myroom_ui_"
   },
 
-  // Visual theme
+  // Named theme + optional per-token overrides + optional custom fonts.
   "theme": {
-    "bgColor1":   "#041320",
-    "bgColor2":   "#0a2d46",
-    "bgColor3":   "#133c5a",
-    "panel":      "rgba(8, 23, 36, 0.85)",
-    "panelBorder":"rgba(108, 223, 255, 0.28)",
-    "ink":        "#d8f4ff",
-    "inkSoft":    "#9ad5ea",
-    "accent":     "#44e0cc",
-    "accentAlt":  "#6de79a",
-    "warn":       "#ffcc66",
-    "danger":     "#ff7272",
-    "radius":     "14px",
-    "shadow":     "0 12px 28px rgba(0,0,0,0.35)",
-    "fontBody":   "TypewriterBold, Courier New, monospace",
-    "fontMono":   "CursedTimer, Courier New, monospace",
+    "base": "midnight-teal",
+    "overrides": { "accent": "#44e0cc" },
     "fonts": [
-      { "family": "TypewriterBold", "src": "fonts/TypewriterBold.ttf", "weight": "normal", "style": "normal" },
-      { "family": "CursedTimer",    "src": "fonts/CursedTimer.ttf",    "weight": "normal", "style": "normal" }
+      { "family": "MyFont", "src": "fonts/MyFont.woff2", "weight": "normal", "style": "normal" }
     ]
   },
 
-  // Media assets (paths relative to packager output root)
   "media": {
-    "hero":    "media/hero.jpg",
+    "hero": "media/hero.jpg",       // used via a content pane, see below
     "favicon": "media/favicon.ico"
   },
 
-  // Panels to include (ordered — determines load and mount order)
-  "panels": {
-    "include": ["game-control", "time-lights", "hints", "system"]
-  },
+  // Panel-specific settings, unchanged from earlier PxD versions. These are
+  // read directly by game-control/time-lights/hints/system — their pane
+  // `config` entry is typically left as `{}` since they read from here.
+  "gameControl": { "heartbeatTimeoutMs": 3000 },
+  "timeLights":  { "lightsScenesTopicRoot": "paradox/myroom/lights" },
+  "hints":       { "hintTopic": "paradox/myroom/hints" },
+  "system":      { "watchZones": [ /* ... */ ] },
 
-  // Panel-specific overrides (each key matches a panel id)
-  "gameControl": {
-    "checklistStateTopic":  "paradox/agent22s-challenge/checklist/state",
-    "heartbeatTimeoutMs":   3000
-  },
-
-  "timeLights": {
-    "lightsScenesTopicRoot": "paradox/agent22/lights",
-    "clockStateTopic":       "paradox/agent22/clock/state",
-    "tvStateTopic":          "paradox/agent22/tv/state"
-  },
-
-  "hints": {
-    "hintTopic": "paradox/agent22/hints"
-  },
-
-  "system": {
-    "warningTopics": [
-      "paradox/agent22/warnings",
-      "paradox/agent22/+/warnings"
-    ],
-    "watchZones": [
-      { "id": "pfxService", "label": "Paradox Fx", "topic": "paradox/agent22/tv/state",        "timeoutMs": 12000 },
-      { "id": "tv",         "label": "TV",          "topic": "paradox/agent22/tv/state",        "timeoutMs": 12000 },
-      { "id": "wallclock",  "label": "Wallclock",   "topic": "paradox/agent22/wallclock/state", "timeoutMs": 15000 },
-      { "id": "suitcase",   "label": "Suitcase",    "topic": "paradox/agent22/suitcase/state",  "timeoutMs": 15000 }
-    ]
-  }
+  "sites": [
+    {
+      "id": "simple",
+      "title": "Simple",
+      "description": "Core operator dashboard",
+      "type": "pxd",
+      "header": null,
+      "footer": null,
+      "pages": [
+        {
+          "id": "main",
+          "title": "My Room",
+          "panes": [
+            { "type": "content", "width": "full", "config": { "html": "<img class=\"pxd-hero-banner\" src=\"media/hero.jpg\">" } },
+            { "type": "game-control", "width": "full", "config": {} },
+            { "type": "time-lights", "width": "half", "config": {} },
+            { "type": "hints", "width": "half", "config": {} },
+            { "type": "widget-grid", "width": "full", "config": { "widgets": [ { "id": "front-door", "name": "Front Door", "shown": true } ] } },
+            { "type": "system", "width": "full", "config": {} }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
----
+If `sites` is omitted entirely, PxD synthesizes a single `pxd` site with id
+`control` and a `panes` list read from a top-level `panes` array (useful for
+the very simplest single-page rooms) — but declaring `sites` explicitly is
+recommended for anything beyond a quick prototype.
 
-## room.json field reference
+## Field reference
 
 ### Top level
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `pxdVersion` | string | **required** | Schema version; currently `"1"` |
-| `layout` | string | `"default-dashboard"` | Layout id |
-| `title` | string | `"PxD"` | Page title and header text |
+| `pxdVersion` | string | **required**, must be `"2"` | Schema version |
+| `title` | string | `"PxD"` | Default page title, landing-page heading |
 | `topicRoot` | string | **required** | Root MQTT topic prefix |
+| `sites` | array | synthesized single `control` site | See `sites[]` below |
 
 ### mqtt
 
 | Field | Default | Description |
 |---|---|---|
-| `broker` | `"auto"` | Hostname / IP or `"auto"` for `window.location.hostname` |
+| `broker` | `"auto"` | Hostname/IP or `"auto"` for `window.location.hostname` |
 | `port` | `"auto"` | Port or `"auto"` for page port |
 | `wsPath` | `"/mqtt"` | Nginx WebSocket proxy path |
 | `clientIdPrefix` | `"pxd_"` | MQTT client ID prefix; random suffix appended |
 
 ### theme
 
-All fields are optional. Unmapped fields fall back to the defaults in `pxd-base.css`.
+`theme` is `"<name>"` or `{ base, overrides, fonts }`. See `docs/THEMING.md`
+for the full token list, the shipped theme catalog, and the accessibility
+rule every theme must satisfy.
 
-See [THEMING.md](THEMING.md) for the full token reference.
+### sites[]
 
-### panels.include
+| Field | Required | Description |
+|---|---|---|
+| `id` | ✓ | Designer-chosen. Output subfolder name for `pxd` sites; also used to build the landing-page link for `manual` sites. |
+| `title` | | Display name (landing-page link text, page `<title>` fallback) |
+| `description` | | Shown as the landing-page link's hover tooltip |
+| `type` | | `"pxd"` (default), `"external"`, or `"manual"` |
+| `url` | `external` only | Target URL for the landing-page link |
+| `header` | | One pane entry `{ type, config }`, sticky to the top of every page in this site |
+| `footer` | | One pane entry `{ type, config }`, sticky to the bottom of every page in this site |
+| `pages` | `pxd` sites | Array of page objects (see below) |
 
-Ordered list of panel IDs. Panels are loaded and mounted in this order. Unknown IDs produce a build warning but do not fail the packager.
+### pages[]
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | ✓ | Becomes `<pageId>.html`. The first page in the array is also aliased `index.html`. |
+| `title` | | Page `<title>` and nav link label |
+| `panes` | ✓ | Ordered array of pane entries — see `docs/PANES.md` |
 
 ### gameControl
 
@@ -150,6 +162,7 @@ Ordered list of panel IDs. Panels are loaded and mounted in this order. Unknown 
 | `configTopic` | `topicRoot/config` | Game config subscribe topic |
 | `checklistStateTopic` | `topicRoot/checklist/state` | Room checklist state topic |
 | `heartbeatTimeoutMs` | `3000` | State heartbeat watchdog timeout |
+| `emergencyActions` | `[]` | Array of `{ label, command, param? }` quick-action buttons |
 
 ### timeLights
 
@@ -158,7 +171,7 @@ Ordered list of panel IDs. Panels are loaded and mounted in this order. Unknown 
 | `commandTopic` | `topicRoot/commands` | Time adjust command topic |
 | `lightsCommandTopic` | `topicRoot/lights/commands` | Lights command topic |
 | `lightsStateTopic` | `topicRoot/lights/state` | Lights state subscribe topic |
-| `lightsScenesTopicRoot` | — | If set, subscribes to `<value>/scenes` for dynamic scene list |
+| `lightsScenesTopicRoot` | — | If set, subscribes to `<value>/scenes` for a dynamic scene list |
 | `clockStateTopic` | `topicRoot/clock/state` | Clock visibility state topic |
 | `tvStateTopic` | `topicRoot/tv/state` | TV/browser state topic |
 
@@ -167,61 +180,6 @@ Ordered list of panel IDs. Panels are loaded and mounted in this order. Unknown 
 | Field | Default | Description |
 |---|---|---|
 | `hintTopic` | `topicRoot/hints` | Topic to publish hints to |
-
-### cameraView
-
-Optional. Add `"camera-view"` to `panels.include` to enable. Embeds live
-go2rtc camera streams; this panel only *consumes* an existing go2rtc
-instance (see `docs/PR_CAMERA_VIEW_PANEL.md` and
-`apps/PxD/tools/camera-finder/`) — it does not run or manage go2rtc.
-
-`cameraView` may be a **single pane object** (as below) or an **array of
-pane objects** to render multiple independent camera panes stacked in the
-same panel slot (each with its own main+sidebar layout and toolbar). Arrays
-wrap in a flex row — `"full"` panes take the whole row, `"half"` panes sit
-two to a row.
-
-| Field | Default | Description |
-|---|---|---|
-| `layout` | `1` | Number of camera slots, 1–5. `1` = single full view, no sidebar |
-| `sidebarPosition` | `"right"` | `left`\|`right`\|`top`\|`bottom` — ignored when `layout` is `1` |
-| `paneWidth` | `"full"` | `"half"`\|`"full"` — initial size, changeable at runtime via the pane's own toolbar |
-| `defaultViewMode` | `"multi"` | `"multi"`\|`"single"` — initial view mode (sidebar shown or not), changeable at runtime |
-| `cameras` | `[]` | Array of `{ id, label, wsUrl, main?, transform? }`. `wsUrl` is the go2rtc WebSocket URL (`ws://<room-pi-ip>:1984/api/ws?src=<stream-name>`). Exactly one entry may set `"main": true` to choose the default main view (first entry if omitted) |
-
-Each pane's header row (next to the "Cameras" title) has three controls:
-**Half/Full** (pane width), **Single/Multi** (view mode), and a gear icon
-(session-only URL overrides, same icon as the Prop/Puzzle widgets panel).
-Changes made via these controls are held in `localStorage` per pane index
-so they survive a page reload during testing — this is intentionally
-lightweight and not meant as a long-term persistence design; it can be
-removed in favor of config-only defaults later.
-
-`transform` (optional, per-camera) corrects a physically-mounted camera's
-orientation entirely on the client — no go2rtc transcoding involved:
-
-| Field | Default | Description |
-|---|---|---|
-| `rotate` | `0` | `0`\|`90`\|`180`\|`270`, clockwise |
-| `flipH` | `false` | Mirror horizontally (applied after rotation) |
-| `flipV` | `false` | Mirror vertically (applied after rotation) |
-
-```jsonc
-{ "id": "vault", "label": "Vault", "wsUrl": "ws://...", "transform": { "rotate": 90, "flipH": true } }
-```
-
-Only the main view ever plays audio (starts muted at 50% volume, with a
-visible mute indicator — click to unmute). Sidebar thumbnails are always
-muted. Clicking a sidebar thumbnail swaps it into the main slot.
-
-
-Camera URL persistence has three tiers (lowest to highest precedence):
-1. `room.json` → `cameraView.cameras[].wsUrl` — the shipped default.
-2. `pxd/camera-view.local.json` (optional) — operator-maintained override,
-   copied verbatim by the packager if present. Persists across reloads and
-   repackages. Shape: `{ "overrides": { "<camera-id>": "ws://..." } }`.
-3. The panel's gear-icon settings dialog — this browser tab's session only
-   (`sessionStorage`), cleared on close. Not durable; for quick testing only.
 
 ### system.watchZones
 
@@ -234,8 +192,6 @@ Array of zone objects:
 | `topic` | string | MQTT topic to watch (any message resets timer) |
 | `timeoutMs` | number | Milliseconds without a message before marking Down |
 
----
-
 ## Packaging
 
 ```bash
@@ -245,59 +201,36 @@ node scripts/package.js \
   --out      ../../rooms/<game>/html
 ```
 
-Or use the npm script:
+`<out>` is the room's `/html/` root, not a single site. Every `pxd` site in
+`sites[]` builds into its own `<out>/<siteId>/` subfolder (cleaned and
+rebuilt each run — see the safety note below); `<out>/index.html` (the
+landing page) is always regenerated.
 
-```bash
-npm run package:<game>
-```
-
----
+**Safety:** a `pxd` site's output subfolder is only ever deleted and rebuilt
+if it doesn't already exist, or if it contains a `.pxd-generated` marker
+file from a previous run of this packager. An existing folder *without*
+that marker is left completely untouched and that site's build fails loudly
+— this is what protects `manual` sites (and any other hand-placed content)
+from ever being silently deleted. Never bulk-delete a room's `html/`
+directory by hand before repackaging — check `git status` on it first, as
+it may contain legacy files that predate PxD and aren't packager output.
 
 ## Adding a new room
 
-For a guided walkthrough see [QUICK_START.md](QUICK_START.md).  The condensed
-steps are:
-
 1. Create the source folder and copy the starter template:
-
-```bash
-GAME=myroom
-mkdir -p rooms/$GAME/pxd/{media,fonts}
-cp apps/PxD/templates/rooms/_starter/room.json rooms/$GAME/pxd/room.json
-```
-
-2. Edit `room.json` **in this order** (each step builds on the last):
-
-| # | Field(s) | What to set |
-|---|---|---|
-| 1 | `title` | Display name in the browser tab |
-| 2 | `topicRoot` | Root MQTT prefix (e.g. `paradox/myroom`) |
-| 3 | `mqtt.*` | Leave `"auto"` for same-host Pi; set explicit values for remote broker |
-| 4 | `theme.*` | Colours, fonts, radius — see [THEMING.md](THEMING.md) |
-| 5 | `media.hero` / `media.favicon` | Drop files in `pxd/media/` first |
-| 6 | `panels.include` | Ordered list of panels to mount |
-| 7 | Panel sections | `gameControl`, `timeLights`, `hints`, `system` — topic overrides |
-| 8 | `widgets[]` | One entry per prop widget; add `"widgets"` to `panels.include` |
-
-3. Add a package shorthand to `apps/PxD/package.json`:
-
-```jsonc
-"package:myroom": "node scripts/package.js --room-dir ../../rooms/myroom/pxd --out ../../rooms/myroom/html"
-```
-
-4. Run the packager and serve locally to verify:
-
-```bash
-cd apps/PxD
-npm run package:myroom
-python3 -m http.server 9090 --directory ../../rooms/myroom/html
-```
-
-5. Deploy to a Pi:
-
-```bash
-scripts/deploy.sh --room myroom --host <pi-hostname>
-```
-
-→ See [PACKAGER.md](PACKAGER.md) for packager options and the full `deploy.sh` reference.
-→ See [QUICKREF.md](QUICKREF.md) for one-liner cheat-sheet.
+   ```bash
+   GAME=myroom
+   mkdir -p rooms/$GAME/pxd/{media,fonts}
+   cp apps/PxD/templates/rooms/_starter/room.json rooms/$GAME/pxd/room.json
+   ```
+2. Edit `room.json`: `title`, `topicRoot`, `theme`, `media`, the panel-settings
+   sections (`gameControl`/`timeLights`/`hints`/`system`), then define at
+   least one site with at least one page and its `panes` list.
+3. Package and serve locally to verify:
+   ```bash
+   cd apps/PxD
+   node scripts/package.js --room-dir ../../rooms/$GAME/pxd --out ../../rooms/$GAME/html
+   python3 -m http.server 9090 --directory ../../rooms/$GAME/html
+   ```
+4. Deploy the room's `html/` directory as usual (Nginx serves it as static
+   files; no server-side changes required).

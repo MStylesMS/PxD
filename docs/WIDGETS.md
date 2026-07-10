@@ -1,11 +1,10 @@
 # PxD Widget System
 
-> **Status: Phase 3 — In progress.**
-
 Widgets are small, embeddable UI cards that display real-time game prop state.
-Unlike the four primary panels (game-control, time-lights, hints, system),
-widgets are room-specific, loaded dynamically, and sized as tiles within the
-widget panel grid.
+Unlike the four legacy-style panes (game-control, time-lights, hints, system),
+widgets are room-specific, loaded dynamically, and sized as tiles within a
+`widget-grid` pane (see `docs/PANES.md`). A page may contain multiple
+`widget-grid` panes, each with its own independent widget set.
 
 ---
 
@@ -83,14 +82,16 @@ the instance directory at runtime.
 
 ---
 
-## Declaring widgets in room.json
+## Declaring widgets in a `widget-grid` pane
 
-```json
-"widgets": [
-  { "id": "bomb-timer",  "type": "countdown",   "name": "Bomb Timer"  },
-  { "id": "front-door",  "type": "binary-door", "name": "Front Door"  },
-  { "id": "vault-lock",  "type": "binary-lock",  "target": "game-control" }
-]
+```jsonc
+{ "type": "widget-grid", "width": "full", "config": {
+  "widgets": [
+    { "id": "bomb-timer",  "type": "countdown",   "name": "Bomb Timer", "shown": true },
+    { "id": "front-door",  "type": "binary-door", "name": "Front Door", "shown": true },
+    { "id": "vault-lock",  "type": "binary-lock", "shown": false }
+  ]
+} }
 ```
 
 | Field | Required | Description |
@@ -98,48 +99,13 @@ the instance directory at runtime.
 | `id` | ✓ | Directory name under `pxd/widgets/`. Unique within the room. |
 | `type` | ✓ | Template or example name. Used at runtime to load the shared factory for **template-tier** widgets; informational for example/custom. |
 | `name` | | Card header label. Falls back to `DISPLAY_NAME` in `config.json`, then `id`. |
-| `target` | | Panel slot for the card (see below). |
+| `shown` | | `true` to show by default; `false` or omitted starts hidden (still loaded — revealable instantly via the pane's gear menu). |
 
-> Add `"widgets"` to `panels.include` in `room.json` when any widgets are
-> declared. The panel stays hidden if the array is empty or the key is absent.
-
-### The `target` field
-
-`target` is optional. It specifies which panel slot the widget card mounts into.
-
-| Value | Behaviour |
-|---|---|
-| *(omitted)* | Mounts in the central `[data-slot="widgets"]` grid |
-| `"game-control"` | Mounts inside the game-control panel's widget anchor |
-| `"time-lights"` | Mounts inside the time-lights panel's widget anchor |
-| `"hints"` | Mounts inside the hints panel's widget anchor |
-| `"header"` | Mounts inside a custom header panel's widget anchor |
-| *(any slot id)* | Mounts inside that panel's `data-widget-slot` element |
-
-If the named panel does not contain a `data-widget-slot` element, the widget
-falls back to the central widgets grid and a console warning is emitted.
-
-### Panel widget anchors
-
-For a panel to accept widgets, its injected HTML must contain:
-
-```html
-<div data-widget-slot></div>
-```
-
-The widget loader appends widget cards to this element. The default framework
-panels (game-control, time-lights, hints, system) will expose an optional
-`data-widget-slot` container at the bottom of their card in Phase 3.
-
-**Example — clock widget in the header panel:**
-
-```
-┌──────────────────────────────────────────┐
-│  [Hero image / logo]     [Bomb: 47:22]   │  ← header panel with widget slot
-└──────────────────────────────────────────┘
-│  game-control  │  time-lights  │  hints  │
-└────────────────┴───────────────┴─────────┘
-```
+Each entry lives in a `widget-grid` pane's own `config.widgets[]` array in
+`room.json` (see `docs/PANES.md § widget-grid`) — there is no separate
+"include" list or panel-slot targeting; placing a widget in a different
+location on the page means adding it to a different `widget-grid` pane
+instance (a page can have as many as it needs).
 
 ---
 
@@ -544,10 +510,10 @@ Examples live in `apps/PxD/templates/widgets/examples/`.
    required; all other keys have sensible defaults.
 3. Place any local icon/image assets in the same directory and reference them
    by filename in the CONFIG block.
-4. Add `{ "id": "<your-id>", "type": "<template>", "name": "Label" }` to
-   `room.json → widgets`.
-5. Add `"widgets"` to `panels.include` if not already present.
-6. Run the packager.
+4. Add `{ "id": "<your-id>", "type": "<template>", "name": "Label", "shown": true }`
+   to a `widget-grid` pane's `config.widgets[]` in `room.json` (see
+   `docs/PANES.md § widget-grid`).
+5. Run the packager.
 
 ### Path B — from an example (copy, configure, optionally extend)
 
@@ -557,7 +523,7 @@ Examples live in `apps/PxD/templates/widgets/examples/`.
    CONFIG block in `widget.js` for fields outside the schema.
 3. Optionally add a `config.json` with overrides — these merge over the
    internal CONFIG without touching the JS.
-4. Add to `room.json → widgets` and run the packager.
+4. Add to a `widget-grid` pane's `config.widgets[]` and run the packager.
 
 ### Path C — custom widget (from scratch)
 
@@ -566,7 +532,7 @@ Examples live in `apps/PxD/templates/widgets/examples/`.
 3. Add a `schema` array to `PxD.widgets.register()` if viewer edit support is
    wanted.
 4. Optionally add `widget.css` for widget-scoped styles.
-5. Add to `room.json → widgets` and run the packager.
+5. Add to a `widget-grid` pane's `config.widgets[]` and run the packager.
 
 ---
 

@@ -1,20 +1,19 @@
 {
   "//": [
-    "PxD Room Configuration — Starter Template",
+    "PxD Room Configuration — Starter Template (v2)",
     "Copy this file to rooms/<game>/pxd/room.json and fill in your values.",
     "Lines starting with '//' are comments and must be removed from your copy",
     "(standard JSON does not allow comments).",
     "",
-    "Required fields are marked REQUIRED. All others have usable defaults."
+    "Required fields are marked REQUIRED. All others have usable defaults.",
+    "Full reference: docs/ROOMS.md (fields), docs/PANES.md (pane library),",
+    "docs/THEMING.md (theme tokens), docs/WIDGETS.md (widget authoring)."
   ],
 
   "//pxdVersion": "REQUIRED — do not change",
-  "pxdVersion": "1",
+  "pxdVersion": "2",
 
-  "//layout": "Layout to use. 'default-dashboard' is the standard four-panel layout.",
-  "layout": "default-dashboard",
-
-  "//title": "REQUIRED — shown in the browser tab and page header",
+  "//title": "REQUIRED — shown in the browser tab, page header, landing page",
   "title": "My Room Name",
 
   "//topicRoot": "REQUIRED — all default MQTT topics derive from this prefix",
@@ -33,88 +32,25 @@
   },
 
   "//theme": [
-    "Visual theme. All fields are optional — omit any field to use the built-in",
-    "default. See docs/THEMING.md for the full token reference."
+    "Named theme + optional per-token overrides + optional custom fonts.",
+    "See docs/THEMING.md for the shipped theme catalog and full token table."
   ],
   "theme": {
-    "//bgColor1": "Page background (darkest)",
-    "bgColor1": "#041320",
-    "//bgColor2": "Page background (mid-tone)",
-    "bgColor2": "#0a2d46",
-    "//bgColor3": "Page background (gradient base, slightly lighter)",
-    "bgColor3": "#133c5a",
-    "//panel": "Panel card background (usually semi-transparent)",
-    "panel": "rgba(8, 23, 36, 0.85)",
-    "//panelBorder": "Panel card border colour",
-    "panelBorder": "rgba(108, 223, 255, 0.28)",
-    "//ink": "Primary text colour",
-    "ink": "#d8f4ff",
-    "//inkSoft": "Secondary text / label colour",
-    "inkSoft": "#9ad5ea",
-    "//accent": "Primary accent — buttons, focus rings, highlights",
-    "accent": "#44e0cc",
-    "//accentAlt": "Secondary accent — success states, alternate highlights",
-    "accentAlt": "#6de79a",
-    "//warn": "Warning colour",
-    "warn": "#ffcc66",
-    "//danger": "Danger / error colour",
-    "danger": "#ff7272",
-    "//radius": "Panel card border-radius",
-    "radius": "14px",
-    "//shadow": "Panel card box-shadow",
-    "shadow": "0 12px 28px rgba(0,0,0,0.35)",
-    "//fontBody": "Body font stack. Must match a family name declared in 'fonts'.",
-    "fontBody": "Arial, sans-serif",
-    "//fontMono": "Monospace font stack (used for timers, codes, etc.)",
-    "fontMono": "Courier New, monospace",
-    "//fonts": [
-      "Declare @font-face entries for custom web fonts here.",
-      "'src' is relative to the packager output root (html/ directory).",
-      "Font files must be in rooms/<game>/pxd/fonts/ before packaging.",
-      "Remove this block if you are only using system fonts."
-    ],
+    "base": "midnight-teal",
+    "overrides": {},
     "fonts": []
   },
 
   "//media": "Paths are relative to the packager output root.",
   "media": {
-    "//hero": "Wide banner image shown at the top of the page. Landscape, ~1200x300 px.",
+    "//hero": "Wide banner image, referenced from a 'content' pane (see below). Landscape, ~1200x300 px.",
     "hero": "media/hero.jpg",
     "//favicon": "Browser tab icon. 32x32 .ico or .png.",
     "favicon": "media/favicon.ico"
   },
 
-  "//panels": "Ordered list of panels to include. Determines load and mount order.",
-  "panels": {
-    "include": ["game-control", "time-lights", "hints", "system"]
-  },
-
-  "//cameraView": [
-    "Optional. Embeds live go2rtc camera streams. Add 'camera-view' to",
-    "panels.include above to enable it (omit both to hide it entirely).",
-    "This panel is a CONSUMER of an existing go2rtc instance - it does not",
-    "run/manage go2rtc. Discover cameras and confirm working stream URLs with",
-    "apps/PxD/tools/camera-finder/ first. See docs/PR_CAMERA_VIEW_PANEL.md."
-  ],
-  "cameraView": {
-    "//layout": "Number of camera slots, 1-5. 1 = single full view, no sidebar.",
-    "layout": 2,
-    "//sidebarPosition": "left|right|top|bottom - ignored when layout is 1",
-    "sidebarPosition": "right",
-    "//cameras": [
-      "One entry per camera. 'wsUrl' is the go2rtc WebSocket URL, e.g.",
-      "ws://<room-pi-ip>:1984/api/ws?src=<stream-name> - copy it from",
-      "apps/PxD/tools/camera-finder/'s 'Embed URL' button. Mark exactly one",
-      "camera 'main': true to set the default main view (first entry if omitted).",
-      "Optional 'transform': { rotate: 0|90|180|270, flipH, flipV } corrects a",
-      "physically-mounted camera's orientation entirely client-side (no",
-      "go2rtc transcoding). See docs/ROOMS.md -> cameraView."
-    ],
-    "cameras": []
-  },
-
   "//gameControl": [
-    "Game-control panel overrides. All fields are optional;",
+    "Game-control pane settings. All fields are optional;",
     "defaults derive from topicRoot. See docs/ROOMS.md for full reference."
   ],
   "gameControl": {
@@ -131,7 +67,7 @@
   },
 
   "//timeLights": [
-    "Time-lights panel overrides. All fields are optional.",
+    "Time-lights pane settings. All fields are optional.",
     "See docs/ROOMS.md for full reference."
   ],
   "timeLights": {
@@ -141,12 +77,12 @@
     "//tvStateTopic":         "Default: topicRoot/tv/state"
   },
 
-  "//hints": "Hints panel overrides.",
+  "//hints": "Hints pane settings.",
   "hints": {
     "//hintTopic": "Default: topicRoot/hints"
   },
 
-  "//system": "System panel configuration.",
+  "//system": "System pane settings.",
   "system": {
     "//warningTopics": [
       "MQTT topics whose messages appear in the warning log.",
@@ -163,5 +99,41 @@
       { "id": "pfx",       "label": "PFx",       "topic": "paradox/myroom/+/state", "timeoutMs": 12000 },
       { "id": "wallclock", "label": "Wallclock",  "topic": "paradox/myroom/clock/state", "timeoutMs": 15000 }
     ]
-  }
+  },
+
+  "//sites": [
+    "REQUIRED — one or more deployable UI variants. Each 'pxd' site has one or",
+    "more pages, each with an ordered list of panes. See docs/PANES.md for the",
+    "full pane library (game-control, time-lights, hints, system, widget-grid,",
+    "camera-view, content, nav, divider) and docs/ROOMS.md for the full",
+    "site/page schema (header/footer, description, external/manual sites).",
+    "",
+    "This starter defines a single 'control' site with the four core panes.",
+    "Add a camera-view pane (docs/PANES.md § camera-view) or a widget-grid",
+    "pane (docs/WIDGETS.md) as needed — consider splitting into two sites",
+    "(e.g. 'simple' and 'live') if you want a camera-free variant too."
+  ],
+  "sites": [
+    {
+      "id": "control",
+      "title": "Control",
+      "description": "Core operator dashboard",
+      "type": "pxd",
+      "pages": [
+        {
+          "id": "main",
+          "title": "My Room Name",
+          "panes": [
+            { "type": "content", "width": "full", "config": {
+                "html": "<img class=\"pxd-hero-banner\" src=\"media/hero.jpg\" alt=\"My Room Name\">"
+              } },
+            { "type": "game-control", "width": "full", "config": {} },
+            { "type": "time-lights", "width": "half", "config": {} },
+            { "type": "hints", "width": "half", "config": {} },
+            { "type": "system", "width": "full", "config": {} }
+          ]
+        }
+      ]
+    }
+  ]
 }

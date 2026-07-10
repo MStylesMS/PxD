@@ -34,8 +34,7 @@ Open `rooms/$GAME/pxd/room.json` and set:
 
 ```jsonc
 {
-  "pxdVersion": "1",
-  "layout": "default-dashboard",
+  "pxdVersion": "2",
   "title": "My Room Name",         // shown in the browser tab and page header
   "topicRoot": "paradox/myroom",   // all MQTT topics derive from this prefix
   ...
@@ -43,7 +42,7 @@ Open `rooms/$GAME/pxd/room.json` and set:
 ```
 
 Everything else has a sensible default. You can come back and customise the
-theme, panel overrides, and MQTT settings later.
+theme, pane list, and MQTT settings later.
 
 ---
 
@@ -97,7 +96,8 @@ npm run package:myroom
 ```
 
 The packager produces a fully self-contained directory at `rooms/$GAME/html/` —
-Bootstrap, Paho MQTT, all panel scripts, and your room assets bundled together.
+Bootstrap, Paho MQTT, all pane scripts, and your room assets bundled together,
+one subfolder per site declared in `room.json → sites[]`.
 No internet access is required at runtime.
 
 ---
@@ -133,18 +133,24 @@ Open `http://<pi-hostname>/myroom/` in a browser.
 
 ## Step 6 — Quick theme tweak (optional)
 
-The starter defaults to a dark blue theme. To use a different accent colour,
-edit `room.json → theme.accent` and repackage:
+The starter defaults to the `midnight-teal` named theme. To use a different
+accent colour without switching themes entirely, add an override and
+repackage:
 
 ```jsonc
 "theme": {
-  "accent":    "#e87040",   // burnt orange instead of teal
-  "accentAlt": "#f0a860"
+  "base": "midnight-teal",
+  "overrides": {
+    "accent":    "#e87040",   // burnt orange instead of teal
+    "accentAlt": "#f0a860"
+  }
 }
 ```
 
-Only fields you set are overridden; everything else falls back to the built-in
-defaults. See [THEMING.md](THEMING.md) for the full token list.
+Or swap `base` for a different shipped theme entirely (`haunted-manor`,
+`crimson-gold`, `parchment-light`). Only fields you set in `overrides` are
+changed from the base theme. See [THEMING.md](THEMING.md) for the full theme
+catalog and token list.
 
 ---
 
@@ -154,7 +160,7 @@ defaults. See [THEMING.md](THEMING.md) for the full token list.
 |---|---|
 | Change the colour theme in depth | [THEMING.md](THEMING.md) |
 | Add custom fonts | [THEMING.md](THEMING.md) — Custom web fonts section |
-| Override panel MQTT topics | [ROOMS.md](ROOMS.md) — Panel config fields |
-| Create a different page layout | [LAYOUTS.md](LAYOUTS.md) |
+| Override pane MQTT topics | [ROOMS.md](ROOMS.md) — Field reference |
+| Add/reorder panes, sections, multi-page sites | [PANES.md](PANES.md) |
 | Full reference for every room.json field | [ROOMS.md](ROOMS.md) |
 | Everything, with examples | [USERS_GUIDE.md](USERS_GUIDE.md) |

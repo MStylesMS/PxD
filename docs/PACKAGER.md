@@ -1,5 +1,13 @@
 # PxD Packager Reference
 
+> **v2 note**: This document predates the "Flexible Sites, Pages & Panes"
+> redesign (`pxdVersion: "2"`) and describes the original single-site,
+> `panels.include`-driven packager. The packager is now multi-site and
+> theme-resolving — see [ROOMS.md](ROOMS.md) § Packaging and
+> [PANES.md](PANES.md) for the current model. This file is kept for
+> background on the packaging pipeline mechanics (asset copying, output
+> layout concepts), which are still broadly applicable.
+
 The packager is a Node.js script (`scripts/package.js`) that assembles a
 self-contained operator UI for a single room.  It reads the room's `pxd/`
 source folder and produces a flat output directory that can be served directly

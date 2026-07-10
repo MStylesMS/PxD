@@ -55,11 +55,13 @@ Then open `rooms/$GAME/pxd/room.json` and edit **in this order**:
 1. `title` — display name shown in the browser tab
 2. `topicRoot` — MQTT topic prefix (e.g. `paradox/myroom`)
 3. `mqtt.broker` / `mqtt.port` — leave `"auto"` for same-host Pi deploys
-4. `theme.*` — paste colour values from your room design
+4. `theme.base` — pick a named theme (`midnight-teal`, `haunted-manor`,
+   `crimson-gold`, `parchment-light`), add `overrides`/`fonts` if needed
 5. `media.hero` / `media.favicon` — drop files in `pxd/media/` first
-6. `panels.include` — list the panels you need
-7. Panel config sections (`gameControl`, `timeLights`, `hints`, `system`) — fill in topic overrides
-8. `widgets[]` — add entries for each prop widget
+6. `sites[].pages[].panes[]` — list the panes you need, in order (see
+   [PANES.md](PANES.md) for the library)
+7. Pane config sections (`gameControl`, `timeLights`, `hints`, `system`) — fill in topic overrides
+8. Any `widget-grid` pane's `config.widgets[]` — add entries for each prop widget
 
 → Step-by-step walkthrough: [QUICK_START.md](QUICK_START.md)
 → Full field reference: [ROOMS.md](ROOMS.md)
@@ -78,17 +80,18 @@ cp -r apps/PxD/templates/widgets/base/binary-door \
 2. Open `rooms/<game>/pxd/widgets/<prop-name>/widget.js` and fill in the
    `STATE_TOPIC`, `VALUE_FIELD`, labels, and colours at the top of the file.
 
-3. Add an entry to `rooms/<game>/pxd/room.json → widgets[]`:
+3. Add an entry to a `widget-grid` pane's `config.widgets[]` in
+   `rooms/<game>/pxd/room.json`:
 
 ```jsonc
-"widgets": [
-  { "id": "<prop-name>", "name": "Display Name" }
-]
+{ "type": "widget-grid", "width": "full", "config": {
+  "widgets": [
+    { "id": "<prop-name>", "name": "Display Name", "shown": true }
+  ]
+} }
 ```
 
-4. Ensure `"widgets"` is in `panels.include`.
-
-5. Repackage:
+4. Repackage:
 
 ```bash
 node apps/PxD/scripts/package.js \

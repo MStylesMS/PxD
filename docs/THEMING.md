@@ -1,6 +1,44 @@
 # PxD Theming Reference (THEMING.md)
 
-PxD uses CSS custom properties (design tokens) applied to `:root` at boot time by `pxd.js` from `room.json → theme`.
+PxD uses CSS custom properties (design tokens) applied to `:root` at boot
+time by `pxd.js`, from a flat token object resolved at **package time** by
+`scripts/package.js` from `room.json → theme`.
+
+## Named themes
+
+`theme` is either a string naming a shipped theme, or an object:
+
+```jsonc
+"theme": "midnight-teal"
+// or, with overrides and custom fonts:
+"theme": {
+  "base": "midnight-teal",
+  "overrides": { "accent": "#44e0cc" },
+  "fonts": [ { "family": "MyFont", "src": "fonts/MyFont.woff2" } ]
+}
+```
+
+Shipped themes live in `apps/PxD/themes/<name>/theme.json`, each a flat
+`{ "tokens": { ...all fields from the table below... } }` object:
+
+| Theme | Style |
+|---|---|
+| `midnight-teal` | Cool dark blue/teal — general-purpose default |
+| `haunted-manor` | Dark maroon/gold — gothic/horror rooms |
+| `crimson-gold` | Deep red/gold — heist/adventure rooms |
+| `parchment-light` | Warm light parchment — bright/vintage-paper rooms |
+
+If `theme` is omitted, `base` is unrecognized, or plain per-token values are
+given directly as the `theme` object (legacy v1 style, no `base`), the
+packager falls back to PxD's built-in defaults (the "Default" column below)
+merged with whatever tokens were supplied.
+
+**Accessibility rule:** every theme (shipped or custom) must keep `ink`
+text readable against `panel`/`bgColor*` (WCAG AA, ≥4.5:1 for body text),
+and keep `warn` and `danger` each ≥3:1 against the background AND clearly
+distinguishable from each other (don't rely on hue alone — verify via a
+contrast-ratio calculation, not just visual judgment). All 4 shipped themes
+were verified this way.
 
 ## Token reference
 

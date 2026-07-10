@@ -3,6 +3,15 @@
 **Version**: 1.0 (Phase 1)  
 **Status**: Active
 
+> **v2 note**: This document predates the "Flexible Sites, Pages & Panes"
+> redesign (`pxdVersion: "2"`). Some examples below (single `panels.include`
+> list, `pxdVersion: "1"`) describe the original v1 model. For the current
+> schema, see [ROOMS.md](ROOMS.md) (fields), [PANES.md](PANES.md) (pane
+> library), [THEMING.md](THEMING.md) (named themes), and
+> [PR_FLEXIBLE_SITES_AND_PANES.md](PR_FLEXIBLE_SITES_AND_PANES.md) (the
+> v2 design rationale). This file is kept for historical/background
+> context on PxD's original goals, which still hold in v2.
+
 ---
 
 ## 1. Purpose
