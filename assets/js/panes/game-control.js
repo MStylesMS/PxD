@@ -478,6 +478,10 @@
         window._gcPanel = null;
     }
 
-    // Register with PxD
-    PxD.panels.register('game-control', { mount: mount, unmount: unmount });
+    // Register with PxD (v2 pane contract). These closures already read their
+    // config from PxD.config.gameControl (the whole-room config object, still
+    // exposed globally by pxd.js), so no other changes were needed to port.
+    PxD.panes.registerType('game-control', function factory(config, ctx) {
+        return { mount: mount, unmount: unmount };
+    });
 })();

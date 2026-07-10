@@ -814,23 +814,15 @@ h6 {
 }
 
 /* ============================================================
-   Camera View panel
+   Camera View pane
    ============================================================ */
-.cv-panes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
 .panel-camera-view {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-/* Size selector — see camera-view.js buildToolbar(). "half" panes sit two
-   to a row (within .cv-panes' flex-wrap); "full" panes take the whole row. */
-.cv-pane-half { flex: 1 1 calc(50% - 4px); min-width: 320px; }
-.cv-pane-full { flex: 1 1 100%; }
+/* Width is now controlled by the outer pane framework's `pxd-w-<width>`
+   class (see docs/PANES.md) — this file no longer manages its own width. */
 
 .cv-pane-header {
     display: flex;
@@ -1048,3 +1040,24 @@ h6 {
 .pxd-content-items { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .pxd-content-text { margin: 0; }
 .pxd-content-image { max-width: 100%; border-radius: var(--pxd-radius); }
+
+/* ============================================================
+   Nav pane — compact, minimal footprint (see docs/PANES.md)
+   ============================================================ */
+.pxd-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
+.pxd-nav-link {
+    color: var(--pxd-accent);
+    text-decoration: none;
+}
+.pxd-nav-link:hover { text-decoration: underline; }
+.pxd-nav-current {
+    color: var(--pxd-ink);
+    font-weight: 600;
+}

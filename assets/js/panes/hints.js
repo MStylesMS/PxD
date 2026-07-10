@@ -284,5 +284,7 @@
         window._hPanel = null;
     }
 
-    PxD.panels.register('hints', { mount: mount, unmount: unmount });
+    PxD.panes.registerType('hints', function factory(config, ctx) {
+        return { mount: mount, unmount: unmount };
+    });
 })();

@@ -172,5 +172,7 @@
         _zoneTimers = {};
     }
 
-    PxD.panels.register('system', { mount: mount, unmount: unmount });
+    PxD.panes.registerType('system', function factory(config, ctx) {
+        return { mount: mount, unmount: unmount };
+    });
 })();

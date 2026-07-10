@@ -388,5 +388,7 @@
         window._tlPanel = null;
     }
 
-    PxD.panels.register('time-lights', { mount: mount, unmount: unmount });
+    PxD.panes.registerType('time-lights', function factory(config, ctx) {
+        return { mount: mount, unmount: unmount };
+    });
 })();

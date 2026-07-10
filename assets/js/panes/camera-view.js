@@ -1,9 +1,9 @@
 /**
- * panels/camera-view.js — Camera View Panel
+ * panes/camera-view.js — Camera View pane
  *
  * Embeds live go2rtc camera streams in the operator dashboard. Talks
  * directly to an existing go2rtc instance (this room's own, per
- * /opt/paradox/config/go2rtc.yaml + go2rtc.service) — this panel is a
+ * /opt/paradox/config/go2rtc.yaml + go2rtc.service) — this pane is a
  * consumer only; it does not run or manage go2rtc itself.
  *
  * Delivery method: MSE only (v1). MSE was chosen over WebRTC because these
@@ -15,36 +15,32 @@
  * MIT licensed) — this is a deliberately trimmed-down reimplementation
  * scoped to MSE only, so this file has no external/vendored dependency.
  *
- * PANES: room.json → cameraView may be a single object (one pane — the
- * original/legacy shape) or an ARRAY of pane objects (multiple independent
- * camera panes stacked/wrapped in the same panel slot). Each pane has its
- * own main+sidebar layout, its own size (half/full) and view-mode
- * (single/multi) selectors, and its own gear-icon settings dialog.
- *   [
- *     {
- *       layout: 1-5,                 // number of camera slots
- *       sidebarPosition: "right",    // left|right|top|bottom (layout > 1 only)
- *       paneWidth: "full",           // "half" | "full" — initial size
- *       defaultViewMode: "multi",    // "multi" | "single" — initial view mode
- *       cameras: [ { id, label, wsUrl, main?: true, transform?: {...} } ]
- *     }
- *   ]
+ * MULTIPLE CAMERA PANES: to show more than one camera-view on a page, add
+ * more than one `{ "type": "camera-view", "config": {...} }` entry to that
+ * page's `panes` list in room.json — the page/pane framework itself gives
+ * each entry its own independent instance (own state, own DOM). Width is
+ * controlled by that pane entry's own `width` field (full/two-thirds/half/
+ * third), same as every other pane type — this file does not manage width.
+ *
+ * Single pane config shape:
+ *   {
+ *     layout: 1-5,                 // number of camera slots
+ *     sidebarPosition: "right",    // left|right|top|bottom (layout > 1 only)
+ *     defaultViewMode: "multi",    // "multi" | "single" — initial view mode
+ *     cameras: [ { id, label, wsUrl, main?: true, transform?: {...} } ]
+ *   }
  *
  * Persistence tiers for camera URLs (lowest to highest precedence):
- *   1. room.json cameraView[].cameras[].wsUrl       — shipped default
- *   2. camera-view.local.json (optional, packaged)  — operator override,
+ *   1. room.json cameraView config's cameras[].wsUrl  — shipped default
+ *   2. camera-view.local.json (optional, packaged)     — operator override,
  *      persists across page reloads AND repackages. Edit the room's
  *      pxd/camera-view.local.json source file (or the deployed copy) by
  *      hand: { "overrides": { "<camera-id>": "ws://...` } }
- *   3. sessionStorage (gear icon)                   — this browser tab's
+ *   3. sessionStorage (gear icon)                       — this browser tab's
  *      session only, cleared on close. NOT persisted anywhere durable.
  *
- * NOTE — TEMPORARY TEST PERSISTENCE: the per-pane size/view-mode selectors
- * persist via localStorage (`pxd:cameraView:pane<N>:*`) at the user's
- * explicit request for an in-progress visual comparison test. This is
- * flagged temporary — remove the localStorage read/write in setWidth()/
- * setViewMode() (and drop back to config-only defaults) once the test is
- * done, along with the second pane in room.json.
+ * The Single/Multi view-mode toggle in each pane's toolbar is runtime-only
+ * (not persisted) — it always starts from `defaultViewMode` on page load.
  */
 (function () {
     'use strict';
@@ -66,8 +62,9 @@
         '</svg>';
 
     var _root = null;
-    var _localOverrides = null; // parsed camera-view.local.json, shared by all panes
-    var _panes = [];            // active pane instances, for unmount()
+    var _localOverrides = null; // parsed camera-view.local.json, shared by every instance
+    var _localOverridesPromise = null;
+    var _paneCounter = 0;       // ensures unique modal ids across instances
 
     // ── MSE mini-player (scoped-down go2rtc protocol client) ───────────────
     var CODEC_CANDIDATES = [
@@ -222,11 +219,11 @@
         var _mainId = null;
         var _streams = {};
 
-        var WIDTH_KEY = 'pxd:cameraView:pane' + paneIndex + ':width';   // TEMPORARY
-        var MODE_KEY = 'pxd:cameraView:pane' + paneIndex + ':viewMode'; // TEMPORARY
-
-        var _width = (localStorage.getItem(WIDTH_KEY)) || cfg.paneWidth || 'full';
-        var _viewMode = (localStorage.getItem(MODE_KEY)) || cfg.defaultViewMode || 'multi';
+        // View mode (single/multi) is a runtime-only toggle, not persisted —
+        // pane width itself is now controlled by the outer pane framework's
+        // `width` field (full/two-thirds/half/third), same as every other
+        // pane type, so camera-view no longer manages its own width toggle.
+        var _viewMode = cfg.defaultViewMode || 'multi';
 
         function readSessionOverrides() {
             try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}'); }
@@ -338,15 +335,8 @@
             render();
         }
 
-        function setWidth(w) {
-            _width = w;
-            try { localStorage.setItem(WIDTH_KEY, w); } catch (e) {} // TEMPORARY — see file header
-            render();
-        }
-
         function setViewMode(m) {
             _viewMode = m;
-            try { localStorage.setItem(MODE_KEY, m); } catch (e) {} // TEMPORARY — see file header
             render();
         }
 
@@ -368,7 +358,6 @@
                 return grp;
             }
 
-            toolbar.appendChild(buildToggle('Half', 'half', 'Full', 'full', _width, setWidth));
             toolbar.appendChild(buildToggle('Single', 'single', 'Multi', 'multi', _viewMode, setViewMode));
 
             var gearBtn = document.createElement('button');
@@ -435,7 +424,9 @@
         function render() {
             teardownStreams();
             _paneEl.innerHTML = '';
-            _paneEl.className = 'panel panel-camera-view cv-pane-' + _width;
+            // Add to (not replace) the outer pane wrapper's classes — it already
+            // carries the framework's `pxd-pane pxd-w-<width>` grid classes.
+            _paneEl.classList.add('panel', 'panel-camera-view');
 
             var header = document.createElement('div');
             header.className = 'panel-header panel-header-tight cv-pane-header';
@@ -492,40 +483,31 @@
     }
 
     // ── panel.mount ────────────────────────────────────────────────────────
-    function mount(slotEl) {
-        _root = slotEl;
-        _root.innerHTML = '';
-        _panes = [];
-
-        var rawCfg = (PxD.config && PxD.config.cameraView) || null;
-        if (!rawCfg) return; // hide if unconfigured
-        var paneConfigs = Array.isArray(rawCfg) ? rawCfg : [rawCfg];
-        if (!paneConfigs.length) return;
-
-        var container = document.createElement('div');
-        container.className = 'cv-panes';
-        _root.appendChild(container);
-
-        fetch('camera-view.local.json')
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .catch(function () { return null; })
-            .then(function (data) {
-                _localOverrides = data;
-                paneConfigs.forEach(function (cfg, idx) {
-                    var paneEl = document.createElement('section');
-                    container.appendChild(paneEl);
-                    var pane = createPane(idx, cfg || {});
-                    pane.mount(paneEl);
-                    _panes.push(pane);
-                });
-            });
+    // Each `{ "type": "camera-view", "config": {...} }` pane entry in a page's
+    // `panes` list gets its own factory() call — the page/pane framework
+    // itself now provides multi-instance support, so this file mounts exactly
+    // one camera pane per call (no more internal pane-array loop).
+    function fetchLocalOverridesOnce() {
+        if (!_localOverridesPromise) {
+            _localOverridesPromise = fetch('camera-view.local.json')
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .catch(function () { return null; })
+                .then(function (data) { _localOverrides = data; return data; });
+        }
+        return _localOverridesPromise;
     }
 
-    function unmount() {
-        _panes.forEach(function (p) { p.unmount(); });
-        _panes = [];
-        if (_root) _root.innerHTML = '';
+    function factory(config, ctx) {
+        var paneIndex = _paneCounter++;
+        var pane = createPane(paneIndex, config || {});
+        return {
+            mount: function (el) {
+                _root = el;
+                fetchLocalOverridesOnce().then(function () { pane.mount(el); });
+            },
+            unmount: function () { pane.unmount(); }
+        };
     }
 
-    PxD.panels.register('camera-view', { mount: mount, unmount: unmount });
+    PxD.panes.registerType('camera-view', factory);
 })();
