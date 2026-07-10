@@ -26,6 +26,7 @@
     }
 
     [data-slot="game-control"],
+    [data-slot="camera-view"],
     [data-slot="widgets"],
     [data-slot="system"] {
         grid-column: 1 / -1;

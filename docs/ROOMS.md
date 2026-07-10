@@ -175,11 +175,27 @@ go2rtc camera streams; this panel only *consumes* an existing go2rtc
 instance (see `docs/PR_CAMERA_VIEW_PANEL.md` and
 `apps/PxD/tools/camera-finder/`) — it does not run or manage go2rtc.
 
+`cameraView` may be a **single pane object** (as below) or an **array of
+pane objects** to render multiple independent camera panes stacked in the
+same panel slot (each with its own main+sidebar layout and toolbar). Arrays
+wrap in a flex row — `"full"` panes take the whole row, `"half"` panes sit
+two to a row.
+
 | Field | Default | Description |
 |---|---|---|
 | `layout` | `1` | Number of camera slots, 1–5. `1` = single full view, no sidebar |
 | `sidebarPosition` | `"right"` | `left`\|`right`\|`top`\|`bottom` — ignored when `layout` is `1` |
+| `paneWidth` | `"full"` | `"half"`\|`"full"` — initial size, changeable at runtime via the pane's own toolbar |
+| `defaultViewMode` | `"multi"` | `"multi"`\|`"single"` — initial view mode (sidebar shown or not), changeable at runtime |
 | `cameras` | `[]` | Array of `{ id, label, wsUrl, main?, transform? }`. `wsUrl` is the go2rtc WebSocket URL (`ws://<room-pi-ip>:1984/api/ws?src=<stream-name>`). Exactly one entry may set `"main": true` to choose the default main view (first entry if omitted) |
+
+Each pane's header row (next to the "Cameras" title) has three controls:
+**Half/Full** (pane width), **Single/Multi** (view mode), and a gear icon
+(session-only URL overrides, same icon as the Prop/Puzzle widgets panel).
+Changes made via these controls are held in `localStorage` per pane index
+so they survive a page reload during testing — this is intentionally
+lightweight and not meant as a long-term persistence design; it can be
+removed in favor of config-only defaults later.
 
 `transform` (optional, per-camera) corrects a physically-mounted camera's
 orientation entirely on the client — no go2rtc transcoding involved:
@@ -197,6 +213,7 @@ orientation entirely on the client — no go2rtc transcoding involved:
 Only the main view ever plays audio (starts muted at 50% volume, with a
 visible mute indicator — click to unmute). Sidebar thumbnails are always
 muted. Clicking a sidebar thumbnail swaps it into the main slot.
+
 
 Camera URL persistence has three tiers (lowest to highest precedence):
 1. `room.json` → `cameraView.cameras[].wsUrl` — the shipped default.
