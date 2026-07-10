@@ -947,3 +947,104 @@ h6 {
     color: var(--pxd-ink-soft, #a0a0b8);
 }
 
+
+/* ============================================================
+   v2 layout — sites / pages / panes / sections
+   (see docs/PANES.md, docs/ROOMS.md, PR_FLEXIBLE_SITES_AND_PANES.md)
+   ============================================================ */
+
+/* Sticky header/footer regions (site-level, one pane each). */
+.pxd-header,
+.pxd-footer {
+    position: sticky;
+    z-index: 30;
+    width: min(1500px, 100%);
+    margin: 0 auto;
+}
+.pxd-header { top: 0; padding-top: 8px; }
+.pxd-footer { bottom: 0; padding-bottom: 8px; }
+.pxd-header[hidden],
+.pxd-footer[hidden] { display: none; }
+
+/* Page body holds the vertical stack of rows/sections. */
+.pxd-page-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* A row is a responsive 12-column grid; panes auto-flow and wrap. */
+.pxd-row {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px;
+    align-items: start;
+}
+.pxd-pane { min-width: 0; }
+
+/* Pane widths (desktop ≥992px). */
+.pxd-w-full        { grid-column: span 12; }
+.pxd-w-two-thirds  { grid-column: span 8; }
+.pxd-w-half        { grid-column: span 6; }
+.pxd-w-third       { grid-column: span 4; }
+
+/* Tablet 768–991px: narrow widths promote so nothing gets cramped. */
+@media (max-width: 991px) {
+    .pxd-w-two-thirds { grid-column: span 12; }
+    .pxd-w-third      { grid-column: span 6; }
+}
+/* Phone <768px: everything stacks full-width. */
+@media (max-width: 767px) {
+    .pxd-w-full,
+    .pxd-w-two-thirds,
+    .pxd-w-half,
+    .pxd-w-third { grid-column: span 12; }
+}
+
+/* Section dividers. */
+.pxd-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 2px;
+    color: var(--pxd-ink);
+    border-bottom: 1px solid var(--pxd-panel-border);
+    user-select: none;
+}
+.pxd-divider-collapsible { cursor: pointer; }
+.pxd-divider-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--pxd-ink-soft);
+}
+.pxd-divider-left   { justify-content: flex-start; }
+.pxd-divider-center { justify-content: center; }
+.pxd-divider-right  { justify-content: flex-end; }
+.pxd-divider-caret {
+    display: inline-block;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid currentColor;
+    transition: transform 0.15s ease;
+}
+.pxd-divider.pxd-collapsed .pxd-divider-caret { transform: rotate(-90deg); }
+
+/* Unknown / errored pane placeholder. */
+.pxd-pane-error {
+    color: var(--pxd-danger);
+    border-color: var(--pxd-danger);
+    font-family: var(--pxd-font-mono);
+    font-size: 0.85rem;
+}
+
+/* Content pane. */
+.panel-content .pxd-content-body { color: var(--pxd-ink); }
+.pxd-content-items { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.pxd-content-text { margin: 0; }
+.pxd-content-image { max-width: 100%; border-radius: var(--pxd-radius); }

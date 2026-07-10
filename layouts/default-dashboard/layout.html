@@ -8,29 +8,24 @@
     <link rel="stylesheet" href="assets/css/pxd-base.css">
     <link rel="stylesheet" href="assets/css/layout.css">
     <title>{{PXD_TITLE}}</title>
+    <script>
+        // Identifies which site + page of room.json this generated file renders.
+        window.PXD_PAGE = { site: "{{PXD_SITE}}", page: "{{PXD_PAGE}}" };
+    </script>
 </head>
-<body>
+<body data-pxd-site="{{PXD_SITE}}" data-pxd-page="{{PXD_PAGE}}">
     <div class="pxd-shell">
-        <header class="pxd-hero">
-            <img id="pxd-hero-img" class="hero-image" alt="{{PXD_TITLE}}" src="media/hero.png">
-            <div class="hero-glow" aria-hidden="true"></div>
-        </header>
+        <!-- Optional site-level sticky header (one pane); filled by pxd.js. -->
+        <header id="pxd-header" class="pxd-header" hidden></header>
 
-        <main class="dashboard">
-            <div data-slot="game-control"></div>
-            <div data-slot="camera-view"></div>
-            <div data-slot="widgets"></div>
-            <div data-slot="time-lights"></div>
-            <div data-slot="hints"></div>
-            <div data-slot="system"></div>
-        </main>
+        <!-- Page body: pxd.js renders the ordered pane grid here. -->
+        <main id="pxd-page-body" class="pxd-page-body"></main>
 
-        <footer class="pxd-footer">
-            <h6>Technology by Paradox Productions | Copyright 2015&#x2013;2026</h6>
-        </footer>
+        <!-- Optional site-level sticky footer (one pane); filled by pxd.js. -->
+        <footer id="pxd-footer" class="pxd-footer" hidden></footer>
     </div>
 
-    <!-- Portal for panel modals (panels inject <div class="modal"> here) -->
+    <!-- Portal for pane modals (panes inject <div class="modal"> here) -->
     <div id="pxd-modals"></div>
 
     <!-- Toast container -->

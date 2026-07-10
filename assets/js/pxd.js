@@ -1,14 +1,25 @@
 /**
- * pxd.js — PxD Framework Core Runtime
+ * pxd.js — PxD Framework Core Runtime (v2: sites / pages / panes)
  *
  * Responsibilities:
  *  1. Fetch room.json and expose it as window.PxD.config
- *  2. Apply theme tokens, fonts, title, and hero image
- *  3. Dynamically load panel scripts from panels.include
- *  4. Connect MQTT (Paho) using room.json mqtt settings
- *  5. On connect: mount each panel into its [data-slot] element
- *  6. Expose window.PxD.mqtt.{publish,subscribe,unsubscribe}
- *  7. Expose window.PxD.utils.{showToast,getContrastColor}
+ *  2. Apply the (build-time-resolved) theme tokens, fonts, title, favicon
+ *  3. Identify THIS page's site + page (baked into the HTML by the packager as
+ *     window.PXD_PAGE = { site: "<siteId>", page: "<pageId>" }, or read from
+ *     <body data-pxd-site data-pxd-page>)
+ *  4. Dynamically load the pane-type scripts this page needs
+ *  5. Render the page: optional sticky header/footer + an ordered, responsive
+ *     grid of panes, grouped into collapsible sections by `divider` entries
+ *  6. Connect MQTT (Paho) once and share it across every pane on the page
+ *  7. Expose window.PxD.mqtt / window.PxD.panes / window.PxD.utils
+ *
+ * Pane authoring contract (see docs/PANES.md):
+ *   PxD.panes.registerType('<type>', function factory(config, ctx) {
+ *       return { mount: function (el) {...}, unmount: function () {...} };
+ *   });
+ *   - `config` is the pane entry's `config` object from room.json.
+ *   - `ctx` provides shared services: { mqtt, config, site, page, utils }.
+ *   - Each config entry yields one independent instance (own DOM, own state).
  */
 (function () {
     'use strict';
@@ -17,7 +28,10 @@
     var _config = null;
     var _client = null;
     var _subs = {};                 // topic-pattern → [callbacks]
-    var _registeredPanels = {};     // panelId → {mount, unmount}
+    var _paneTypes = {};            // type → factory(config, ctx)
+    var _instances = [];            // live pane instances (for teardown)
+    var _site = null;               // resolved current site object
+    var _page = null;               // resolved current page object
     var _reconnectTimer = null;
     var _reconnectDelayMs = 2000;
 
@@ -27,13 +41,6 @@
 
         // ── MQTT API ───────────────────────────────────────────────────────
         mqtt: {
-            /**
-             * Publish a JSON payload to a topic.
-             * @param {string}  topic
-             * @param {object}  payload   — will be JSON-serialised
-             * @param {number}  [qos=0]
-             * @param {boolean} [retained=false]
-             */
             publish: function (topic, payload, qos, retained) {
                 if (!_client || !_client.isConnected()) {
                     console.warn('[PxD] publish called while disconnected — dropped');
@@ -45,13 +52,6 @@
                 msg.retained = !!retained;
                 _client.send(msg);
             },
-
-            /**
-             * Subscribe to a topic pattern (supports + and # wildcards).
-             * Multiple callbacks may be registered for the same pattern.
-             * @param {string}   topic
-             * @param {Function} callback  fn(payload, topic)
-             */
             subscribe: function (topic, callback) {
                 if (!_subs[topic]) {
                     _subs[topic] = [];
@@ -61,12 +61,6 @@
                 }
                 _subs[topic].push(callback);
             },
-
-            /**
-             * Remove a specific callback from a topic subscription.
-             * @param {string}   topic
-             * @param {Function} callback
-             */
             unsubscribe: function (topic, callback) {
                 var cbs = _subs[topic];
                 if (!cbs) return;
@@ -75,25 +69,23 @@
             }
         },
 
-        // ── Panel registry API ─────────────────────────────────────────────
-        panels: {
+        // ── Pane registry API ──────────────────────────────────────────────
+        panes: {
             /**
-             * Called by each panel script to register itself.
-             * @param {string} id     matches a data-slot attribute
-             * @param {{ mount: Function, unmount: Function }} panel
+             * Register a pane type. Called by each pane script in
+             * assets/js/panes/<type>.js.
+             * @param {string} type
+             * @param {function(object, object): {mount: Function, unmount: Function}} factory
              */
-            register: function (id, panel) {
-                _registeredPanels[id] = panel;
-            }
+            registerType: function (type, factory) {
+                _paneTypes[type] = factory;
+            },
+            /** @returns {boolean} whether a type has been registered */
+            hasType: function (type) { return !!_paneTypes[type]; }
         },
 
-        // ── Utility helpers (shared across panels) ─────────────────────────
+        // ── Utility helpers (shared across panes) ──────────────────────────
         utils: {
-            /**
-             * Show a Bootstrap toast.
-             * @param {string} message
-             * @param {{ x?: number, y?: number, anchorEl?: Element }} [opts]
-             */
             showToast: function (message, opts) {
                 opts = opts || {};
                 var container = document.getElementById('pxd-toast-container');
@@ -146,11 +138,6 @@
                 }
             },
 
-            /**
-             * Return '#000000' or '#FFFFFF' depending on the luminance of hexColor.
-             * @param {string} hexColor  e.g. '#FF8C00'
-             * @returns {string}
-             */
             getContrastColor: function (hexColor) {
                 if (!hexColor || hexColor.length < 7) return '#FFFFFF';
                 var r = parseInt(hexColor.substr(1, 2), 16);
@@ -174,7 +161,6 @@
         return pp.length === tp.length;
     }
 
-    // Dispatch an incoming MQTT message to all matching subscribers
     function dispatchMessage(topic, payload) {
         Object.keys(_subs).forEach(function (pattern) {
             if (!topicMatches(pattern, topic)) return;
@@ -224,12 +210,9 @@
             onSuccess: function () {
                 console.log('[PxD] MQTT connected to', broker + ':' + port);
                 clearTimeout(_reconnectTimer);
-                // Re-subscribe to all registered topics
                 Object.keys(_subs).forEach(function (topic) {
                     _client.subscribe(topic, { qos: 0 });
                 });
-                // Mount all panels
-                mountPanels();
             },
             onFailure: function (err) {
                 console.warn('[PxD] MQTT connection failed:', err.errorMessage);
@@ -239,58 +222,219 @@
         });
     }
 
-    // ── Panel loading ──────────────────────────────────────────────────────
-    function loadPanelScript(panelId) {
-        return new Promise(function (resolve, reject) {
+    // ── Pane-type script loading ───────────────────────────────────────────
+    function loadPaneScript(type) {
+        return new Promise(function (resolve) {
+            if (_paneTypes[type]) { resolve(); return; } // already loaded
             var s = document.createElement('script');
-            s.src = 'assets/js/panels/' + panelId + '.js';
+            s.src = 'assets/js/panes/' + type + '.js';
             s.onload = resolve;
             s.onerror = function () {
-                console.error('[PxD] Failed to load panel script:', panelId);
-                reject(new Error('Panel load failed: ' + panelId));
+                console.error('[PxD] Failed to load pane script:', type);
+                resolve(); // don't block the page; unknown-type placeholder renders instead
             };
             document.head.appendChild(s);
         });
     }
 
-    // Mount all registered panels into their slots
-    function mountPanels() {
-        var include = (_config.panels && _config.panels.include) || [];
-        include.forEach(function (panelId) {
-            var panel = _registeredPanels[panelId];
-            if (!panel) { console.warn('[PxD] No registration for panel:', panelId); return; }
-            var slotEl = document.querySelector('[data-slot="' + panelId + '"]');
-            if (!slotEl) { console.warn('[PxD] No slot element for panel:', panelId); return; }
-            try { panel.mount(slotEl); } catch (e) {
-                console.error('[PxD] Panel mount error:', panelId, e);
-            }
-        });
+    function uniquePaneTypes(site, page) {
+        var set = {};
+        // `divider` is handled entirely in-core (no pane script), so exclude it.
+        function collect(paneCfg) {
+            if (paneCfg && paneCfg.type && paneCfg.type !== 'divider') set[paneCfg.type] = true;
+        }
+        (page.panes || []).forEach(collect);
+        if (site.header) collect(site.header);
+        if (site.footer) collect(site.footer);
+        return Object.keys(set);
     }
 
-    // ── Theme application ──────────────────────────────────────────────────
+    // ── Pane instantiation ─────────────────────────────────────────────────
+    function paneContext() {
+        return { mqtt: PxD.mqtt, config: _config, site: _site, page: _page, utils: PxD.utils };
+    }
+
+    function instantiatePane(el, paneCfg) {
+        var factory = _paneTypes[paneCfg.type];
+        if (!factory) {
+            el.innerHTML = '<section class="panel pxd-pane-error">Unknown pane type: "' +
+                String(paneCfg.type).replace(/[<>&"]/g, '') + '"</section>';
+            return null;
+        }
+        var inst;
+        try {
+            inst = factory(paneCfg.config || {}, paneContext());
+            inst.mount(el);
+        } catch (e) {
+            console.error('[PxD] Pane mount error:', paneCfg.type, e);
+            el.innerHTML = '<section class="panel pxd-pane-error">Pane error: ' + paneCfg.type + '</section>';
+            return null;
+        }
+        _instances.push(inst);
+        return inst;
+    }
+
+    // ── Section (divider) rendering ────────────────────────────────────────
+    // A `divider` starts a section: a titled bar with an optional collapse
+    // toggle, followed by a flex-wrap row that holds every pane up to the next
+    // divider/footer. Collapsing unmounts the section's pane instances (freeing
+    // camera streams / MQTT subs); expanding rebuilds them. Session-only state.
+    function buildSection(gridEl, dividerCfg) {
+        var align = ['left', 'center', 'right'].indexOf(dividerCfg.align) !== -1 ? dividerCfg.align : 'left';
+        var collapsible = dividerCfg.collapsible !== false;
+
+        var header = document.createElement('div');
+        header.className = 'pxd-divider pxd-divider-' + align + (collapsible ? ' pxd-divider-collapsible' : '');
+
+        var titleWrap = document.createElement('div');
+        titleWrap.className = 'pxd-divider-title';
+        if (collapsible) {
+            var caret = document.createElement('span');
+            caret.className = 'pxd-divider-caret';
+            caret.setAttribute('aria-hidden', 'true');
+            titleWrap.appendChild(caret);
+        }
+        var titleText = document.createElement('span');
+        titleText.textContent = dividerCfg.title || '';
+        titleWrap.appendChild(titleText);
+        header.appendChild(titleWrap);
+
+        var body = document.createElement('div');
+        body.className = 'pxd-row pxd-section-body';
+
+        gridEl.appendChild(header);
+        gridEl.appendChild(body);
+
+        var section = {
+            bodyEl: body,
+            panes: [],          // pane configs assigned to this section
+            instances: [],      // live instances when expanded
+            collapsed: !!dividerCfg.collapsed
+        };
+
+        function mountSectionPanes() {
+            section.instances = [];
+            section.panes.forEach(function (paneCfg) {
+                var paneEl = document.createElement('div');
+                paneEl.className = 'pxd-pane pxd-w-' + (paneCfg.width || 'full');
+                body.appendChild(paneEl);
+                var inst = instantiatePane(paneEl, paneCfg);
+                if (inst) section.instances.push(inst);
+            });
+        }
+        function unmountSectionPanes() {
+            section.instances.forEach(function (inst) {
+                try { if (inst.unmount) inst.unmount(); } catch (e) { /* ignore */ }
+                var i = _instances.indexOf(inst);
+                if (i >= 0) _instances.splice(i, 1);
+            });
+            section.instances = [];
+            body.innerHTML = '';
+        }
+        function applyCollapsed() {
+            header.classList.toggle('pxd-collapsed', section.collapsed);
+            if (section.collapsed) { unmountSectionPanes(); body.style.display = 'none'; }
+            else { body.style.display = ''; if (!section.instances.length) mountSectionPanes(); }
+        }
+
+        if (collapsible) {
+            header.addEventListener('click', function () {
+                section.collapsed = !section.collapsed;
+                applyCollapsed();
+            });
+        }
+
+        // `render` runs after all panes are assigned (see renderPage).
+        section.render = function () {
+            if (section.collapsed) { applyCollapsed(); }
+            else { mountSectionPanes(); }
+        };
+        return section;
+    }
+
+    // ── Page rendering ─────────────────────────────────────────────────────
+    function renderPage(container, page) {
+        var grid = document.createElement('div');
+        grid.className = 'pxd-page-grid';
+
+        // Panes before the first divider live in an initial default row.
+        var defaultRow = document.createElement('div');
+        defaultRow.className = 'pxd-row';
+        grid.appendChild(defaultRow);
+
+        var currentSection = null;
+        var deferredSections = [];
+
+        (page.panes || []).forEach(function (paneCfg) {
+            if (paneCfg.type === 'divider') {
+                currentSection = buildSection(grid, paneCfg);
+                deferredSections.push(currentSection);
+                return;
+            }
+            if (currentSection) {
+                currentSection.panes.push(paneCfg); // mounted when the section renders
+            } else {
+                var paneEl = document.createElement('div');
+                paneEl.className = 'pxd-pane pxd-w-' + (paneCfg.width || 'full');
+                defaultRow.appendChild(paneEl);
+                instantiatePane(paneEl, paneCfg);
+            }
+        });
+
+        container.appendChild(grid);
+        // Render sections after DOM attach (some panes measure layout on mount).
+        deferredSections.forEach(function (s) { s.render(); });
+    }
+
+    // ── Sticky header / footer ─────────────────────────────────────────────
+    function renderStickyRegion(hostEl, paneCfg) {
+        if (!paneCfg) return;
+        var inner = document.createElement('div');
+        inner.className = 'pxd-pane pxd-w-full';
+        hostEl.appendChild(inner);
+        hostEl.hidden = false;
+        instantiatePane(inner, paneCfg);
+    }
+
+    // ── Site / page resolution ─────────────────────────────────────────────
+    function resolveSites(config) {
+        if (Array.isArray(config.sites) && config.sites.length) return config.sites;
+        // Zero-config fallback: a single implicit `control` site with one page
+        // built from a legacy-style flat `panes` array if present.
+        return [{
+            id: 'control', title: config.title || 'Control', type: 'pxd',
+            pages: [{ id: 'main', title: 'Main', panes: config.panes || [] }]
+        }];
+    }
+
+    function currentPageRef() {
+        if (window.PXD_PAGE && window.PXD_PAGE.site) return window.PXD_PAGE;
+        var body = document.body;
+        return {
+            site: body.getAttribute('data-pxd-site') || null,
+            page: body.getAttribute('data-pxd-page') || null
+        };
+    }
+
+    // ── Theme + fonts ──────────────────────────────────────────────────────
     var TOKEN_MAP = {
-        bgColor1:    '--pxd-bg-1',
-        bgColor2:    '--pxd-bg-2',
-        bgColor3:    '--pxd-bg-3',
-        panel:       '--pxd-panel',
-        panelBorder: '--pxd-panel-border',
-        ink:         '--pxd-ink',
-        inkSoft:     '--pxd-ink-soft',
-        accent:      '--pxd-accent',
-        accentAlt:   '--pxd-accent-alt',
-        warn:        '--pxd-warn',
-        danger:      '--pxd-danger',
-        radius:      '--pxd-radius',
-        shadow:      '--pxd-shadow',
-        fontBody:    '--pxd-font-body',
-        fontMono:    '--pxd-font-mono',
-        bgGlow1:     '--pxd-bg-glow-1',
-        bgGlow2:     '--pxd-bg-glow-2'
+        bgColor1: '--pxd-bg-1', bgColor2: '--pxd-bg-2', bgColor3: '--pxd-bg-3',
+        panel: '--pxd-panel', panelBorder: '--pxd-panel-border',
+        ink: '--pxd-ink', inkSoft: '--pxd-ink-soft',
+        accent: '--pxd-accent', accentAlt: '--pxd-accent-alt',
+        warn: '--pxd-warn', danger: '--pxd-danger',
+        radius: '--pxd-radius', shadow: '--pxd-shadow',
+        fontBody: '--pxd-font-body', fontMono: '--pxd-font-mono',
+        bgGlow1: '--pxd-bg-glow-1', bgGlow2: '--pxd-bg-glow-2'
     };
 
     function applyTheme(theme) {
+        // The packager resolves { base, overrides } → a flat token object at
+        // build time, so at runtime `theme` is a flat token object.
         Object.keys(TOKEN_MAP).forEach(function (key) {
-            if (theme[key]) document.documentElement.style.setProperty(TOKEN_MAP[key], theme[key]);
+            if (theme && theme[key]) {
+                document.documentElement.style.setProperty(TOKEN_MAP[key], theme[key]);
+            }
         });
     }
 
@@ -320,34 +464,42 @@
                 _config = config;
                 window.PxD.config = config;
 
-                // Page title
                 if (config.title) document.title = config.title;
-
-                // Fonts (inject before theme so font-family values resolve)
                 if (config.theme && config.theme.fonts) injectFonts(config.theme.fonts);
-
-                // Theme tokens
                 if (config.theme) applyTheme(config.theme);
 
-                // Hero image
-                var heroImg = document.getElementById('pxd-hero-img');
-                if (heroImg && config.media && config.media.hero) {
-                    heroImg.src = config.media.hero;
-                    heroImg.alt = config.title || '';
+                var favicon = config.media && config.media.favicon;
+                if (favicon) {
+                    var link = document.querySelector('link[rel="shortcut icon"], link[rel="icon"]');
+                    if (link) link.href = favicon;
                 }
 
-                // Load panel scripts sequentially, then connect MQTT
-                var panels = (config.panels && config.panels.include) || [];
-                return panels.reduce(function (chain, id) {
-                    return chain.then(function () { return loadPanelScript(id); });
-                }, Promise.resolve());
+                // Resolve this page's site + page.
+                var sites = resolveSites(config);
+                var ref = currentPageRef();
+                _site = sites.filter(function (s) { return s.id === ref.site; })[0]
+                    || sites.filter(function (s) { return s.type !== 'external'; })[0]
+                    || sites[0];
+                var pages = (_site && _site.pages) || [];
+                _page = pages.filter(function (p) { return p.id === ref.page; })[0] || pages[0];
+
+                if (!_page) { console.error('[PxD] No page to render for', ref); return Promise.resolve(); }
+
+                // Load every pane-type script this page needs, then render.
+                var types = uniquePaneTypes(_site, _page);
+                return types.reduce(function (chain, t) {
+                    return chain.then(function () { return loadPaneScript(t); });
+                }, Promise.resolve()).then(function () {
+                    var header = document.getElementById('pxd-header');
+                    var footer = document.getElementById('pxd-footer');
+                    var body = document.getElementById('pxd-page-body');
+                    if (header && _site.header) renderStickyRegion(header, _site.header);
+                    if (footer && _site.footer) renderStickyRegion(footer, _site.footer);
+                    if (body) renderPage(body, _page);
+                });
             })
-            .then(function () {
-                connectMqtt();
-            })
-            .catch(function (err) {
-                console.error('[PxD] Initialisation error:', err);
-            });
+            .then(function () { if (_config) connectMqtt(); })
+            .catch(function (err) { console.error('[PxD] Initialisation error:', err); });
     }
 
     document.addEventListener('DOMContentLoaded', init);
