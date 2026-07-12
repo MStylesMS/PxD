@@ -1,0 +1,88 @@
+/* binary-switch widget — 1×1 tile styles
+   Class prefix: wd-switch-*
+
+   These styles target the content injected by widget.js into the
+   .widget-card-body element provided by the widget loader.
+
+   For a 2×2 variant, override .wd-switch-icon size and .wd-switch-label
+   font-size in a room-local stylesheet or a dedicated 2×2 widget.css.
+*/
+
+.wd-switch-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         6px 4px 4px;
+    gap:             4px;
+}
+
+/* Click target visual feedback */
+.wd-switch-wrap.wd-interactive {
+    cursor:         pointer;
+    border-radius:  var(--pxd-border-radius, 4px);
+    transition:     background-color 0.15s ease;
+}
+
+.wd-switch-wrap.wd-interactive:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.wd-switch-wrap.wd-interactive:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.wd-switch-icon {
+    width:           44px;
+    height:          44px;
+    flex-shrink:     0;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    transition:      color 0.25s ease;
+}
+
+.wd-switch-icon svg {
+    width:  100%;
+    height: 100%;
+}
+
+/* Material Symbols ligature variant */
+.wd-switch-icon .material-symbols-outlined {
+    font-size:   44px;
+    line-height: 1;
+    display:     block;
+}
+
+/* File-path variant (PNG, GIF, WebP, APNG, SVG file) */
+.wd-switch-img {
+    width:      100%;
+    height:     100%;
+    object-fit: contain;
+    display:    block;
+}
+
+.wd-switch-label {
+    font-size:      0.6rem;
+    font-weight:    700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height:    1;
+    transition:     color 0.25s ease;
+}
+
+/* Pending state — command sent, awaiting MQTT confirmation */
+@keyframes wd-switch-pulse {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.35; }
+    100% { opacity: 1; }
+}
+
+.wd-switch-wrap.wd-pending .wd-switch-icon {
+    animation: wd-switch-pulse 0.85s ease-in-out infinite;
+}
+
+.wd-switch-wrap.wd-pending .wd-switch-label::after {
+    content: '\2026';  /* … */
+}

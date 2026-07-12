@@ -1,0 +1,7 @@
+{
+    "label": "binary-switch — 1×1",
+    "quickStates": [
+        { "label": "On",  "payload": "{\"state\":\"on\"}",  "color": "#198754" },
+        { "label": "Off", "payload": "{\"state\":\"off\"}", "color": "#dc3545" }
+    ]
+}

@@ -492,9 +492,27 @@ packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 | `binary-door` | `1x1` | Passive | Door open / closed indicator with icon |
 | `binary-light` | `1x1` | Passive | Coloured indicator dot (CSS only) |
 | `binary-lock` | `1x1` | Active | Lock icon; click publishes lock/unlock command |
+| `binary-switch` | `1x1` | Active | Power/device switch; click publishes allOn/allOff |
 | `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
 | `text-display` | `4x1` | Passive | Arbitrary text field from payload |
 | `numeric-gauge` | `2x2` | Passive | Numeric value + threshold colour bands |
+
+### binary-switch
+
+Active on/off control for props that accept `allOn` / `allOff` (or custom)
+commands. Copy from `templates/widgets/base/binary-switch/`.
+
+| Key | Default | Notes |
+|---|---|---|
+| `GLYPH` | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` |
+| `ON_COMMAND` | `"allOn"` | Published as `{ command: "allOn" }` (object, not stringified) |
+| `OFF_COMMAND` | `"allOff"` | Published as `{ command: "allOff" }` |
+| `ON_VALUE` | `"on"` | State-field value that means on |
+| `ICON_ON` / `ICON_OFF` | `null` | Optional overrides; when set, replace the glyph pair |
+
+Glyph summary: **plug** / **fan** use a filled icon for ON and the same icon
+with a circle+slash for OFF; **bulb** uses a solid bulb with rays for ON and an
+outline bulb (no rays) for OFF.
 
 Examples live in `apps/PxD/templates/widgets/examples/`.
 
