@@ -1,0 +1,76 @@
+/* lights-control widget — 2×2 tile styles
+   Class prefix: wd-lights-*
+*/
+
+.wd-lights-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     stretch;
+    justify-content: flex-start;
+    height:          100%;
+    padding:         6px 8px 8px;
+    gap:              4px;
+    min-height:      0;
+}
+
+.wd-lights-glyph {
+    width:           40px;
+    height:          40px;
+    flex-shrink:     0;
+    align-self:      center;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    color:           #f4f4f4;
+    transition:      color 0.2s ease;
+}
+
+.wd-lights-glyph svg {
+    width:  100%;
+    height: 100%;
+}
+
+.wd-lights-label {
+    font-size:      0.55rem;
+    font-weight:    700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height:    1.2;
+    color:          var(--pxd-ink-soft, #adb5bd);
+    margin:         0;
+    display:        flex;
+    flex-direction: column;
+    gap:            4px;
+}
+
+.wd-lights-label .wd-lights-select {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight:    500;
+}
+
+.wd-lights-select {
+    font-size:   0.7rem;
+    padding:     0.15rem 0.35rem;
+    min-height:  1.7rem;
+}
+
+.wd-lights-bri-row {
+    display:         flex;
+    align-items:     baseline;
+    justify-content: space-between;
+    gap:             6px;
+}
+
+.wd-lights-bri-val {
+    font-size:      0.6rem;
+    font-weight:    600;
+    font-variant-numeric: tabular-nums;
+    color:          var(--pxd-ink-soft, #adb5bd);
+}
+
+.wd-lights-bri {
+    width:     100%;
+    margin:    0;
+    accent-color: var(--pxd-accent, #6c757d);
+}

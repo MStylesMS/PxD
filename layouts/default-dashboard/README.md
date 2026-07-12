@@ -7,7 +7,7 @@ Four-panel operator dashboard for the PxD framework.
 | Slot ID | Required | Description |
 |---|---|---|
 | `game-control` | **Yes** | Game state display, mode selector, start/pause/solve buttons, emergency actions, and checklist. |
-| `time-lights` | No | Clock time adjustment and lighting scene selector. |
+| `time-lights` | No | **Time & Lights** — clock adjust and lighting scene selector (no emergency). |
 | `hints` | No | Hint selector and delivery control. |
 | `system` | No | System warning log and MQTT zone heartbeat status. |
 

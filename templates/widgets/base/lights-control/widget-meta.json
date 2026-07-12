@@ -1,0 +1,9 @@
+{
+    "label": "lights-control — 2×2",
+    "quickStates": [
+        { "label": "Warm 80%",  "payload": "{\"scene\":\"warmWhite\",\"brightness\":80}",  "color": "#FFE4B0" },
+        { "label": "Red 60%",   "payload": "{\"scene\":\"red\",\"brightness\":60}",         "color": "#FF0000" },
+        { "label": "Blue 100%", "payload": "{\"scene\":\"blue\",\"brightness\":100}",       "color": "#0046FF" },
+        { "label": "Off",       "payload": "{\"scene\":\"off\",\"brightness\":0}",           "color": "#000000" }
+    ]
+}

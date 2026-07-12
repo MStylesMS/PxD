@@ -181,19 +181,52 @@ h1, h2, h3, h4, h5 {
     min-width: 0;
 }
 
+.control-item-time {
+    grid-column: 1 / -1;
+}
+
+.gc-time-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.gc-time-group {
+    width: auto;
+    flex: 1 1 120px;
+    max-width: 160px;
+}
+
+.gc-time-group .form-select {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    min-width: 3.25rem;
+}
+
+.gc-time-sep {
+    font-size: 1.15rem;
+    line-height: 1;
+    color: var(--pxd-ink-soft);
+    flex: 0 0 auto;
+}
+
+.gc-time-apply {
+    flex: 0 0 auto;
+}
+
 /* ============================================================
-   Time, lights & safety grid
+   Time & Lights grid
    ============================================================ */
 .time-lights-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
     gap: 12px;
     align-items: end;
 }
 
 .clock-adjust,
-.lighting-block,
-.safety-block {
+.lighting-block {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -562,7 +595,7 @@ h6 {
    layout while the viewport is still > 960px).
    ============================================================ */
 
-/* Intermediate: clock row spans full width, lights+safety side-by-side.
+/* Intermediate: clock row spans full width, lights beside it.
    Also wrap the panel header so the clock pill gets its own full-width row
    rather than squeezing against a potentially wide uppercase title. */
 @container (max-width: 560px) {

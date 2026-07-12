@@ -16,8 +16,8 @@ width at tablet size, everything stacks to full width at phone size.
 | Type | Purpose | Multi-instance? |
 |---|---|---|
 | `content` | Static HTML block (hero images, custom text/markup) | Yes |
-| `game-control` | Mode select, checklist, start/solve/fail, emergency actions | No — reads global `PxD.config.gameControl` |
-| `time-lights` | Time adjust, light scenes, TV/clock status | No — reads global `PxD.config.timeLights` |
+| `game-control` | Mode select, checklist, start/solve/fail, time adjust, emergency actions | No — reads global `PxD.config.gameControl` |
+| `time-lights` | **Time & Lights** — clock adjust + light scenes (no emergency button) | No — reads global `PxD.config.timeLights` |
 | `hints` | Hint dropdown + free-text send | No — reads global `PxD.config.hints` |
 | `system` | Connection/warning status bar + watch zones | No — reads global `PxD.config.system` |
 | `widget-grid` | Grid of MQTT-bound prop/puzzle widget tiles | **Yes** — each instance has its own widget set |
@@ -32,6 +32,12 @@ their own `config` is typically `{}`. This is unchanged from PxD v1 and lets
 one room reuse the same settings across multiple pages/sites without
 repeating them. `widget-grid` and `camera-view` are true multi-instance
 panes: all of their configuration lives in the pane's own `config`.
+
+**Time & Lights / Emergency split:** The `time-lights` pane title is
+**Time & Lights** (clock adjust + light scenes only). Emergency Controls live
+only on `game-control` (header button + modal). `game-control` also includes
+an Adjust Time row that publishes `{ command: "adjustTime", seconds }` to the
+game commands topic.
 
 ### `content`
 

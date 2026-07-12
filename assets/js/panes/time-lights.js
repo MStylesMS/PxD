@@ -1,15 +1,14 @@
 /**
- * panels/time-lights.js — Time Adjustment & Lighting Panel
+ * panels/time-lights.js — Time & Lights Panel
  *
  * Responsibilities:
  *  - MM:SS clock adjustment inputs (+/- minute, +/- second, Add/Subtract)
  *  - Lighting scene dropdown (colour scenes + MQTT-driven named scenes)
- *  - Emergency button shortcut (delegates to game-control panel's modal)
  *  - Clock visibility indicator (driven by tv/state and clock/state)
  *
  * Reads from: PxD.config.timeLights, PxD.config.topicRoot
  * Subscribes to: lights/state, lights/scenes, clock/state, tv/state
- * Publishes to: lights/commands
+ * Publishes to: lights/commands (and topicRoot/commands for adjustTime)
  */
 (function () {
     'use strict';
@@ -305,7 +304,7 @@
     function buildHTML() {
         return '<section class="panel panel-time-lights">' +
             '<div class="panel-header panel-header-tight">' +
-                '<h2 class="panel-title">Time, Lighting, and Safety</h2>' +
+                '<h2 class="panel-title">Time &amp; Lights</h2>' +
             '</div>' +
             '<div class="time-lights-grid">' +
                 // Clock adjust
@@ -337,11 +336,6 @@
                         '<ul id="colorDropdown" class="dropdown-menu w-100"><li class="px-3 text-muted small">Loading scenes\u2026</li></ul>' +
                     '</div>' +
                 '</div>' +
-                // Emergency shortcut
-                '<div class="safety-block">' +
-                    '<label class="form-label">Emergency</label>' +
-                    '<button id="emergencyBtnTL" type="button" class="btn btn-danger w-100" onclick="window._gcPanel && window._gcPanel.showEmergencyModal && window._gcPanel.showEmergencyModal()">Emergency Controls</button>' +
-                '</div>' +
             '</div>' +
         '</section>';
     }
@@ -357,15 +351,6 @@
 
         _root = slotEl;
         slotEl.innerHTML = buildHTML();
-
-        // Patch emergency button to use game-control panel modal
-        var emerBtn = slotEl.querySelector('#emergencyBtnTL');
-        if (emerBtn) {
-            emerBtn.onclick = function () {
-                var el = document.getElementById('gc-emergencyModal');
-                if (el) { new bootstrap.Modal(el).show(); }
-            };
-        }
 
         populateColorScenes();
 

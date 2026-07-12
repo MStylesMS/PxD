@@ -494,6 +494,7 @@ packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 | `binary-lock` | `1x1` | Active | Lock icon; click publishes lock/unlock command |
 | `binary-switch` | `1x1` | Active | Power/device switch; click publishes allOn/allOff |
 | `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
+| `lights-control` | `2x2` | Active | Colour scene picker + brightness; glyph tinted by scene×brightness |
 | `text-display` | `4x1` | Passive | Arbitrary text field from payload |
 | `numeric-gauge` | `2x2` | Passive | Numeric value + threshold colour bands |
 
@@ -513,6 +514,22 @@ commands. Copy from `templates/widgets/base/binary-switch/`.
 Glyph summary: **plug** / **fan** use a filled icon for ON and the same icon
 with a circle+slash for OFF; **bulb** uses a solid bulb with rays for ON and an
 outline bulb (no rays) for OFF.
+
+### lights-control
+
+Active lighting control for PxB (or compatible) light topics. Copy from
+`templates/widgets/base/lights-control/`. Publishes `{ command: "setColorScene",
+scene }` and `{ command: "setBrightness", brightness }` as objects. Scene list
+comes from `SCENES_TOPIC` when available; otherwise uses the same hardcoded
+colour scenes as the **Time & Lights** pane.
+
+| Key | Default | Notes |
+|---|---|---|
+| `STATE_TOPIC` | `REPLACE/…/lights/state` | Reads `scene` / `activeScene` / `lighting.activeScene`, optional `brightness` |
+| `SCENES_TOPIC` | `REPLACE/…/lights/scenes` | `{ scenes: [{ id, label, swatch }] }` |
+| `COMMAND_TOPIC` | `REPLACE/…/lights/commands` | Target for setColorScene / setBrightness |
+| `GLYPH` | `"bulb"` | `ceiling` \| `desk` \| `spotlight` \| `bulb` |
+| `SIZE` | `"2x2"` | Prefer `2x2` or `2x1` |
 
 Examples live in `apps/PxD/templates/widgets/examples/`.
 

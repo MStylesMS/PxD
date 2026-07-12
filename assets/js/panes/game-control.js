@@ -6,6 +6,7 @@
  *  - Mode selector (game modes from MQTT config)
  *  - Start / Pause / Resume / Solve / Fail / Reset / Wake action button
  *  - Checklist button (state driven by MQTT; currently a stub)
+ *  - Time adjust (MM:SS selectors + add/subtract)
  *  - Emergency controls modal
  *  - Abort intro confirmation modal
  *
@@ -330,8 +331,56 @@
         populateGameSelector();
     }
 
+    // ── Time adjust ────────────────────────────────────────────────────────
+    function clampTimePart(value) {
+        var n = parseInt(value, 10);
+        if (isNaN(n) || n < 0) return 0;
+        if (n > 60) return 60;
+        return n;
+    }
+
+    function stepTimeSelect(sel, delta) {
+        if (!sel) return;
+        var next = clampTimePart((parseInt(sel.value, 10) || 0) + delta);
+        sel.value = String(next);
+    }
+
+    function validateTimeSelects() {
+        var mi = _root && _root.querySelector('#gcMinutesSelect');
+        var si = _root && _root.querySelector('#gcSecondsSelect');
+        if (mi) mi.value = String(clampTimePart(mi.value));
+        if (si) si.value = String(clampTimePart(si.value));
+    }
+
+    function resetTimeSelects() {
+        var mi = _root && _root.querySelector('#gcMinutesSelect');
+        var si = _root && _root.querySelector('#gcSecondsSelect');
+        if (mi) mi.value = '0';
+        if (si) si.value = '0';
+    }
+
+    function adjustTime(direction) {
+        var mi = _root && _root.querySelector('#gcMinutesSelect');
+        var si = _root && _root.querySelector('#gcSecondsSelect');
+        var mins = clampTimePart((mi && mi.value) || '0');
+        var secs = clampTimePart((si && si.value) || '0');
+        var total = (mins * 60 + secs) * direction;
+        if (total === 0) return;
+        sendCommand('adjustTime', { seconds: total });
+        resetTimeSelects();
+    }
+
+    function buildTimeOptions() {
+        var html = '';
+        for (var i = 0; i <= 60; i++) {
+            html += '<option value="' + i + '">' + String(i).padStart(2, '0') + '</option>';
+        }
+        return html;
+    }
+
     // ── HTML template ──────────────────────────────────────────────────────
     function buildHTML() {
+        var timeOpts = buildTimeOptions();
         return '<section class="panel panel-control">' +
             '<div class="panel-header">' +
                 '<h2 class="panel-title">Game Control</h2>' +
@@ -355,6 +404,26 @@
                     '<div class="btn-group w-100" role="group">' +
                         '<button id="solveBtn" type="button" class="btn btn-success" onclick="window._gcPanel.sendSolve()" disabled>Solve</button>' +
                         '<button id="failBtn"  type="button" class="btn btn-danger"  onclick="window._gcPanel.sendFail()"  disabled>Fail</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="control-item control-item-time">' +
+                    '<label class="form-label">Adjust Time</label>' +
+                    '<div class="gc-time-row">' +
+                        '<div class="input-group input-group-sm gc-time-group">' +
+                            '<button class="btn btn-outline-secondary" type="button" onclick="window._gcPanel.stepMinutes(-1)" tabindex="-1" aria-label="Decrease minutes">-</button>' +
+                            '<select id="gcMinutesSelect" class="form-select text-center" aria-label="Minutes" onchange="window._gcPanel.validateTimeSelects()">' + timeOpts + '</select>' +
+                            '<button class="btn btn-outline-secondary" type="button" onclick="window._gcPanel.stepMinutes(1)" tabindex="-1" aria-label="Increase minutes">+</button>' +
+                        '</div>' +
+                        '<div class="gc-time-sep" aria-hidden="true">:</div>' +
+                        '<div class="input-group input-group-sm gc-time-group">' +
+                            '<button class="btn btn-outline-secondary" type="button" onclick="window._gcPanel.stepSeconds(-1)" tabindex="-1" aria-label="Decrease seconds">-</button>' +
+                            '<select id="gcSecondsSelect" class="form-select text-center" aria-label="Seconds" onchange="window._gcPanel.validateTimeSelects()">' + timeOpts + '</select>' +
+                            '<button class="btn btn-outline-secondary" type="button" onclick="window._gcPanel.stepSeconds(1)" tabindex="-1" aria-label="Increase seconds">+</button>' +
+                        '</div>' +
+                        '<div class="btn-group gc-time-apply" role="group" aria-label="Apply time adjustment">' +
+                            '<button type="button" class="btn btn-outline-light btn-sm" onclick="window._gcPanel.adjustTime(-1)" title="Subtract time">\u2212</button>' +
+                            '<button type="button" class="btn btn-outline-light btn-sm" onclick="window._gcPanel.adjustTime(1)" title="Add time">+</button>' +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -447,6 +516,10 @@
             sendGameAction:     sendGameAction,
             sendSolve:          function () { sendCommand('solve'); },
             sendFail:           function () { sendCommand('fail'); },
+            stepMinutes:        function (d) { stepTimeSelect(_root.querySelector('#gcMinutesSelect'), d); },
+            stepSeconds:        function (d) { stepTimeSelect(_root.querySelector('#gcSecondsSelect'), d); },
+            validateTimeSelects: validateTimeSelects,
+            adjustTime:         adjustTime,
             emergencyAction:    emergencyAction,
             confirmIntroAbort:  confirmIntroAbort
         };
