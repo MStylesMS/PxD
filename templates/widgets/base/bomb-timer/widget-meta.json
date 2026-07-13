@@ -1,0 +1,12 @@
+{
+    "label": "bomb-timer — 3×1",
+    "quickStates": [
+        { "label": "Ready", "payload": "{\"timeRemaining\":3600,\"gameState\":\"ready\",\"battery\":92,\"batteryState\":\"normal\",\"lowBattery\":false}", "color": "#9a9a9a" },
+        { "label": "Running", "payload": "{\"timeRemaining\":1842,\"gameState\":\"countdown\",\"battery\":74,\"batteryState\":\"normal\",\"lowBattery\":false}", "color": "#ffffff" },
+        { "label": "Paused", "payload": "{\"timeRemaining\":900,\"gameState\":\"paused\",\"battery\":55,\"batteryState\":\"normal\",\"lowBattery\":false}", "color": "#ffffff" },
+        { "label": "Low batt", "payload": "{\"timeRemaining\":600,\"gameState\":\"countdown\",\"battery\":35,\"batteryState\":\"normal\",\"lowBattery\":true}", "color": "#e0a800" },
+        { "label": "Cutoff", "payload": "{\"timeRemaining\":120,\"gameState\":\"countdown\",\"battery\":22,\"batteryState\":\"normal\",\"lowBattery\":true}", "color": "#dc3545" },
+        { "label": "Solved", "payload": "{\"timeRemaining\":411,\"gameState\":\"defused\",\"battery\":60,\"batteryState\":\"normal\",\"lowBattery\":false}", "color": "#198754" },
+        { "label": "Failed", "payload": "{\"timeRemaining\":0,\"gameState\":\"detonated\",\"battery\":48,\"batteryState\":\"normal\",\"lowBattery\":false}", "color": "#dc3545" }
+    ]
+}

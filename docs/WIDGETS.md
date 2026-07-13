@@ -496,7 +496,9 @@ packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 | `binary-lock` | `1x1` | Active | Lock icon; click publishes lock/unlock command |
 | `binary-switch` | `1x1` | Active | Power/device switch; click publishes allOn/allOff |
 | `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
+| `bomb-timer` | `3x1` | Passive | Suitcase/bomb countdown with gameState colour + battery glyph |
 | `lights-control` | `1x1` | Active | Colour scene picker + brightness; glyph tinted by scene×brightness |
+| `troffer-control` | `3x1` | Active | Paradox Troffer (white on/off, RGB, brightness, UV) |
 | `text-display` | `4x1` | Passive | Arbitrary text field from payload |
 | `numeric-gauge` | `2x2` | Passive | Numeric value + threshold colour bands |
 
@@ -507,15 +509,16 @@ commands. Copy from `templates/widgets/base/binary-switch/`.
 
 | Key | Default | Notes |
 |---|---|---|
-| `GLYPH` | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` |
+| `GLYPH` | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` |
 | `ON_COMMAND` | `"allOn"` | Published as `{ command: "allOn" }` (object, not stringified) |
 | `OFF_COMMAND` | `"allOff"` | Published as `{ command: "allOff" }` |
 | `ON_VALUE` | `"on"` | State-field value that means on |
 | `ICON_ON` / `ICON_OFF` | `null` | Optional overrides; when set, replace the glyph pair |
 
-Glyph summary: **plug** / **fan** use a filled icon for ON and the same icon
-with a circle+slash for OFF; **bulb** uses a solid bulb with rays for ON and an
-outline bulb (no rays) for OFF.
+Glyph summary: **plug** / **fan** / **tv** use a filled icon for ON and the same
+icon with a circle+slash for OFF; **bulb** uses a solid bulb with rays for ON
+and an outline bulb (no rays) for OFF. **tv** is a classic CRT set with
+rabbit-ear antennas.
 
 ### lights-control
 
@@ -532,6 +535,36 @@ colour scenes as the **Time & Lights** pane.
 | `COMMAND_TOPIC` | `REPLACE/…/lights/commands` | Target for setColorScene / setBrightness |
 | `GLYPH` | `"bulb"` | `ceiling` \| `desk` \| `spotlight` \| `bulb` |
 | `SIZE` | `"1x1"` | Prefer `1x1` (compact) or `3x1` |
+
+### troffer-control
+
+Active control for MQTT-native Paradox Troffer / px-wifi-light fixtures
+(white on/off, RGB colour + brightness, independent UV). Copy from
+`templates/widgets/base/troffer-control/`. UV slider is **0–255** (device
+native units). White ON uses scene `white`; White OFF restores current RGB via
+`setColor` (or `off` when RGB is black).
+
+| Key | Default | Notes |
+|---|---|---|
+| `STATE_TOPIC` | `REPLACE/…/state` | Reads `on`, `white`, `r`/`g`/`b`, `brightness`, `uv`, `scene` |
+| `COMMAND_TOPIC` | `REPLACE/…/commands` | `setColorScene` / `setColor` / `setBrightness` / `setUV` / `off` |
+| `SIZE` | `"3x1"` | Compact operator tile |
+
+### bomb-timer
+
+Passive suitcase/bomb display: mm:ss + `gameState` text colour (+ blink when
+paused) + battery glyph. Copy from `templates/widgets/base/bomb-timer/`.
+px-wifi-v1 states: `ready`, `not_ready`, `countdown`, `paused`, `defused`,
+`detonated` (aliases `running`/`solved`/`failed` also accepted). Cutoff % is
+not in the state payload — use CONFIG `BATTERY_LOW_PCT` / `BATTERY_CUTOFF_PCT`
+(firmware defaults 40 / 20).
+
+| Key | Default | Notes |
+|---|---|---|
+| `STATE_TOPIC` | `REPLACE/…/suitcase/state` | `timeRemaining`, `gameState`, `battery`, `lowBattery`, `batteryState` |
+| `SIZE` | `"3x1"` | ~25% width |
+| `BATTERY_LOW_PCT` | `40` | Yellow / warn when at or below (or `lowBattery`) |
+| `BATTERY_CUTOFF_PCT` | `20` | Red when within 5% of cutoff (`≤ cutoff+5`) |
 
 Examples live in `apps/PxD/templates/widgets/examples/`.
 

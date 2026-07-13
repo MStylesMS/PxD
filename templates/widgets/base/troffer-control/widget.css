@@ -1,0 +1,115 @@
+/* troffer-control — Paradox Troffer / px-wifi-light
+   Class prefix: wd-troffer-*
+   Default tile: 3×1 (~25% width)
+*/
+
+.wd-troffer-wrap {
+    display:         flex;
+    flex-direction:  row;
+    align-items:     stretch;
+    justify-content: flex-start;
+    height:          100%;
+    padding:         4px 6px;
+    gap:              8px;
+    min-height:      0;
+    box-sizing:      border-box;
+}
+
+.wd-troffer-left {
+    flex:            0 0 auto;
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    gap:             4px;
+}
+
+.wd-troffer-glyph {
+    width:           36px;
+    height:          36px;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    color:           #f4f4f4;
+    transition:      color 0.2s ease;
+}
+
+.wd-troffer-glyph svg {
+    width:  100%;
+    height: 100%;
+}
+
+.wd-troffer-white {
+    font-size:      0.55rem;
+    font-weight:    700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height:    1;
+    padding:        0.25rem 0.4rem;
+    border-radius:  var(--pxd-border-radius, 4px);
+    border:         1px solid rgba(255, 255, 255, 0.25);
+    background:     rgba(0, 0, 0, 0.25);
+    color:          var(--pxd-ink-soft, #adb5bd);
+    cursor:         pointer;
+}
+
+.wd-troffer-white.wd-troffer-white-on {
+    background: #f4f4f4;
+    color:      #111;
+    border-color: #f4f4f4;
+}
+
+.wd-troffer-main {
+    flex:            1 1 auto;
+    min-width:       0;
+    display:         flex;
+    flex-direction:  column;
+    justify-content: center;
+    gap:             3px;
+}
+
+.wd-troffer-label {
+    width:   100%;
+    margin:  0;
+    display: block;
+}
+
+.wd-troffer-color {
+    font-size:  0.65rem;
+    padding:    0.1rem 0.25rem;
+    min-height: 1.45rem;
+    width:      100%;
+}
+
+.wd-troffer-row {
+    display:         flex;
+    flex-direction:  row;
+    align-items:     center;
+    gap:             6px;
+    min-width:       0;
+}
+
+.wd-troffer-bri-val,
+.wd-troffer-uv-val {
+    flex:                   0 0 4.6rem;
+    font-size:              0.5rem;
+    font-weight:            600;
+    font-variant-numeric:   tabular-nums;
+    color:                  var(--pxd-ink-soft, #adb5bd);
+    line-height:            1.1;
+    white-space:            nowrap;
+}
+
+.wd-troffer-bri,
+.wd-troffer-uv {
+    flex:         1 1 auto;
+    min-width:    0;
+    width:        100%;
+    height:       1.1rem;
+    margin:       0;
+    accent-color: var(--pxd-accent, #6c757d);
+}
+
+.wd-troffer-uv {
+    accent-color: #9b59ff;
+}

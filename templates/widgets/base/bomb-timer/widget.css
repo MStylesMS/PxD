@@ -1,0 +1,72 @@
+/* bomb-timer — suitcase / bomb countdown
+   Class prefix: wd-bomb-*
+   Default tile: 3×1 (~25% width)
+*/
+
+.wd-bomb-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    height:          100%;
+    padding:         6px 8px;
+    gap:              2px;
+}
+
+.wd-bomb-main {
+    display:         flex;
+    flex-direction:  row;
+    align-items:     center;
+    justify-content: center;
+    gap:             8px;
+    min-width:       0;
+}
+
+.wd-bomb-time {
+    font-size:            1.85rem;
+    font-weight:          700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing:       0.04em;
+    line-height:          1;
+    color:                #9a9a9a;
+    transition:           color 0.35s ease;
+    white-space:          nowrap;
+}
+
+.wd-bomb-wrap:not(.wd-has-label) .wd-bomb-time {
+    font-size: 2rem;
+}
+
+.wd-bomb-batt {
+    width:           28px;
+    height:          28px;
+    flex-shrink:     0;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    color:           #2f8f74;
+}
+
+.wd-bomb-batt-svg {
+    width:  100%;
+    height: 100%;
+}
+
+.wd-bomb-label {
+    font-size:       0.6rem;
+    font-weight:     600;
+    letter-spacing:  0.08em;
+    text-transform:  uppercase;
+    color:           #6c757d;
+    line-height:     1;
+}
+
+/* Paused — blink the time (and keep battery steady) */
+@keyframes wd-bomb-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
+}
+
+.wd-bomb-wrap.wd-bomb-paused .wd-bomb-time {
+    animation: wd-bomb-blink 1.1s ease-in-out infinite;
+}

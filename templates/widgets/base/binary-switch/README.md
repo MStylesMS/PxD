@@ -32,7 +32,7 @@ command (configurable) to the configured command topic.
    | `OFF_LABEL` | | `"OFF"` | Label shown in the off state |
    | `ON_COLOR` | | `#198754` | CSS colour for on state (icon + label) |
    | `OFF_COLOR` | | `#dc3545` | CSS colour for off state |
-   | `GLYPH` | | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` |
+   | `GLYPH` | | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` |
    | `ICON_ON` | | `null` | Optional override for the on icon |
    | `ICON_OFF` | | `null` | Optional override for the off icon |
    | `INTERACTIVE` | | `true` | `false` disables click-to-command |
@@ -57,9 +57,10 @@ command (configurable) to the configured command topic.
 | `plug` | Filled electrical plug | Same plug + circle/slash prohibition mark |
 | `fan` | Four-blade fan with hub | Same fan + circle/slash prohibition mark |
 | `bulb` | Solid bulb with radiating rays | Outline bulb, empty interior, no rays |
+| `tv` | Classic CRT TV with rabbit-ear antennas | Same TV + circle/slash prohibition mark |
 
 ```js
-GLYPH: 'fan',   // or 'plug' | 'bulb'
+GLYPH: 'fan',   // or 'plug' | 'bulb' | 'tv'
 ```
 
 To replace the glyph pair entirely, set `ICON_ON` / `ICON_OFF` (inline SVG,

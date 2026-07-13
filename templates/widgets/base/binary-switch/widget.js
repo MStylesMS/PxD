@@ -9,7 +9,7 @@
  *   2. Edit only the CONFIG block below.
  *   3. Add the widget to room.json → widgets and run the packager.
  *
- * Glyphs — set GLYPH to one of: 'plug' | 'fan' | 'bulb'
+ * Glyphs — set GLYPH to one of: 'plug' | 'fan' | 'bulb' | 'tv'
  *   Built-in SVG pairs are offline-safe (fill="currentColor", viewBox 0 0 24 24).
  *
  * Icon overrides — set ICON_ON / ICON_OFF to one of:
@@ -102,6 +102,29 @@
                 '<rect x="10.3" y="18.8" width="3.4" height="1.8" rx="0.5"/>' +
                 '</svg>',
         },
+
+        tv: {
+            // Classic CRT set with rabbit-ear antennas
+            on: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<path d="M7.2 2.2l4.3 4.1L16.8 2.2l1.1 1.2-4.2 3.9h-3.4L6.1 3.4z"/>' +
+                '<rect x="3" y="7.2" width="18" height="12.2" rx="1.6"/>' +
+                '<rect x="5" y="9" width="14" height="7.6" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.35"/>' +
+                '<rect x="8.5" y="19.4" width="2.2" height="2.2" rx="0.4"/>' +
+                '<rect x="13.3" y="19.4" width="2.2" height="2.2" rx="0.4"/>' +
+                '</svg>',
+
+            off: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<g opacity="0.55">' +
+                '<path d="M7.2 2.2l4.3 4.1L16.8 2.2l1.1 1.2-4.2 3.9h-3.4L6.1 3.4z"/>' +
+                '<rect x="3" y="7.2" width="18" height="12.2" rx="1.6"/>' +
+                '<rect x="5" y="9" width="14" height="7.6" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>' +
+                '<rect x="8.5" y="19.4" width="2.2" height="2.2" rx="0.4"/>' +
+                '<rect x="13.3" y="19.4" width="2.2" height="2.2" rx="0.4"/>' +
+                '</g>' +
+                '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/>' +
+                '<path d="M6.2 6.2l11.6 11.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+                '</svg>',
+        },
     };
     /* eslint-enable max-len */
 
@@ -151,7 +174,7 @@
 
         // Glyph / icons ------------------------------------------------------
         //
-        // GLYPH selects a built-in SVG pair: 'plug' | 'fan' | 'bulb'
+        // GLYPH selects a built-in SVG pair: 'plug' | 'fan' | 'bulb' | 'tv'
         // Set ICON_ON / ICON_OFF to override (inline SVG, file path, or ligature).
 
         GLYPH:                'plug',
