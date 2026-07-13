@@ -2,7 +2,7 @@
  * lights-control — active light scene + brightness widget
  * Scene picker, brightness slider, and a glyph tinted by the selected scene
  * colour mixed toward black by brightness.
- * Default size: 2×2
+ * Default size: 1×1
  *
  * To use:
  *   1. Copy this directory to rooms/<game>/pxd/widgets/<your-id>/
@@ -21,13 +21,14 @@
     /* eslint-disable max-len */
     const GLYPHS = {
 
+        // Flush-mount ceiling drum fixture (canopy + short stem + shade)
         ceiling:
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
-            '<rect x="3" y="2" width="18" height="2.2" rx="0.6"/>' +
-            '<path d="M11.2 4.2h1.6v3.2h-1.6z"/>' +
-            '<path d="M7.5 8.2c0-1.7 1.9-3.1 4.5-3.1s4.5 1.4 4.5 3.1c0 2.4-1.6 3.6-2.4 5.4-.4.9-.6 1.7-.6 2.6v1.2H10.5v-1.2c0-.9-.2-1.7-.6-2.6-.8-1.8-2.4-3-2.4-5.4z"/>' +
-            '<rect x="9.8" y="17.4" width="4.4" height="1.3" rx="0.3"/>' +
-            '<rect x="10.3" y="19.1" width="3.4" height="1.8" rx="0.5"/>' +
+            '<rect x="3.5" y="1.8" width="17" height="2" rx="0.8"/>' +
+            '<rect x="11.1" y="3.8" width="1.8" height="2.4" rx="0.4"/>' +
+            '<path d="M6.2 7.2h11.6c1 0 1.8.8 1.8 1.8v.8H4.4v-.8c0-1 .8-1.8 1.8-1.8z"/>' +
+            '<path d="M4.4 9.8h15.2v5.4c0 1.6-3.4 2.9-7.6 2.9s-7.6-1.3-7.6-2.9V9.8z"/>' +
+            '<ellipse cx="12" cy="17.6" rx="6.2" ry="1.15" opacity="0.5"/>' +
             '</svg>',
 
         desk:
@@ -96,8 +97,8 @@
         /** Built-in glyph: 'ceiling' | 'desk' | 'spotlight' | 'bulb' */
         GLYPH:                'bulb',
 
-        /** Tile size. Prefer 2x2 (or 2x1) so picker + slider fit. */
-        SIZE:                 '2x2',
+        /** Tile size. Prefer 1x1 (compact) or 3x1 if controls need more width. */
+        SIZE:                 '1x1',
 
         /** Card goes 'disconnected' if no state message arrives within this many ms.
          *  Set to 0 to disable the heartbeat watcher. */
@@ -139,6 +140,28 @@
             return s.length === 1 ? '0' + s : s;
         }
         return '#' + p(r) + p(g) + p(b);
+    }
+
+    /** Black text on light swatches, white on dark (shared PxD helper). */
+    function contrastText(hex) {
+        if (PxD.utils && typeof PxD.utils.getContrastColor === 'function') {
+            return PxD.utils.getContrastColor(hex);
+        }
+        // Fallback if utils not loaded yet
+        var rgb = parseHex(hex);
+        if (!rgb) return '#ffffff';
+        return ((rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000 > 128) ? '#000000' : '#ffffff';
+    }
+
+    function applySelectColors(selectEl, bgHex) {
+        if (!selectEl) return;
+        if (bgHex) {
+            selectEl.style.backgroundColor = bgHex;
+            selectEl.style.color = contrastText(bgHex);
+        } else {
+            selectEl.style.backgroundColor = '';
+            selectEl.style.color = '';
+        }
     }
 
     /** Mix scene RGB toward black by brightness (0% → black, 100% → full colour). */
@@ -205,13 +228,24 @@
             var opt = document.createElement('option');
             opt.value = s.id;
             opt.textContent = s.label;
-            if (s.color) opt.style.backgroundColor = s.color;
+            if (s.color) {
+                opt.style.backgroundColor = s.color;
+                opt.style.color = contrastText(s.color);
+            }
             _sceneSelect.appendChild(opt);
         });
         var match = list.find(function (s) { return s.id === prev; }) ||
                     list.find(function (s) { return String(s.id).toLowerCase() === String(prev).toLowerCase(); });
-        _sceneSelect.value = match ? match.id : (list[0] ? list[0].id : prev);
-        if (match) _sceneId = match.id;
+        if (match) {
+            _sceneId = match.id;
+            _sceneSelect.value = match.id;
+        } else if (list[0]) {
+            // Previous scene was removed — keep select and state aligned.
+            _sceneId = list[0].id;
+            _sceneSelect.value = list[0].id;
+        }
+        var selected = findSceneMeta(_sceneId);
+        applySelectColors(_sceneSelect, selected && selected.color);
     }
 
     function syncBrightnessUi() {
@@ -230,6 +264,8 @@
                       opts.find(function (o) { return o.value.toLowerCase() === String(_sceneId).toLowerCase(); });
             if (hit) _sceneSelect.value = hit.value;
         }
+        var meta = findSceneMeta(_sceneId);
+        applySelectColors(_sceneSelect, meta && meta.color);
         syncBrightnessUi();
         renderGlyph();
     }
@@ -283,6 +319,8 @@
         var id = _sceneSelect.value;
         if (!id) return;
         _sceneId = id;
+        var meta = findSceneMeta(_sceneId);
+        applySelectColors(_sceneSelect, meta && meta.color);
         renderGlyph();
         // Publish object payload — PxD.mqtt serialises once (do not JSON.stringify).
         PxD.mqtt.publish(CONFIG.COMMAND_TOPIC, { command: 'setColorScene', scene: id });
@@ -319,15 +357,16 @@
         mount(bodyEl) {
             bodyEl.innerHTML =
                 '<div class="wd-lights-wrap">' +
-                '  <div class="wd-lights-glyph" aria-hidden="true">' + glyphSvg + '</div>' +
-                '  <label class="wd-lights-label">Scene' +
-                '    <select class="wd-lights-select form-select form-select-sm" aria-label="Color scene"></select>' +
-                '  </label>' +
-                '  <div class="wd-lights-bri-row">' +
-                '    <label class="wd-lights-label">Brightness</label>' +
-                '    <span class="wd-lights-bri-val">100%</span>' +
+                '  <div class="wd-lights-main">' +
+                '    <div class="wd-lights-glyph" aria-hidden="true">' + glyphSvg + '</div>' +
+                '    <label class="wd-lights-label">' +
+                '      <select class="wd-lights-select form-select form-select-sm" aria-label="Color scene"></select>' +
+                '    </label>' +
                 '  </div>' +
-                '  <input class="wd-lights-bri" type="range" min="0" max="100" value="100" step="1" aria-label="Brightness">' +
+                '  <div class="wd-lights-bri-col">' +
+                '    <span class="wd-lights-bri-val">100%</span>' +
+                '    <input class="wd-lights-bri" type="range" min="0" max="100" value="100" step="1" orient="vertical" aria-label="Brightness">' +
+                '  </div>' +
                 '</div>';
 
             _wrapEl      = bodyEl.querySelector('.wd-lights-wrap');

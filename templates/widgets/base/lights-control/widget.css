@@ -1,23 +1,34 @@
-/* lights-control widget — 2×2 tile styles
+/* lights-control widget — glyph+scene left, vertical brightness right
    Class prefix: wd-lights-*
+   Default tile: 3×1 (~25% width, single row)
 */
 
 .wd-lights-wrap {
     display:         flex;
-    flex-direction:  column;
+    flex-direction:  row;
     align-items:     stretch;
     justify-content: flex-start;
     height:          100%;
-    padding:         6px 8px 8px;
-    gap:              4px;
+    padding:         4px 6px 4px 4px;
+    gap:              8px;
     min-height:      0;
+    box-sizing:      border-box;
+}
+
+.wd-lights-main {
+    flex:            1 1 auto;
+    min-width:       0;
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    gap:             4px;
 }
 
 .wd-lights-glyph {
-    width:           40px;
-    height:          40px;
+    width:           44px;
+    height:          44px;
     flex-shrink:     0;
-    align-self:      center;
     display:         flex;
     align-items:     center;
     justify-content: center;
@@ -31,16 +42,17 @@
 }
 
 .wd-lights-label {
-    font-size:      0.55rem;
+    width:          100%;
+    font-size:      0.5rem;
     font-weight:    700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    line-height:    1.2;
+    line-height:    1.1;
     color:          var(--pxd-ink-soft, #adb5bd);
     margin:         0;
     display:        flex;
     flex-direction: column;
-    gap:            4px;
+    gap:            2px;
 }
 
 .wd-lights-label .wd-lights-select {
@@ -50,27 +62,44 @@
 }
 
 .wd-lights-select {
-    font-size:   0.7rem;
-    padding:     0.15rem 0.35rem;
-    min-height:  1.7rem;
+    font-size:   0.65rem;
+    padding:     0.1rem 0.25rem;
+    min-height:  1.45rem;
+    width:       100%;
 }
 
-.wd-lights-bri-row {
+/* Vertical brightness column: 100% at top → 0% at bottom */
+.wd-lights-bri-col {
+    flex:            0 0 auto;
     display:         flex;
-    align-items:     baseline;
-    justify-content: space-between;
-    gap:             6px;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: stretch;
+    gap:             2px;
+    min-height:      0;
+    align-self:      stretch;
 }
 
 .wd-lights-bri-val {
-    font-size:      0.6rem;
+    font-size:      0.55rem;
     font-weight:    600;
     font-variant-numeric: tabular-nums;
     color:          var(--pxd-ink-soft, #adb5bd);
+    line-height:    1;
+    flex-shrink:    0;
 }
 
 .wd-lights-bri {
-    width:     100%;
-    margin:    0;
-    accent-color: var(--pxd-accent, #6c757d);
+    /* Vertical range: high values at top */
+    writing-mode:         vertical-lr;
+    direction:            rtl;
+    -webkit-appearance:   slider-vertical;
+    appearance:           slider-vertical;
+    width:                1.35rem;
+    height:               100%;
+    flex:                 1 1 auto;
+    min-height:           48px;
+    margin:               0;
+    padding:              0;
+    accent-color:         var(--pxd-accent, #6c757d);
 }

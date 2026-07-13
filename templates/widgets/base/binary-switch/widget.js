@@ -52,24 +52,28 @@
         },
 
         fan: {
+            // Table fan: blade set inside a circular cage
             on: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
-                '<ellipse cx="12" cy="6.5" rx="2.2" ry="4.5"/>' +
-                '<ellipse cx="17.5" cy="12" rx="4.5" ry="2.2"/>' +
-                '<ellipse cx="12" cy="17.5" rx="2.2" ry="4.5"/>' +
-                '<ellipse cx="6.5" cy="12" rx="4.5" ry="2.2"/>' +
-                '<circle cx="12" cy="12" r="2.2"/>' +
+                '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+                '<circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.35"/>' +
+                '<ellipse cx="12" cy="7.3" rx="1.7" ry="3.5"/>' +
+                '<ellipse cx="16.7" cy="12" rx="3.5" ry="1.7"/>' +
+                '<ellipse cx="12" cy="16.7" rx="1.7" ry="3.5"/>' +
+                '<ellipse cx="7.3" cy="12" rx="3.5" ry="1.7"/>' +
+                '<circle cx="12" cy="12" r="1.9"/>' +
                 '</svg>',
 
             off: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
                 '<g opacity="0.55">' +
-                '<ellipse cx="12" cy="6.5" rx="2.2" ry="4.5"/>' +
-                '<ellipse cx="17.5" cy="12" rx="4.5" ry="2.2"/>' +
-                '<ellipse cx="12" cy="17.5" rx="2.2" ry="4.5"/>' +
-                '<ellipse cx="6.5" cy="12" rx="4.5" ry="2.2"/>' +
-                '<circle cx="12" cy="12" r="2.2"/>' +
+                '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+                '<circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>' +
+                '<ellipse cx="12" cy="7.3" rx="1.7" ry="3.5"/>' +
+                '<ellipse cx="16.7" cy="12" rx="3.5" ry="1.7"/>' +
+                '<ellipse cx="12" cy="16.7" rx="1.7" ry="3.5"/>' +
+                '<ellipse cx="7.3" cy="12" rx="3.5" ry="1.7"/>' +
+                '<circle cx="12" cy="12" r="1.9"/>' +
                 '</g>' +
-                '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/>' +
-                '<path d="M6.2 6.2l11.6 11.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+                '<path d="M5.5 5.5l13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' +
                 '</svg>',
         },
 

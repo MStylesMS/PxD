@@ -194,7 +194,7 @@ h1, h2, h3, h4, h5 {
 
 .gc-time-group {
     width: auto;
-    flex: 1 1 120px;
+    flex: 0 1 140px;
     max-width: 160px;
 }
 
@@ -204,8 +204,8 @@ h1, h2, h3, h4, h5 {
     min-width: 3.25rem;
 }
 
-.gc-time-sep {
-    font-size: 1.15rem;
+.gc-time-unit {
+    font-size: 0.85rem;
     line-height: 1;
     color: var(--pxd-ink-soft);
     flex: 0 0 auto;
@@ -636,8 +636,11 @@ h6 {
     transition:   opacity 0.4s ease;
 }
 
-/* ── Tile sizes ────────────────────────────────────────────── */
-.widget-card[data-size="1x1"] { width: calc(25% - 8px);  min-height: 110px; }
+/* ── Tile sizes ──────────────────────────────────────────────
+   1x1 ≈ Bootstrap col-2 (6/row). 3x1 ≈ col-3 (4/row). 2x* ≈ half. 4x* = full.
+*/
+.widget-card[data-size="1x1"] { width: calc(16.666% - 8px); min-height: 110px; }
+.widget-card[data-size="3x1"] { width: calc(25% - 8px);     min-height: 110px; }
 .widget-card[data-size="2x1"] { width: calc(50% - 5px);  min-height: 110px; }
 .widget-card[data-size="2x2"] { width: calc(50% - 5px);  min-height: 220px; }
 .widget-card[data-size="4x1"] { width: 100%;             min-height: 110px; }
@@ -749,12 +752,14 @@ h6 {
 /* ── Responsive: collapse to 2-up or full-width on narrow panels */
 @container (max-width: 480px) {
     .widget-card[data-size="1x1"],
+    .widget-card[data-size="3x1"],
     .widget-card[data-size="2x1"] { width: calc(50% - 5px); }
     .widget-card[data-size="2x2"] { width: 100%; }
 }
 
 @container (max-width: 280px) {
     .widget-card[data-size="1x1"],
+    .widget-card[data-size="3x1"],
     .widget-card[data-size="2x1"],
     .widget-card[data-size="2x2"] { width: 100%; }
 }

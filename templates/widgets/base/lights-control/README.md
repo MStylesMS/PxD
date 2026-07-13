@@ -5,7 +5,7 @@ Active lighting widget. Shows a glyph tinted by the selected colour scene
 slider. Scene and brightness changes publish MQTT commands; the next state
 message overwrites the display.
 
-**Default size:** `2x2`  
+**Default size:** `1x1`  
 **Default glyph:** `bulb` (inline SVG)  
 **Interactive:** Yes — scene select and brightness slider publish commands
 
@@ -25,7 +25,7 @@ message overwrites the display.
    | `SCENES_TOPIC` | | — | Retained scenes list; falls back to hardcoded colour scenes |
    | `COMMAND_TOPIC` | ✓ | — | MQTT topic for `setColorScene` / `setBrightness` |
    | `GLYPH` | | `"bulb"` | `ceiling` \| `desk` \| `spotlight` \| `bulb` |
-   | `SIZE` | | `"2x2"` | Prefer `2x2` or `2x1` |
+   | `SIZE` | | `"1x1"` | Prefer `1x1` or `3x1` |
    | `HEARTBEAT_TIMEOUT_MS` | | `30000` | ms before card shows disconnected; `0` to disable |
 
 3. Add to a `widget-grid` pane in `room.json`:

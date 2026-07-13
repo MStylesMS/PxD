@@ -111,17 +111,19 @@ instance (a page can have as many as it needs).
 
 ## Tile sizing
 
-Widgets live in a 4-unit CSS grid. One unit = 25 % of the widget panel width
-and `var(--pxd-widget-unit, 100px)` in height. The loader sets `data-size` on
-the card element; `pxd-base.css` maps `data-size` to grid span rules.
+Widgets live in a CSS flex tile grid. One height unit is
+`var(--pxd-widget-unit, 100px)` (cards add a small header, so `1x1`
+min-height is ~110px). The loader sets `data-size` on the card
+element; `pxd-base.css` maps `data-size` to width/height rules.
 
-| `SIZE` | Grid cols | Grid rows | Approx width | Approx height |
-|---|---|---|---|---|
-| `"1x1"` | span 1 | span 1 | 25 % | 100 px |
-| `"2x1"` | span 2 | span 1 | 50 % | 100 px |
-| `"2x2"` | span 2 | span 2 | 50 % | 200 px |
-| `"4x1"` | span 4 | span 1 | 100 % | 100 px |
-| `"4x2"` | span 4 | span 2 | 100 % | 200 px |
+| `SIZE` | Approx width | Approx height | Bootstrap-ish |
+|---|---|---|---|
+| `"1x1"` | ~16.7 % (6/row) | 110 px | col-2 |
+| `"3x1"` | 25 % (4/row) | 110 px | col-3 |
+| `"2x1"` | 50 % | 110 px | col-6 |
+| `"2x2"` | 50 % | 220 px | col-6 |
+| `"4x1"` | 100 % | 110 px | col-12 |
+| `"4x2"` | 100 % | 220 px | col-12 |
 
 ---
 
@@ -372,7 +374,7 @@ PxD.widgetTypes.register('binary-door', {
         { key: 'CASE_SENSITIVE',       type: 'boolean',    label: 'Case-sensitive'                   },
         { key: 'STATE_MAP',            type: 'state-map',  label: 'State mapping'                   },
         { key: 'SIZE',                 type: 'select',     label: 'Tile size',
-          options: ['1x1','2x1','2x2','4x1','4x2']                                                   },
+          options: ['1x1','3x1','2x1','2x2','4x1','4x2']                                                   },
         { key: 'HEARTBEAT_TIMEOUT_MS', type: 'number',     label: 'Heartbeat (ms)',  min: 0          },
     ],
 
@@ -494,7 +496,7 @@ packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 | `binary-lock` | `1x1` | Active | Lock icon; click publishes lock/unlock command |
 | `binary-switch` | `1x1` | Active | Power/device switch; click publishes allOn/allOff |
 | `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
-| `lights-control` | `2x2` | Active | Colour scene picker + brightness; glyph tinted by scene×brightness |
+| `lights-control` | `1x1` | Active | Colour scene picker + brightness; glyph tinted by scene×brightness |
 | `text-display` | `4x1` | Passive | Arbitrary text field from payload |
 | `numeric-gauge` | `2x2` | Passive | Numeric value + threshold colour bands |
 
@@ -529,7 +531,7 @@ colour scenes as the **Time & Lights** pane.
 | `SCENES_TOPIC` | `REPLACE/…/lights/scenes` | `{ scenes: [{ id, label, swatch }] }` |
 | `COMMAND_TOPIC` | `REPLACE/…/lights/commands` | Target for setColorScene / setBrightness |
 | `GLYPH` | `"bulb"` | `ceiling` \| `desk` \| `spotlight` \| `bulb` |
-| `SIZE` | `"2x2"` | Prefer `2x2` or `2x1` |
+| `SIZE` | `"1x1"` | Prefer `1x1` (compact) or `3x1` |
 
 Examples live in `apps/PxD/templates/widgets/examples/`.
 
