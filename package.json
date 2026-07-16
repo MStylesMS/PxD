@@ -9,6 +9,6 @@
     "test": "node scripts/package.test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   }
 }
