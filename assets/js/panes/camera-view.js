@@ -72,6 +72,10 @@
     var _paneCounter = 0;       // ensures unique modal ids across instances
 
     // ── MSE mini-player (scoped-down go2rtc protocol client) ───────────────
+    // iPhone / iOS WebKit (Safari and Chrome-on-iOS) do not expose classic
+    // window.MediaSource. Since iOS 17.1 they provide ManagedMediaSource
+    // instead — same API surface, but the video element must use srcObject
+    // and disableRemotePlayback (see go2rtc video-rtc.js onmse()).
     var CODEC_CANDIDATES = [
         'avc1.640029', 'avc1.64002A', 'avc1.640033', // H.264 high profiles
         'hvc1.1.6.L153.B0',                          // H.265 main
@@ -79,11 +83,20 @@
         'opus'
     ];
 
-    function supportedCodecs(wantAudio) {
+    function mediaSourceCtor() {
+        if (typeof ManagedMediaSource !== 'undefined') return ManagedMediaSource;
+        if (typeof MediaSource !== 'undefined') return MediaSource;
+        return null;
+    }
+
+    function supportedCodecs(wantAudio, MS) {
+        var isTypeSupported = MS && MS.isTypeSupported
+            ? function (t) { return MS.isTypeSupported(t); }
+            : function () { return false; };
         return CODEC_CANDIDATES
             .filter(function (c) { return wantAudio || !/mp4a|opus/.test(c); })
             .filter(function (c) {
-                try { return MediaSource.isTypeSupported('video/mp4; codecs="' + c + '"'); }
+                try { return isTypeSupported('video/mp4; codecs="' + c + '"'); }
                 catch (e) { return false; }
             })
             .join(',');
@@ -104,6 +117,8 @@
         var closedByUs = false;
         var retryTimer = null;
         var gotFrame = false;
+        var objectUrl = null;
+        var MS = mediaSourceCtor();
 
         function status(s) { if (opts && opts.onStatus) opts.onStatus(s); }
 
@@ -113,19 +128,46 @@
             catch (e) { /* ignore, will retry on next updateend */ }
         }
 
+        function clearVideoSource() {
+            if (objectUrl) {
+                try { URL.revokeObjectURL(objectUrl); } catch (e) {}
+                objectUrl = null;
+            }
+            try { videoEl.srcObject = null; } catch (e) {}
+            videoEl.removeAttribute('src');
+            try { videoEl.load(); } catch (e) {}
+        }
+
         function open() {
+            if (!MS) {
+                status('offline');
+                console.error('[camera-view] MediaSource / ManagedMediaSource not available in this browser');
+                return;
+            }
+
             status('connecting');
             sb = null;
             queue = [];
-            ms = new MediaSource();
-            videoEl.src = URL.createObjectURL(ms);
+            clearVideoSource();
+
+            ms = new MS();
+
+            // ManagedMediaSource (iOS): attach via srcObject + disable AirPlay
+            // remote playback, otherwise sourceopen never fires.
+            if (typeof ManagedMediaSource !== 'undefined' && MS === ManagedMediaSource) {
+                videoEl.disableRemotePlayback = true;
+                videoEl.srcObject = ms;
+            } else {
+                objectUrl = URL.createObjectURL(ms);
+                videoEl.src = objectUrl;
+            }
 
             ms.addEventListener('sourceopen', function () {
                 ws = new WebSocket(wsUrl);
                 ws.binaryType = 'arraybuffer';
 
                 ws.addEventListener('open', function () {
-                    ws.send(JSON.stringify({ type: 'mse', value: supportedCodecs(true) }));
+                    ws.send(JSON.stringify({ type: 'mse', value: supportedCodecs(true, MS) }));
                 });
 
                 ws.addEventListener('message', function (ev) {
@@ -166,9 +208,7 @@
                 closedByUs = true;
                 clearTimeout(retryTimer);
                 if (ws) { try { ws.close(); } catch (e) {} }
-                if (videoEl.src) { try { URL.revokeObjectURL(videoEl.src); } catch (e) {} }
-                videoEl.removeAttribute('src');
-                videoEl.load();
+                clearVideoSource();
             },
             refresh: function () {
                 if (ws) { try { ws.close(); } catch (e) {} }

@@ -271,6 +271,16 @@ If HTML loads but tiles stay black over Tailscale, the page is almost certainly
 still using a hardcoded `ws://10.…:1984` URL — repackage after switching to
 `/go2rtc/api/ws?src=…`, hard-refresh the browser.
 
+### iPhone / iOS Chrome or Safari
+
+Chrome on iPhone uses WebKit. Classic `window.MediaSource` is **not**
+available there; iOS 17.1+ exposes `ManagedMediaSource` instead. PxD’s
+`camera-view` pane uses that path (same approach as go2rtc’s `video-rtc.js`).
+If the Cameras **header** appears but video tiles never render, an older
+build may still be calling bare `new MediaSource()` — repackage from a
+current PxD and hard-refresh. iOS older than 17.1 has no MSE-equivalent API;
+use a desktop browser or upgrade iOS.
+
 ---
 
 ## camera-finder vs production go2rtc
