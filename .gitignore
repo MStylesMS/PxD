@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Camera-finder capture snaps (local discovery only — do not commit)
+tools/camera-finder/snaps/
+
+# OS / editor noise
+.DS_Store
+*.swp
+*~

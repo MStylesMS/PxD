@@ -9,38 +9,24 @@ webrtc:
   listen: ":8555"
 
 streams:
-  # Amcrest / Dahua RTSP URL pattern:
-  #   rtsp://USER:PASSWORD@CAMERA_IP:554/cam/realmonitor?channel=1&subtype=0   (main stream, higher quality)
-  #   rtsp://USER:PASSWORD@CAMERA_IP:554/cam/realmonitor?channel=1&subtype=1   (substream, lower quality)
+  # Scratch discovery config for camera-finder.
+  # Production streams live in /opt/paradox/config/go2rtc.yaml (go2rtc.service).
+  # When go2rtc.service is already on :1984, camera-finder reuses it and this
+  # file is ignored until you stop the system service.
   #
-  # Replace USER / PASSWORD below for each camera, then run:
-  #   docker restart camera-lab-go2rtc
-  #
-  # Add more channel/subtype pairs as more cameras come online. Keep the
-  # naming convention <camera>_main / <camera>_sub so the test page's stream
-  # dropdown stays readable.
+  # Amcrest NV2104E: rtsp://admin:0@NVR:554/cam/realmonitor?channel=N&subtype=0|1
 
-  # Houdini-Study — 10.0.0.148
-  # NOTE: not reachable on the network as of the last check (ping + port 554
-  # both failed). Confirm the camera is powered on and on this subnet before
-  # testing this stream.
-  houdini_study_main: rtsp://admin:Camer0nS@10.0.0.148:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
-  houdini_study_sub: rtsp://admin:Camer0nS@10.0.0.148:554/cam/realmonitor?channel=1&subtype=1#backchannel=0
+  # ── Houdini NVR @ 10.0.4.90 ──────────────────────────────────────────────
+  houdini_foyer:      rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
+  houdini_foyer_sub:  rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=1&subtype=1#backchannel=0
+  houdini_cell:       rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=2&subtype=0#backchannel=0
+  houdini_cell_sub:   rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=2&subtype=1#backchannel=0
+  houdini_front_desk: rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=3&subtype=0#backchannel=0
+  houdini_study:      rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=4&subtype=0#backchannel=0
+  houdini_study_sub:  rtsp://admin:0@10.0.4.90:554/cam/realmonitor?channel=4&subtype=1#backchannel=0
 
-  # Mine-Exit — 10.0.0.29
-  # Confirmed reachable: RTSP (554) and HTTP (80) both open. Still needs real
-  # RTSP credentials below.
-  mine_exit_main: rtsp://admin:Camer0nS@10.0.0.29:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
-  mine_exit_sub: rtsp://admin:Camer0nS@10.0.0.29:554/cam/realmonitor?channel=1&subtype=1#backchannel=0
-
-  # These cameras only send H.264/AAC. go2rtc's MJPEG *output* mode requires an
-  # actual MJPEG-codec source — it does not transcode for free. These extra
-  # `_mjpeg` entries ask go2rtc to spin up an FFmpeg process (bundled in the
-  # image) to decode+re-encode to MJPEG on demand, so the test page's MJPEG
-  # option has something real to show. Expect notably higher CPU on these
-  # compared to WebRTC/MSE/HLS, which are cheap repackaging only — that
-  # difference is itself a useful data point for the streams-per-Pi budget.
-  houdini_study_sub_mjpeg:
-    - ffmpeg:houdini_study_sub#video=mjpeg
-  mine_exit_sub_mjpeg:
-    - ffmpeg:mine_exit_sub#video=mjpeg
+  # ── Agent22 / SpyCatcher NVR @ 10.0.4.140 (for cross-room testing) ───────
+  agent22_moscow_closet:      rtsp://admin:0@10.0.4.140:554/cam/realmonitor?channel=1&subtype=0#backchannel=0
+  agent22_washington_office:  rtsp://admin:0@10.0.4.140:554/cam/realmonitor?channel=2&subtype=0#backchannel=0
+  agent22_washington_closet:  rtsp://admin:0@10.0.4.140:554/cam/realmonitor?channel=3&subtype=0#backchannel=0
+  agent22_moscow_office:      rtsp://admin:0@10.0.4.140:554/cam/realmonitor?channel=4&subtype=0#backchannel=0
