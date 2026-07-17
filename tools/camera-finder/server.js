@@ -129,6 +129,33 @@ async function main() {
     return serveStatic(req, res, req.url.split('?')[0]);
   });
 
+  // Proxy WebSocket upgrades for MSE/WebRTC signaling to go2rtc.
+  server.on('upgrade', (req, socket, head) => {
+    if (!req.url.startsWith('/api/')) {
+      socket.destroy();
+      return;
+    }
+    const headers = { ...req.headers, host: `${GO2RTC_HOST}:${GO2RTC_PORT}` };
+    const proxyReq = http.request({
+      host: GO2RTC_HOST, port: GO2RTC_PORT, path: req.url, method: req.method, headers,
+    });
+    proxyReq.on('upgrade', (proxyRes, proxySocket, proxyHead) => {
+      const lines = [`HTTP/1.1 ${proxyRes.statusCode} Switching Protocols`];
+      for (const [k, v] of Object.entries(proxyRes.headers)) {
+        if (Array.isArray(v)) v.forEach((vv) => lines.push(`${k}: ${vv}`));
+        else lines.push(`${k}: ${v}`);
+      }
+      socket.write(lines.join('\r\n') + '\r\n\r\n');
+      if (proxyHead && proxyHead.length) proxySocket.write(proxyHead);
+      proxySocket.pipe(socket);
+      socket.pipe(proxySocket);
+      proxySocket.on('error', () => socket.destroy());
+      socket.on('error', () => proxySocket.destroy());
+    });
+    proxyReq.on('error', () => socket.destroy());
+    proxyReq.end();
+  });
+
   server.listen(PORT, () => {
     console.log(`[camera-finder] Open http://<this-machine-ip>:${PORT}/  (Ctrl+C to stop)`);
   });

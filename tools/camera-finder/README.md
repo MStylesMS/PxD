@@ -1,27 +1,36 @@
 # camera-finder — PxD camera discovery & tuning tool
 
-Temporary, on-demand tool for finding IP cameras on the network, tuning their
-encoder settings, and comparing go2rtc delivery methods (WebRTC/MSE/HLS/MJPEG)
-side by side — so you can grab a working stream URL to paste into a PxD
-room's `cameraView` config.
+Tool for finding IP cameras on the network, tuning encoder settings, and
+comparing go2rtc delivery methods (WebRTC/MSE/HLS/MJPEG) side by side — so
+you can grab a working stream URL to paste into a PxD room's `camera-view`
+config.
 
-**This is a launch-when-needed tool, not a service.** Run it while setting up
-cameras for a room, then stop it (Ctrl+C). It does not need root and does not
-touch system nginx.
+You can run it ad hoc (`node server.js`) or enable the optional
+`camera-finder.service` (port 8090, also proxied at `/camera-finder/` when
+nginx is configured). Full production install (binary, systemd, Tailscale
+nginx proxy): **[docs/GO2RTC.md](../../docs/GO2RTC.md)**.
 
 ## Relationship to the room's real go2rtc
 
 Once a camera is confirmed working here, its `streams:` entry belongs in the
-**room's persistent go2rtc config** — see
-`/opt/paradox/config/go2rtc.yaml.example` and `/opt/paradox/config/go2rtc.service`
-at the repo root. That persistent instance (installed by PxP or manually) is
-what the deployed PxD room page actually talks to at runtime. This tool's own
-`go2rtc.yaml` is scratch space for discovery only.
+**room's persistent go2rtc config** —
+`/opt/paradox/config/go2rtc.yaml` (+ `go2rtc.yaml.example` template) and
+`/opt/paradox/config/go2rtc.service`. That persistent instance is what the
+deployed PxD Live page talks to at runtime. This tool's own `go2rtc.yaml` is
+scratch space for discovery only.
 
 If a persistent go2rtc is already running on this machine (port 1984),
 `server.js` detects and reuses it automatically instead of starting a second
 one — so it's also safe to run this tool on a live Room Controller Pi to
 audit currently-configured cameras.
+
+For PxD `room.json`, prefer path-absolute embed URLs (nginx `/go2rtc/` proxy):
+
+```text
+/go2rtc/api/ws?src=<stream_name>
+```
+
+not `ws://<lan-ip>:1984/...` (breaks Tailscale from off-site).
 
 ## Run it
 

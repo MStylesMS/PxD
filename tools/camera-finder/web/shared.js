@@ -1,9 +1,16 @@
 // Shared helpers for both the comparison page (index.html/app.js) and the
 // multi-tile load-test page (grid.html/grid.js).
 
+/** Base URL for this tool (works at / on :8090 or under /camera-finder/ via nginx). */
+function toolBase() {
+  // .../camera-finder/ or .../camera-finder/index.html → .../camera-finder/
+  const path = location.pathname.replace(/\/[^/]*$/, '/');
+  return path.endsWith('/') ? path : path + '/';
+}
+
 export async function fetchStreams() {
   try {
-    const res = await fetch('/api/streams');
+    const res = await fetch(new URL('api/streams', location.href));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -21,14 +28,25 @@ export function buildStreamUrls(streamName) {
   const httpOrigin = location.origin;
   const wsOrigin = httpOrigin.replace(/^http/, 'ws');
   const encoded = encodeURIComponent(streamName);
+  const base = toolBase();
+  // Prefer the nginx /go2rtc/ proxy for embed URLs (same-host, Tailscale-safe).
+  // Fall back to this tool's /api/ proxy when opened directly on :8090.
+  const go2rtcHttp = `${httpOrigin}/go2rtc`;
+  const go2rtcWs = `${wsOrigin}/go2rtc`;
+  const localApi = `${httpOrigin}${base}api`;
+  const localWs = `${wsOrigin}${base}api`;
+  const viaNginx = location.port === '' || location.port === '80' || location.port === '443';
+  const apiHttp = viaNginx ? go2rtcHttp : localApi;
+  const apiWs = viaNginx ? go2rtcWs : localWs;
   return {
     // WebRTC/MSE signaling (what go2rtc's own video-rtc.js-based players use).
-    ws: `${wsOrigin}/api/ws?src=${encoded}`,
-    hls: `${httpOrigin}/api/stream.m3u8?src=${encoded}`,
-    mp4: `${httpOrigin}/api/stream.mp4?src=${encoded}`,
-    mjpeg: `${httpOrigin}/api/stream.mjpeg?src=${encoded}`,
-    // RTSP restream isn't proxied through nginx - go2rtc's host networking
-    // exposes it directly on the Pi's own address, port 8554.
+    ws: `${apiWs}/ws?src=${encoded}`,
+    hls: `${apiHttp}/stream.m3u8?src=${encoded}`,
+    mp4: `${apiHttp}/stream.mp4?src=${encoded}`,
+    mjpeg: `${apiHttp}/stream.mjpeg?src=${encoded}`,
+    // Path form for pasting into PxD room.json camera-view wsUrl:
+    embedPath: `/go2rtc/api/ws?src=${encoded}`,
+    // RTSP restream isn't proxied through nginx - go2rtc exposes it on :8554.
     rtsp: `rtsp://${location.hostname}:8554/${streamName}`,
   };
 }
@@ -71,7 +89,7 @@ export async function copyText(text) {
 export function startResourcePolling({ cpuEl, memEl, netEl, errEl }, intervalMs = 2000) {
   async function poll() {
     try {
-      const res = await fetch('/monitor/stats');
+      const res = await fetch(new URL('monitor/stats', location.href));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       cpuEl.textContent = data.CPUPerc ?? '–';
@@ -101,7 +119,11 @@ export function mountVideo(holder, streamName, mode, dimsEl) {
   video.mode = mode;
   holder.appendChild(video);
   // Must be set after the element is in the DOM; triggers the websocket connect.
-  video.src = new URL(`api/ws?src=${encodeURIComponent(streamName)}`, location.href);
+  // Prefer nginx /go2rtc/ when served on :80 so MSE works over Tailscale too.
+  const viaNginx = location.port === '' || location.port === '80' || location.port === '443';
+  video.src = viaNginx
+    ? `${location.origin}/go2rtc/api/ws?src=${encodeURIComponent(streamName)}`
+    : new URL(`api/ws?src=${encodeURIComponent(streamName)}`, location.href).href;
 
   if (dimsEl) {
     const vid = video.querySelector('video');

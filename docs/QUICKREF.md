@@ -64,6 +64,7 @@ Then open `rooms/$GAME/pxd/room.json` and edit **in this order**:
 8. Any `widget-grid` pane's `config.widgets[]` — add entries for each prop widget
 
 → Step-by-step walkthrough: [QUICK_START.md](QUICK_START.md)
+→ Live cameras / go2rtc / Tailscale nginx proxy: [GO2RTC.md](GO2RTC.md)
 → Full field reference: [ROOMS.md](ROOMS.md)
 
 ---

@@ -39,6 +39,11 @@
  *   3. sessionStorage (gear icon)                       — this browser tab's
  *      session only, cleared on close. NOT persisted anywhere durable.
  *
+ * Preferred wsUrl form (works over LAN and Tailscale via nginx):
+ *   "/go2rtc/api/ws?src=<stream>"   — path-absolute; resolved to
+ *   ws(s)://<page-host>/go2rtc/... using window.location. Absolute
+ *   ws://host:1984/... URLs still work for direct go2rtc access.
+ *
  * The Single/Multi view-mode toggle in each pane's toolbar is runtime-only
  * (not persisted) — it always starts from `defaultViewMode` on page load.
  */
@@ -236,13 +241,24 @@
             try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(o)); } catch (e) {}
         }
 
+        function toWebsocketUrl(url) {
+            if (!url) return url;
+            // Path-absolute (e.g. /go2rtc/api/ws?src=...) → same host as the page
+            // so Tailscale / LAN / hostname all work via the nginx proxy.
+            if (url.charAt(0) === '/') {
+                var proto = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
+                return proto + '//' + window.location.host + url;
+            }
+            return url;
+        }
+
         function resolveCameraUrl(cam) {
             var session = readSessionOverrides();
-            if (session[cam.id]) return session[cam.id];
+            if (session[cam.id]) return toWebsocketUrl(session[cam.id]);
             if (_localOverrides && _localOverrides.overrides && _localOverrides.overrides[cam.id]) {
-                return _localOverrides.overrides[cam.id];
+                return toWebsocketUrl(_localOverrides.overrides[cam.id]);
             }
-            return cam.wsUrl;
+            return toWebsocketUrl(cam.wsUrl);
         }
 
         function cameraById(id) {

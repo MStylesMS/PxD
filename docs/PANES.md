@@ -81,9 +81,9 @@ writing a new pane type — see below.
   "sidebarPosition": "right",
   "defaultViewMode": "multi",
   "cameras": [
-    { "id": "study",  "label": "Study",  "wsUrl": "ws://<ip>:1984/api/ws?src=study", "main": true },
-    { "id": "vault",  "label": "Vault",  "wsUrl": "ws://<ip>:1984/api/ws?src=vault" },
-    { "id": "mirror", "label": "Mirror", "wsUrl": "ws://<ip>:1984/api/ws?src=mirror" }
+    { "id": "study",  "label": "Study",  "wsUrl": "/go2rtc/api/ws?src=study", "main": true },
+    { "id": "vault",  "label": "Vault",  "wsUrl": "/go2rtc/api/ws?src=vault" },
+    { "id": "mirror", "label": "Mirror", "wsUrl": "/go2rtc/api/ws?src=mirror" }
   ]
 } }
 ```
@@ -96,6 +96,13 @@ writing a new pane type — see below.
 - `cameras[].main: true` marks the initially-focused camera in single view.
 - `cameras[].transform`: optional `{ rotate: 90|180|270 }` for physically
   rotated cameras.
+- **`wsUrl` preferred form:** path-absolute `/go2rtc/api/ws?src=<stream>` —
+  nginx proxies `/go2rtc/` to the room's go2rtc on `:1984`, and
+  `camera-view.js` resolves the path to `ws(s)://<page-host>/go2rtc/...`.
+  That works for LAN and Tailscale (same host as the HTML). Absolute
+  `ws://<ip>:1984/...` still works for direct access.
+  **New machine install:** see [GO2RTC.md](GO2RTC.md) (binary, systemd,
+  nginx proxy, Amcrest NVR URL pattern).
 - Camera URL overrides: a room-local `pxd/camera-view.local.json` (packaged
   alongside `room.json`) can override `wsUrl` per camera id without editing
   `room.json` — see the file header comment in

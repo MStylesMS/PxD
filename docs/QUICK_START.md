@@ -158,6 +158,7 @@ catalog and token list.
 
 | Goal | Where to look |
 |---|---|
+| **Live cameras** (go2rtc, nginx `/go2rtc/` proxy, Tailscale) | [GO2RTC.md](GO2RTC.md) |
 | Change the colour theme in depth | [THEMING.md](THEMING.md) |
 | Add custom fonts | [THEMING.md](THEMING.md) — Custom web fonts section |
 | Override pane MQTT topics | [ROOMS.md](ROOMS.md) — Field reference |

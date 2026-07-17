@@ -16,13 +16,16 @@ node scripts/package.js \
 node scripts/package.test.js
 ```
 
-Nginx serves the output directory. No web server changes are required.
+Nginx serves the output directory. For rooms with **live cameras**, also
+install go2rtc and the `/go2rtc/` nginx proxy — see
+[docs/GO2RTC.md](docs/GO2RTC.md) (required for Tailscale access).
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
 | [docs/QUICK_START.md](docs/QUICK_START.md) | New room in under 10 minutes |
+| [docs/GO2RTC.md](docs/GO2RTC.md) | **Cameras:** install go2rtc, nginx Tailscale proxy, room.json `wsUrl` |
 | [docs/ROOMS.md](docs/ROOMS.md) | room.json field reference — sites, pages, panes, glossary |
 | [docs/PANES.md](docs/PANES.md) | Pane library reference + how to add a new pane type |
 | [docs/THEMING.md](docs/THEMING.md) | Named themes, CSS tokens, custom fonts |
