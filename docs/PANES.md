@@ -4,19 +4,32 @@ A **pane** is a card/section rendered inside a page's grid. Every pane entry
 in `room.json` has the shape:
 
 ```jsonc
-{ "type": "<pane-type>", "width": "full|two-thirds|half|third", "config": { /* type-specific */ } }
+{ "type": "<pane-type>", "width": "full|three-quarters|two-thirds|half|third|quarter",
+  "order": 1, "narrowWidth": "full", "narrowOrder": 2,
+  "config": { /* type-specific */ } }
 ```
 
-`width` defaults to `"full"` if omitted. Panes stack top-to-bottom in array
-order and reflow responsively — `two-thirds` and `third` promote to full
-width at tablet size, everything stacks to full width at phone size.
+`width` defaults to `"full"` if omitted. Panes flow left-to-right in a
+12-column grid and wrap. Optional layout fields:
+
+| Field | Description |
+|---|---|
+| `order` | CSS grid order at wide viewports. When any pane in a row sets `order`/`narrowOrder`, panes without one sort after (auto 100+). |
+| `narrowWidth` | Width token used when the viewport is below `grid.narrowBreakpointPx` (default 992) |
+| `narrowOrder` | Grid order used in that narrow mode |
+
+Default narrow promotions (when `narrowWidth` is omitted): `quarter`→half,
+`third`→half, `two-thirds`/`three-quarters`→full. Phone (`<480px`) stacks
+everything full-width. See `docs/ROOMS.md` § grid.
 
 ## Shipped pane types
 
 | Type | Purpose | Multi-instance? |
 |---|---|---|
 | `content` | Static HTML block (hero images, custom text/markup) | Yes |
-| `game-control` | Mode select, checklist, start/solve/fail, time adjust, emergency actions | No — reads global `PxD.config.gameControl` |
+| `game-control` | Full control card: status, mode, checklist, start/solve/fail, time adjust, emergency | No — reads global `PxD.config.gameControl` |
+| `game-status` | Large time/status pill only (no title) | No — same `gameControl` config |
+| `game-actions` | Mode, Main Action, End Game + `⋯` menu (adjust time / checklist / emergency) | No — same `gameControl` config |
 | `time-lights` | **Time & Lights** — clock adjust + light scenes (no emergency button) | No — reads global `PxD.config.timeLights` |
 | `hints` | Hint dropdown + free-text send | No — reads global `PxD.config.hints` |
 | `system` | Connection/warning status bar + watch zones | No — reads global `PxD.config.system` |
@@ -25,32 +38,67 @@ width at tablet size, everything stacks to full width at phone size.
 | `nav` | Auto-built links to every page in the current site | Yes (rarely needed more than once) |
 | `divider` | Not a visual card — starts a new collapsible section | N/A |
 
-`game-control`, `time-lights`, `hints`, and `system` are legacy-style panes
-that read their settings from the matching top-level `room.json` key
-(`gameControl`, `timeLights`, etc.) rather than their own `config` object —
-their own `config` is typically `{}`. This is unchanged from PxD v1 and lets
-one room reuse the same settings across multiple pages/sites without
-repeating them. `widget-grid` and `camera-view` are true multi-instance
-panes: all of their configuration lives in the pane's own `config`.
+`game-control`, `game-status`, `game-actions`, `time-lights`, `hints`, and
+`system` are legacy-style panes that read their settings from the matching
+top-level `room.json` key (`gameControl`, `timeLights`, etc.) rather than
+their own `config` object — their own `config` is typically `{}`. This is
+unchanged from PxD v1 and lets one room reuse the same settings across
+multiple pages/sites without repeating them. `widget-grid` and `camera-view`
+are true multi-instance panes: all of their configuration lives in the
+pane's own `config`.
+
+**Do not** place `game-control` on the same page as `game-status` /
+`game-actions` — pick one control surface. A common Live layout is
+`game-status` (quarter) + logo `content` (half) + `game-actions` (quarter)
+with `order` / `narrowOrder` so wide = status\|logo\|actions and narrow =
+logo on top, then status\|actions.
 
 **Time & Lights / Emergency split:** The `time-lights` pane title is
 **Time & Lights** (clock adjust + light scenes only). Emergency Controls live
-only on `game-control` (header button + modal). `game-control` also includes
-an Adjust Time row that publishes `{ command: "adjustTime", seconds }` to the
-game commands topic.
+on `game-control` (header button) or `game-actions` (`⋯` menu). Both publish
+`{ command: "adjustTime", seconds }` for time changes.
 
 ### `content`
 
 ```jsonc
-{ "type": "content", "width": "full", "config": {
-  "html": "<img class=\"pxd-hero-banner\" src=\"media/hero.jpg\" alt=\"My Room\">"
+{ "type": "content", "width": "half", "config": {
+  "aspectRatio": "4.6",
+  "forceFit": true,
+  "backgroundColor": "#1C4875",
+  "html": "<img class=\"pxd-hero-banner\" src=\"media/hero-alpha.png\" alt=\"My Room\">"
 } }
 ```
 
-Renders `config.html` verbatim inside the pane. Used for hero banners
-(`pxd-hero-banner` CSS class handles responsive sizing) and any other
-static content. This is also the reference implementation to copy when
-writing a new pane type — see below.
+Renders `config.html` verbatim inside the pane (or structured `items`).
+Used for hero banners (`pxd-hero-banner`) and any other static content.
+
+| Config | Description |
+|---|---|
+| `aspectRatio` | Ideal box ratio as `"4.6"` or `"23 / 5"`. **Ideal logo ratio** beside `game-status` + `game-actions` (half-width ≈743px at the 1500px shell, compact control panes ≈160px tall): **4.6:1**. Used as the pane's intrinsic aspect when not stretched by siblings. |
+| `forceFit` | When `true`, the image fills the pane with `object-fit: contain` (never skewed): letterbox (empty top/bottom) when the image is too wide for the pane, pillarbox (empty sides) when too tall, edge-to-edge when ratios match. Transparent image pixels show `backgroundColor` (or the theme panel color). |
+| `backgroundColor` | Optional pane fill (`#rgb` / `#rrggbb` / `rgb()` / `rgba()` / named CSS color). Typical use: the original logo background so an alpha PNG blends cleanly. |
+
+This is also the reference implementation to copy when writing a new pane
+type — see below.
+
+### `game-status`
+
+```jsonc
+{ "type": "game-status", "width": "quarter", "config": {} }
+```
+
+Title-less card with a large status/time pill (Ready / Time left / Paused /
+etc.). Pair with `game-actions`.
+
+### `game-actions`
+
+```jsonc
+{ "type": "game-actions", "width": "quarter", "config": {} }
+```
+
+Compact Mode / Main Action / End Game controls. Top-right `⋯` opens Adjust
+Time, Checklist, and Emergency Controls (same MQTT commands and checklist
+stub as `game-control`).
 
 ### `widget-grid`
 

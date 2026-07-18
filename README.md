@@ -42,7 +42,10 @@ rooms with a `pxd/` config are migrated.
 | Feature | Status |
 |---|---|
 | Multi-site / multi-page / pane-tree framework core | ✅ |
-| Responsive width system (full / two-thirds / half / third) | ✅ |
+| Responsive width system (full / three-quarters / two-thirds / half / third / quarter) | ✅ |
+| Pane `order` / `narrowWidth` / `narrowOrder` + `grid.narrowBreakpointPx` | ✅ |
+| `game-status` + `game-actions` compact control panes | ✅ |
+| Content pane `aspectRatio` / `forceFit` / `backgroundColor` (ideal logo **4.6:1**) | ✅ |
 | Collapsible sections (`divider` panes) | ✅ |
 | Named themes (midnight-teal, haunted-manor, crimson-gold, parchment-light) | ✅ |
 | Multi-instance `widget-grid` panes | ✅ |
@@ -66,9 +69,9 @@ apps/PxD/
       paho-mqtt.js          Vendored Eclipse Paho MQTT
       bootstrap.bundle.min.js  Vendored Bootstrap 5.3.3 JS bundle
       pxd.js                Framework core runtime (sites/pages/panes)
-      panes/                Pane type modules (game-control, time-lights,
-                             hints, system, widget-grid, camera-view,
-                             content, nav)
+      panes/                Pane type modules (game-control, game-status,
+                             game-actions, time-lights, hints, system,
+                             widget-grid, camera-view, content, nav)
   themes/
     <name>/theme.json        Named theme token bundles
   layouts/

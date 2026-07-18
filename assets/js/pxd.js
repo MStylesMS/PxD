@@ -254,6 +254,68 @@
         return { mqtt: PxD.mqtt, config: _config, site: _site, page: _page, utils: PxD.utils };
     }
 
+    var WIDTH_TOKENS = {
+        full: true, 'three-quarters': true, 'two-thirds': true,
+        half: true, third: true, quarter: true
+    };
+
+    function sanitizeWidth(w, fallback) {
+        return (w && WIDTH_TOKENS[w]) ? w : (fallback || 'full');
+    }
+
+    function sanitizeOrder(n) {
+        var v = parseInt(n, 10);
+        return (!isNaN(v) && v >= -99 && v <= 999) ? v : null;
+    }
+
+    /**
+     * Build the class list for a pane slot: width + optional narrowWidth.
+     * Grid order is applied via CSS variables (see applyPaneOrder) so
+     * unordered panes can sort after explicit orders (CSS default order is 0,
+     * which would otherwise put cameras/etc. above status|logo|actions).
+     */
+    function paneClassName(paneCfg) {
+        var width = sanitizeWidth(paneCfg.width, 'full');
+        var classes = ['pxd-pane', 'pxd-w-' + width];
+        if (paneCfg.narrowWidth) {
+            classes.push('pxd-nw-' + sanitizeWidth(paneCfg.narrowWidth, width));
+        }
+        return classes.join(' ');
+    }
+
+    /**
+     * Assign effective wide/narrow order for a row of panes.
+     * Explicit order/narrowOrder win; panes without one get 100+index so they
+     * stay after any 1..N top-row ordering.
+     */
+    function resolvePaneOrders(paneCfgs) {
+        var hasAny = paneCfgs.some(function (p) {
+            return sanitizeOrder(p.order) != null || sanitizeOrder(p.narrowOrder) != null;
+        });
+        return paneCfgs.map(function (p, i) {
+            if (!hasAny) return { order: null, narrowOrder: null };
+            var explicit = sanitizeOrder(p.order);
+            var explicitN = sanitizeOrder(p.narrowOrder);
+            var fallback = 100 + i;
+            return {
+                order: explicit != null ? explicit : fallback,
+                narrowOrder: explicitN != null ? explicitN : (explicit != null ? explicit : fallback)
+            };
+        });
+    }
+
+    function applyPaneOrder(el, orders) {
+        if (!orders || orders.order == null) {
+            el.style.removeProperty('--pxd-order');
+            el.style.removeProperty('--pxd-narrow-order');
+            return;
+        }
+        el.style.setProperty('--pxd-order', String(orders.order));
+        el.style.setProperty('--pxd-narrow-order', String(
+            orders.narrowOrder != null ? orders.narrowOrder : orders.order
+        ));
+    }
+
     function instantiatePane(el, paneCfg) {
         var factory = _paneTypes[paneCfg.type];
         if (!factory) {
@@ -272,6 +334,29 @@
         }
         _instances.push(inst);
         return inst;
+    }
+
+    // ── Narrow breakpoint (room.json → grid.narrowBreakpointPx) ────────────
+    // Toggles html.pxd-narrow below the configured width (default 992). Phone
+    // stacking at 480px remains a fixed CSS media query.
+    // Note: top-level `layout` is the HTML shell name (packager); do not reuse it.
+    var _narrowMq = null;
+    var _narrowListener = null;
+
+    function applyNarrowBreakpoint(config) {
+        var grid = (config && config.grid) || {};
+        var bp = parseInt(grid.narrowBreakpointPx, 10);
+        if (isNaN(bp) || bp < 320) bp = 992;
+        if (_narrowMq && _narrowListener) {
+            try { _narrowMq.removeEventListener('change', _narrowListener); } catch (e) { /* ignore */ }
+        }
+        _narrowListener = function (e) {
+            document.documentElement.classList.toggle('pxd-narrow', !!(e && e.matches));
+        };
+        _narrowMq = window.matchMedia('(max-width: ' + (bp - 1) + 'px)');
+        document.documentElement.classList.toggle('pxd-narrow', !!_narrowMq.matches);
+        if (_narrowMq.addEventListener) _narrowMq.addEventListener('change', _narrowListener);
+        else if (_narrowMq.addListener) _narrowMq.addListener(_narrowListener);
     }
 
     // ── Section (divider) rendering ────────────────────────────────────────
@@ -314,9 +399,11 @@
 
         function mountSectionPanes() {
             section.instances = [];
-            section.panes.forEach(function (paneCfg) {
+            var orders = resolvePaneOrders(section.panes);
+            section.panes.forEach(function (paneCfg, idx) {
                 var paneEl = document.createElement('div');
-                paneEl.className = 'pxd-pane pxd-w-' + (paneCfg.width || 'full');
+                paneEl.className = paneClassName(paneCfg);
+                applyPaneOrder(paneEl, orders[idx]);
                 body.appendChild(paneEl);
                 var inst = instantiatePane(paneEl, paneCfg);
                 if (inst) section.instances.push(inst);
@@ -364,6 +451,7 @@
 
         var currentSection = null;
         var deferredSections = [];
+        var defaultPanes = [];
 
         (page.panes || []).forEach(function (paneCfg) {
             if (paneCfg.type === 'divider') {
@@ -374,11 +462,17 @@
             if (currentSection) {
                 currentSection.panes.push(paneCfg); // mounted when the section renders
             } else {
-                var paneEl = document.createElement('div');
-                paneEl.className = 'pxd-pane pxd-w-' + (paneCfg.width || 'full');
-                defaultRow.appendChild(paneEl);
-                instantiatePane(paneEl, paneCfg);
+                defaultPanes.push(paneCfg);
             }
+        });
+
+        var defaultOrders = resolvePaneOrders(defaultPanes);
+        defaultPanes.forEach(function (paneCfg, idx) {
+            var paneEl = document.createElement('div');
+            paneEl.className = paneClassName(paneCfg);
+            applyPaneOrder(paneEl, defaultOrders[idx]);
+            defaultRow.appendChild(paneEl);
+            instantiatePane(paneEl, paneCfg);
         });
 
         container.appendChild(grid);
@@ -467,6 +561,7 @@
                 if (config.title) document.title = config.title;
                 if (config.theme && config.theme.fonts) injectFonts(config.theme.fonts);
                 if (config.theme) applyTheme(config.theme);
+                applyNarrowBreakpoint(config);
 
                 var favicon = config.media && config.media.favicon;
                 if (favicon) {

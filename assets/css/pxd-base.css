@@ -385,6 +385,20 @@ h6 {
     font-size: 1rem;
 }
 
+#gaSelect {
+    background: #ffffff;
+    color: #0b1620;
+    border-color: #c8d4dc;
+    opacity: 1;
+}
+#gaSelect:disabled {
+    color: #4a5560 !important;
+    -webkit-text-fill-color: #4a5560;
+    background: #d0d4d8;
+    border-color: #a8b0b8;
+    opacity: 1;
+}
+
 #gameSelect:disabled {
     color: #0b1620 !important;
     -webkit-text-fill-color: #0b1620;
@@ -1012,32 +1026,70 @@ h6 {
     gap: 14px;
 }
 
-/* A row is a responsive 12-column grid; panes auto-flow and wrap. */
+/* A row is a responsive 12-column grid; panes auto-flow and wrap.
+   Stretch so sibling panes in a row share the same height (e.g. status /
+   logo / actions). The narrow breakpoint class `pxd-narrow` is toggled on
+   <html> by pxd.js from room.json → grid.narrowBreakpointPx (default 992). */
 .pxd-row {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: 14px;
-    align-items: start;
+    align-items: stretch;
 }
-.pxd-pane { min-width: 0; }
-
-/* Pane widths (desktop ≥992px). */
-.pxd-w-full        { grid-column: span 12; }
-.pxd-w-two-thirds  { grid-column: span 8; }
-.pxd-w-half        { grid-column: span 6; }
-.pxd-w-third       { grid-column: span 4; }
-
-/* Tablet 768–991px: narrow widths promote so nothing gets cramped. */
-@media (max-width: 991px) {
-    .pxd-w-two-thirds { grid-column: span 12; }
-    .pxd-w-third      { grid-column: span 6; }
+.pxd-pane {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    /* Order via CSS vars from pxd.js. Unordered panes in a row that uses
+       order get 100+ so they sort after status|logo|actions (CSS default
+       order:0 would otherwise put cameras/etc. first). */
+    order: var(--pxd-order, 0);
 }
-/* Phone <768px: everything stacks full-width. */
-@media (max-width: 767px) {
+html.pxd-narrow .pxd-pane {
+    order: var(--pxd-narrow-order, var(--pxd-order, 0));
+}
+.pxd-pane > .panel {
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+/* Pane widths (wide / desktop). */
+.pxd-w-full             { grid-column: span 12; }
+.pxd-w-three-quarters   { grid-column: span 9; }
+.pxd-w-two-thirds       { grid-column: span 8; }
+.pxd-w-half             { grid-column: span 6; }
+.pxd-w-third            { grid-column: span 4; }
+.pxd-w-quarter          { grid-column: span 3; }
+
+/* Narrow viewport (html.pxd-narrow): optional per-pane width overrides via
+   narrowWidth. Default promotions keep pairs usable. */
+html.pxd-narrow .pxd-w-three-quarters { grid-column: span 12; }
+html.pxd-narrow .pxd-w-two-thirds     { grid-column: span 12; }
+html.pxd-narrow .pxd-w-third          { grid-column: span 6; }
+html.pxd-narrow .pxd-w-quarter        { grid-column: span 6; }
+
+html.pxd-narrow .pxd-nw-full             { grid-column: span 12; }
+html.pxd-narrow .pxd-nw-three-quarters   { grid-column: span 9; }
+html.pxd-narrow .pxd-nw-two-thirds       { grid-column: span 8; }
+html.pxd-narrow .pxd-nw-half             { grid-column: span 6; }
+html.pxd-narrow .pxd-nw-third            { grid-column: span 4; }
+html.pxd-narrow .pxd-nw-quarter          { grid-column: span 3; }
+
+/* Phone <480px: everything stacks full-width. Kept below the default
+   narrow breakpoint (700) so status|actions can sit half+half when narrow. */
+@media (max-width: 479px) {
     .pxd-w-full,
+    .pxd-w-three-quarters,
     .pxd-w-two-thirds,
     .pxd-w-half,
-    .pxd-w-third { grid-column: span 12; }
+    .pxd-w-third,
+    .pxd-w-quarter,
+    html.pxd-narrow .pxd-nw-full,
+    html.pxd-narrow .pxd-nw-three-quarters,
+    html.pxd-narrow .pxd-nw-two-thirds,
+    html.pxd-narrow .pxd-nw-half,
+    html.pxd-narrow .pxd-nw-third,
+    html.pxd-narrow .pxd-nw-quarter { grid-column: span 12; }
 }
 
 /* Section dividers. */
@@ -1088,6 +1140,127 @@ h6 {
 .pxd-content-text { margin: 0; }
 .pxd-content-image { max-width: 100%; border-radius: var(--pxd-radius); }
 
+/* Content force-fit: image fills the pane with object-fit:contain.
+   - Image too wide  → letterbox (empty top/bottom), no side gaps
+   - Image too tall  → pillarbox (empty sides), no top/bottom gaps
+   - Matching ratio  → edge-to-edge, no gaps
+   Transparent pixels show --pxd-content-bg / backgroundColor. */
+.panel-content-fit {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: var(--pxd-content-ar, 4.6);
+    background: var(--pxd-content-bg, transparent);
+}
+.panel-content-fit .pxd-content-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+.panel-content-fit .pxd-content-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    overflow: hidden;
+    background: transparent;
+}
+.panel-content-fit .pxd-content-frame img,
+.panel-content-fit .pxd-hero-banner {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* ============================================================
+   Game status pane (time/status only) + game actions pane
+   ============================================================ */
+.panel-game-status {
+    display: flex;
+    flex-direction: column;
+    min-height: 160px;
+    padding: 0;
+    overflow: hidden;
+}
+.gs-status-pill {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    margin: 0 !important;
+    padding: 1rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.5rem, 3.1vw, 2.15rem);
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    border-radius: var(--pxd-radius);
+    border: none !important;
+    box-shadow: none;
+}
+
+.panel-game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 160px;
+    position: relative;
+}
+.ga-mode-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 0;
+}
+.ga-mode-row > .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ga-mode-row > .dropdown {
+    flex: 0 0 auto;
+}
+.ga-more-btn {
+    width: 1.75rem;
+    min-width: 1.75rem;
+    padding: 0;
+    line-height: 1;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    height: 100%;
+}
+.ga-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 auto;
+    justify-content: center;
+}
+.ga-controls .control-item {
+    gap: 0;
+}
+
 /* ============================================================
    Nav pane — compact, minimal footprint (see docs/PANES.md)
    ============================================================ */
@@ -1112,6 +1285,10 @@ h6 {
 /* ============================================================
    Hero banner (used via a content pane's `html`, e.g.
    <img class="pxd-hero-banner" src="media/hero.jpg">)
+
+   Ideal logo aspect ratio for a half-width pane beside two quarter-width
+   game-status / game-actions panes (~160px tall at the 1500px shell):
+   **4.6:1** (width:height). See docs/PANES.md § content.
    ============================================================ */
 .pxd-hero-banner {
     width: 100%;
@@ -1119,4 +1296,9 @@ h6 {
     border-radius: var(--pxd-radius, 12px);
     border: 1px solid var(--pxd-panel-border);
     box-shadow: var(--pxd-shadow);
+}
+.panel-content-fit .pxd-hero-banner {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
 }

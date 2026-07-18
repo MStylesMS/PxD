@@ -53,6 +53,12 @@ replaces the framework `time-lights.js` for this room only. See
   },
 
   // Named theme + optional per-token overrides + optional custom fonts.
+  // Grid breakpoint for narrowWidth / narrowOrder (default 992).
+  // (Top-level `layout` remains the optional HTML shell name, e.g. "default-dashboard".)
+  "grid": {
+    "narrowBreakpointPx": 992
+  },
+
   "theme": {
     "base": "midnight-teal",
     "overrides": { "accent": "#44e0cc" },
@@ -67,8 +73,8 @@ replaces the framework `time-lights.js` for this room only. See
   },
 
   // Panel-specific settings, unchanged from earlier PxD versions. These are
-  // read directly by game-control/time-lights/hints/system — their pane
-  // `config` entry is typically left as `{}` since they read from here.
+  // read directly by game-control/game-status/game-actions/time-lights/hints/system
+  // — their pane `config` entry is typically left as `{}` since they read from here.
   "gameControl": { "heartbeatTimeoutMs": 3000 },
   "timeLights":  { "lightsScenesTopicRoot": "paradox/myroom/lights" },
   "hints":       { "hintTopic": "paradox/myroom/hints" },
@@ -115,7 +121,19 @@ recommended for anything beyond a quick prototype.
 | `pxdVersion` | string | **required**, must be `"2"` | Schema version |
 | `title` | string | `"PxD"` | Default page title, landing-page heading |
 | `topicRoot` | string | **required** | Root MQTT topic prefix |
+| `layout` | string | `"default-dashboard"` | HTML shell name under `layouts/` (packager) |
+| `grid` | object | `{ narrowBreakpointPx: 992 }` | Grid narrow-mode breakpoint (see below) |
 | `sites` | array | synthesized single `control` site | See `sites[]` below |
+
+### grid
+
+| Field | Default | Description |
+|---|---|---|
+| `narrowBreakpointPx` | `992` | Viewport width (px) at which panes switch from `width`/`order` to `narrowWidth`/`narrowOrder`. Phone stacking at `<480px` is fixed in CSS. Agent 22 Live uses `700`. |
+
+Pane entries may also set `order`, `narrowWidth`, and `narrowOrder` — see
+`docs/PANES.md`. Example Live top row: wide = status\|logo\|actions; below
+the breakpoint = logo full on top, then status\|actions half+half.
 
 ### mqtt
 
