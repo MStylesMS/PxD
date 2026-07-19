@@ -131,12 +131,7 @@ Document these reserved fields so a later agent PR can enable them without a sch
 
 ## Implementation status
 
-**Implemented** on `main` (pane + CSS + docs). Wired into Houdini and Agent22:
-
-- **simple:** half-width after `hints`
-- **live:** full-width immediately under `camera-view`
-
-`topicRoot` currently points at `paradox/spycatcher/terminal` (active PxT under test). Retarget per room when each game has its own terminal.
+**Pane implemented** on PxD `main` (`assets/js/panes/pxt-chat.js`). Not wired into Agent22 or Houdini — add it only to SpyCatcher (or other PxT rooms) when that dashboard is created.
 
 ## Decisions & assumptions (locked)
 
