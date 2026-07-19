@@ -196,7 +196,7 @@ simple site after `hints`; full-width on live immediately under
 `camera-view`.
 
 Payload shape (both directions): `{ "ts"?: number, "author": string, "message": string }`.
-See `apps/PxT/docs/MQTT_API.md` and `docs/PR_PXT_CHAT_PANE.md`.
+See `apps/PxT/docs/MQTT_API.md` and `docs/archive/PR_PXT_CHAT_PANE.md`.
 
 ### `nav`
 

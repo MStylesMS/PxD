@@ -14,7 +14,7 @@ Docs only in this PR; implementation assigned later.
 - Retained state: `{base}/state` — `waitGameStart`, `introPlay`, `login`, `loggedin`, `win`, `fail`, …
 - Events: `{base}/events` — `passwordAttempt`, `introVideoDone`, `stateChange`, …
 - Commands: `{base}/commands` — `start`, `reset`, `solve`, `fail`, `showMessage`, …
-- Chat is a **separate pane** — see [`PR_PXT_CHAT_PANE.md`](PR_PXT_CHAT_PANE.md); this widget may deep-link or note “use chat pane” but does not embed a full chat UI in v1.
+- Chat is a **separate pane** — see [`archive/PR_PXT_CHAT_PANE.md`](archive/PR_PXT_CHAT_PANE.md); this widget may deep-link or note “use chat pane” but does not embed a full chat UI in v1.
 - Closest templates: `text-display`, `countdown`, control widgets (`lights-control`)
 
 ## Why a widget template (not a pane)
@@ -154,4 +154,4 @@ Document both; v1 buttons match approach A.
 - Default size: `4x2`
 - Shared `PxD.mqtt` only
 - Force-unlock + live typing depend on future PxT work; UI designed around them now
-- Companion chat UI: [`PR_PXT_CHAT_PANE.md`](PR_PXT_CHAT_PANE.md)
+- Companion chat UI: [`archive/PR_PXT_CHAT_PANE.md`](archive/PR_PXT_CHAT_PANE.md)
