@@ -285,6 +285,124 @@ h1, h2, h3, h4, h5 {
 .hint-target { color: var(--pxd-ink-soft); }
 
 /* ============================================================
+   PxT chat pane
+   ============================================================ */
+.panel-pxt-chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 260px;
+}
+
+.pxt-chat-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: 10px;
+    min-height: 0;
+}
+
+.pxt-chat-log {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 140px;
+    max-height: 320px;
+}
+
+.pxt-chat-transcript {
+    height: 100%;
+    min-height: 140px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--pxd-panel-border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.18);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pxt-chat-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pxd-ink-soft);
+    font-size: 0.92rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pxt-chat-msg {
+    max-width: 92%;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--pxd-panel-border);
+    background: var(--pxd-panel);
+}
+
+.pxt-chat-msg--player {
+    align-self: flex-start;
+    border-color: rgba(120, 180, 255, 0.35);
+}
+
+.pxt-chat-msg--operator {
+    align-self: flex-end;
+    background: rgba(40, 90, 160, 0.35);
+}
+
+.pxt-chat-msg--agent {
+    align-self: flex-start;
+    border-color: rgba(180, 140, 255, 0.45);
+}
+
+.pxt-chat-msg--other {
+    align-self: flex-start;
+}
+
+.pxt-chat-msg-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: var(--pxd-ink-soft);
+    margin-bottom: 2px;
+}
+
+.pxt-chat-msg-author {
+    font-weight: 600;
+    color: var(--pxd-ink);
+}
+
+.pxt-chat-msg-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--pxd-ink);
+    line-height: 1.35;
+}
+
+.pxt-chat-compose {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.pxt-chat-input {
+    resize: vertical;
+    min-height: 64px;
+}
+
+.pxt-chat-send {
+    min-height: 64px;
+}
+
+@media (max-width: 600px) {
+    .pxt-chat-compose { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    System warnings panel
    ============================================================ */
 .page-warnings {

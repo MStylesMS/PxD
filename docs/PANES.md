@@ -35,6 +35,7 @@ everything full-width. See `docs/ROOMS.md` § grid.
 | `system` | Connection/warning status bar + watch zones | No — reads global `PxD.config.system` |
 | `widget-grid` | Grid of MQTT-bound prop/puzzle widget tiles | **Yes** — each instance has its own widget set |
 | `camera-view` | go2rtc live camera stream viewer (MSE) | **Yes** — each instance has its own camera list |
+| `pxt-chat` | Operator ↔ PxT terminal chat window | **Yes** — each instance has its own topic root |
 | `nav` | Auto-built links to every page in the current site | Yes (rarely needed more than once) |
 | `divider` | Not a visual card — starts a new collapsible section | N/A |
 
@@ -43,9 +44,9 @@ everything full-width. See `docs/ROOMS.md` § grid.
 top-level `room.json` key (`gameControl`, `timeLights`, etc.) rather than
 their own `config` object — their own `config` is typically `{}`. This is
 unchanged from PxD v1 and lets one room reuse the same settings across
-multiple pages/sites without repeating them. `widget-grid` and `camera-view`
-are true multi-instance panes: all of their configuration lives in the
-pane's own `config`.
+multiple pages/sites without repeating them. `widget-grid`, `camera-view`,
+and `pxt-chat` are true multi-instance panes: all of their configuration
+lives in the pane's own `config`.
 
 **Do not** place `game-control` on the same page as `game-status` /
 `game-actions` — pick one control surface. A common Live layout is
@@ -157,6 +158,38 @@ stub as `game-control`).
   `assets/js/panes/camera-view.js` for the exact format. A pane's gear icon
   also allows session-only (non-persisted) URL overrides for testing.
 - A page may contain multiple `camera-view` panes; each is fully independent.
+
+### `pxt-chat`
+
+```jsonc
+{ "type": "pxt-chat", "width": "half", "narrowWidth": "full", "config": {
+  "topicRoot": "paradox/spycatcher/terminal",
+  "operatorAuthor": "operator",
+  "maxMessages": 200,
+  "title": "Terminal Chat",
+  "ai": { "enabled": false, "author": "agent", "mode": "assist" }
+} }
+```
+
+Operator chat window for a Paradox Terminal (PxT) kiosk. Looks like a
+normal text chat (scrollable transcript + compose box).
+
+| Config | Description |
+|---|---|
+| `topicRoot` | PxT base topic (required). Topics become `{topicRoot}/chat/to-players` and `…/from-players`. |
+| `toPlayersTopic` / `fromPlayersTopic` | Optional full-topic overrides. |
+| `operatorAuthor` | `author` field on outbound messages (default `operator`). |
+| `maxMessages` | In-memory transcript cap (default 200). |
+| `title` | Panel title (default `Terminal Chat`). |
+| `ai` | **Reserved** for a future SLM agent (`enabled`, `author`, `mode`). Ignored in v1. |
+
+**Width allow-list:** `full` \| `three-quarters` \| `two-thirds` \| `half`
+only (do not use `third` / `quarter`). Typical layouts: half-width on the
+simple site after `hints`; full-width on live immediately under
+`camera-view`.
+
+Payload shape (both directions): `{ "ts"?: number, "author": string, "message": string }`.
+See `apps/PxT/docs/MQTT_API.md` and `docs/PR_PXT_CHAT_PANE.md`.
 
 ### `nav`
 

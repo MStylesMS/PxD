@@ -123,11 +123,20 @@ Document these reserved fields so a later agent PR can enable them without a sch
 
 ## Explicitly deferred
 
-- SLM / AI agent integration (see reserved hooks above)
+- SLM / AI agent integration (see reserved hooks above) — **v1 shipped with hooks only**
 - Typing indicators / read receipts
 - Message persistence across dashboard reload (beyond in-memory buffer)
 - Markdown / rich text in messages
 - Voice input
+
+## Implementation status
+
+**Implemented** on `main` (pane + CSS + docs). Wired into Houdini and Agent22:
+
+- **simple:** half-width after `hints`
+- **live:** full-width immediately under `camera-view`
+
+`topicRoot` currently points at `paradox/spycatcher/terminal` (active PxT under test). Retarget per room when each game has its own terminal.
 
 ## Decisions & assumptions (locked)
 
