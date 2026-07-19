@@ -131,7 +131,11 @@ Document these reserved fields so a later agent PR can enable them without a sch
 
 ## Implementation status
 
-**Pane implemented** on PxD `main` (`assets/js/panes/pxt-chat.js`). Not wired into Agent22 or Houdini — add it only to SpyCatcher (or other PxT rooms) when that dashboard is created.
+**Pane implemented** on PxD `main`. **SpyCatcher Moscow dashboard** wired in `rooms/spycatcher/pxd/room.json`:
+
+- **simple:** half-width Terminal Chat after hints → `/spycatcher/simple/`
+- **live:** full-width Terminal Chat under camera-view → `/spycatcher/live/`
+
 
 ## Decisions & assumptions (locked)
 
