@@ -3,9 +3,18 @@
  *
  * Bidirectional MQTT chat:
  *   publish → {topicRoot}/chat/to-players
+ *   subscribe ← {topicRoot}/chat/to-players   (so all operator windows share outbound)
  *   subscribe ← {topicRoot}/chat/from-players
+ *   subscribe ← {topicRoot}/chat/history      (retained snapshot from PxO for refresh)
+ *
+ * Transcript is MQTT-only: outbound lines appear when the to-players
+ * publish is delivered (including the sender's own echo), not by local
+ * optimistic insert. That keeps multiple GM browsers in sync.
+ * On mount, a retained history snapshot (published by PxO) seeds the
+ * transcript so refresh / new windows recover the current game chat.
  *
  * Payload: { ts?: number, author: string, message: string }
+ * History: { ts?: number, messages: Array<{ts, author, message}> }
  *
  * config (pane entry):
  *   {
@@ -71,6 +80,9 @@
         var emptyEl = null;
         var messages = [];
         var fromHandler = null;
+        var toHandler = null;
+        var historyHandler = null;
+        var lastHistoryTs = 0;
         var awaitingReply = false;
         var notifyPermissionAsked = false;
         var audioCtx = null;
@@ -84,6 +96,8 @@
             || (topicRoot ? topicRoot + '/chat/to-players' : '');
         var fromTopic = String(config.fromPlayersTopic || '').trim()
             || (topicRoot ? topicRoot + '/chat/from-players' : '');
+        var historyTopic = String(config.historyTopic || '').trim()
+            || (topicRoot ? topicRoot + '/chat/history' : '');
         var operatorAuthor = String(config.operatorAuthor || 'operator').trim() || 'operator';
         var maxMessages = Number(config.maxMessages);
         if (!isFinite(maxMessages) || maxMessages < 10) maxMessages = 200;
@@ -261,14 +275,13 @@
             var row = {
                 ts: entry.ts || Date.now(),
                 author: author,
-                message: message,
-                local: opts.local === true
+                message: message
             };
-            // Deduplicate local echo if broker also reflects operator traffic
-            if (!row.local && messages.length) {
-                var last = messages[messages.length - 1];
-                if (last.local && last.author === row.author && last.message === row.message
-                    && Math.abs((last.ts || 0) - (row.ts || 0)) < 5000) {
+            // Dedupe live echo vs retained history snapshot (delivery order varies)
+            for (var i = messages.length - 1; i >= Math.max(0, messages.length - 8); i--) {
+                var prev = messages[i];
+                if (prev.author === row.author && prev.message === row.message
+                    && Math.abs((prev.ts || 0) - (row.ts || 0)) < 5000) {
                     return null;
                 }
             }
@@ -286,6 +299,41 @@
             return row;
         }
 
+        function applyHistory(payload) {
+            if (!payload || typeof payload !== 'object') return;
+            if (!Array.isArray(payload.messages)) return;
+            var ts = Number(payload.ts) || 0;
+            if (ts && lastHistoryTs && ts < lastHistoryTs) return;
+            if (ts) lastHistoryTs = ts;
+
+            var next = [];
+            for (var i = 0; i < payload.messages.length; i++) {
+                var m = payload.messages[i];
+                if (!m || typeof m !== 'object') continue;
+                var author = normalizeAuthor(m.author);
+                var message = String(m.message == null ? '' : m.message).trim();
+                if (!message) continue;
+                next.push({
+                    ts: m.ts || Date.now(),
+                    author: author,
+                    message: message
+                });
+            }
+            while (next.length > maxMessages) next.shift();
+            messages = next;
+            renderTranscript();
+
+            // Restore highlight from last line; never chime on history seed
+            if (!messages.length) {
+                setAwaitingReply(false);
+                return;
+            }
+            var last = messages[messages.length - 1];
+            if (isPlayerAuthor(last.author)) setAwaitingReply(true);
+            else if (isOperatorAuthor(last.author, operatorAuthor)) setAwaitingReply(false);
+            else setAwaitingReply(false);
+        }
+
         /** Pluggable send path — human operator today; future SLM can call the same helper. */
         function sendChatMessage(payload) {
             var author = normalizeAuthor(payload && payload.author != null ? payload.author : operatorAuthor);
@@ -300,9 +348,9 @@
                 console.warn('[pxt-chat] MQTT client unavailable');
                 return false;
             }
-            var out = { ts: Date.now(), author: author, message: message };
-            client.publish(toTopic, out);
-            pushMessage(out, { local: true, notify: false });
+            // Do not push locally — subscribe to to-players so every GM window
+            // (including this one) records the same MQTT delivery.
+            client.publish(toTopic, { ts: Date.now(), author: author, message: message });
             return true;
         }
 
@@ -313,6 +361,19 @@
                 author: payload.author,
                 message: payload.message
             }, { notify: true });
+        }
+
+        function onToPlayers(payload) {
+            if (!payload || typeof payload !== 'object') return;
+            pushMessage({
+                ts: payload.ts,
+                author: payload.author,
+                message: payload.message
+            }, { notify: false });
+        }
+
+        function onHistory(payload) {
+            applyHistory(payload);
         }
 
         function onSendClick() {
@@ -337,6 +398,9 @@
                 root = el;
                 messages = [];
                 fromHandler = null;
+                toHandler = null;
+                historyHandler = null;
+                lastHistoryTs = 0;
                 awaitingReply = false;
                 notifyPermissionAsked = false;
 
@@ -403,11 +467,23 @@
                 setAwaitingReply(false);
 
                 var client = mqtt();
-                if (fromTopic && client && typeof client.subscribe === 'function') {
-                    fromHandler = onFromPlayers;
-                    client.subscribe(fromTopic, fromHandler);
-                } else if (!fromTopic) {
-                    console.warn('[pxt-chat] no from-players topic configured');
+                if (client && typeof client.subscribe === 'function') {
+                    if (historyTopic) {
+                        historyHandler = onHistory;
+                        client.subscribe(historyTopic, historyHandler);
+                    }
+                    if (fromTopic) {
+                        fromHandler = onFromPlayers;
+                        client.subscribe(fromTopic, fromHandler);
+                    } else {
+                        console.warn('[pxt-chat] no from-players topic configured');
+                    }
+                    if (toTopic) {
+                        toHandler = onToPlayers;
+                        client.subscribe(toTopic, toHandler);
+                    } else {
+                        console.warn('[pxt-chat] no to-players topic configured');
+                    }
                 }
 
                 // Expose send helper for future agent modules on this instance
@@ -416,10 +492,15 @@
 
             unmount: function () {
                 var client = mqtt();
-                if (fromTopic && fromHandler && client && typeof client.unsubscribe === 'function') {
-                    client.unsubscribe(fromTopic, fromHandler);
+                if (client && typeof client.unsubscribe === 'function') {
+                    if (historyTopic && historyHandler) client.unsubscribe(historyTopic, historyHandler);
+                    if (fromTopic && fromHandler) client.unsubscribe(fromTopic, fromHandler);
+                    if (toTopic && toHandler) client.unsubscribe(toTopic, toHandler);
                 }
                 fromHandler = null;
+                toHandler = null;
+                historyHandler = null;
+                lastHistoryTs = 0;
                 if (panelEl && unlockAudioBound) {
                     panelEl.removeEventListener('pointerdown', unlockAudioBound);
                     panelEl.removeEventListener('keydown', unlockAudioBound, true);

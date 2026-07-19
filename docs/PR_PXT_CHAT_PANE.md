@@ -57,7 +57,12 @@ Reject / ignore `third` and `quarter` for this pane type in the editor if practi
 
 - Transcript shows player messages and local echoes of operator sends (and later, AI replies).
 - Compose box + Send publishes to `to-players` via shared `PxD.mqtt` (no second client).
-- Subscribe `from-players` on mount; unsubscribe on unmount.
+- Subscribe both `to-players` and `from-players` on mount; unsubscribe on unmount.
+  Outbound lines are recorded from the `to-players` delivery (not a local
+  optimistic insert) so multiple GM browsers stay in sync.
+- Subscribe retained `{topicRoot}/chat/history` (PxO publishes) to seed the
+  transcript after refresh / new windows. History apply never chimes; live
+  `from-players` still notifies.
 - Timestamps optional; display author + message clearly.
 - Empty / disconnected state: muted placeholder text (“Waiting for chat…”).
 

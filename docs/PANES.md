@@ -172,12 +172,18 @@ stub as `game-control`).
 ```
 
 Operator chat window for a Paradox Terminal (PxT) kiosk. Looks like a
-normal text chat (scrollable transcript + compose box).
+normal text chat (scrollable transcript + compose box). The transcript is
+built from MQTT only: it subscribes to both `to-players` and `from-players`
+so every open operator browser sees the same outbound GM lines (not just
+the window that clicked Send). It also subscribes to retained
+`{topicRoot}/chat/history` (published by PxO) so refresh / new windows
+recover the current game transcript.
 
 | Config | Description |
 |---|---|
 | `topicRoot` | PxT base topic (required). Topics become `{topicRoot}/chat/to-players` and `…/from-players`. |
 | `toPlayersTopic` / `fromPlayersTopic` | Optional full-topic overrides. |
+| `historyTopic` | Optional retained history snapshot topic (default `{topicRoot}/chat/history`). |
 | `operatorAuthor` | `author` field on outbound messages (default `operator`). |
 | `maxMessages` | In-memory transcript cap (default 200). |
 | `title` | Panel title (default `Terminal Chat`). |
