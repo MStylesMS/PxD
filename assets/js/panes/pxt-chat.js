@@ -43,6 +43,17 @@
         return 'pxt-chat-msg--other';
     }
 
+    function isPlayerAuthor(author) {
+        var a = String(author || '').toLowerCase();
+        return a === 'player' || a.indexOf('player') === 0;
+    }
+
+    function isOperatorAuthor(author, operatorAuthor) {
+        var a = String(author || '').toLowerCase();
+        var op = String(operatorAuthor || 'operator').toLowerCase();
+        return a === op || a === 'operator' || a === 'gm' || a === 'admin';
+    }
+
     function formatTime(ts) {
         var d = ts ? new Date(ts) : new Date();
         if (isNaN(d.getTime())) d = new Date();
@@ -54,11 +65,19 @@
     function factory(config, ctx) {
         config = config || {};
         var root = null;
+        var panelEl = null;
         var transcriptEl = null;
         var inputEl = null;
         var emptyEl = null;
         var messages = [];
         var fromHandler = null;
+        var awaitingReply = false;
+        var notifyPermissionAsked = false;
+        var audioCtx = null;
+        var unlockAudioBound = null;
+        var chimeEnabled = config.chime !== false;
+        var muted = false;
+        var muteStorageKey = 'pxd.pxt-chat.muted.' + (String(config.topicRoot || 'default').replace(/[^a-zA-Z0-9._-]/g, '_'));
 
         var topicRoot = String(config.topicRoot || '').replace(/\/+$/, '');
         var toTopic = String(config.toPlayersTopic || '').trim()
@@ -74,6 +93,136 @@
 
         function mqtt() {
             return (ctx && ctx.mqtt) || (window.PxD && window.PxD.mqtt) || null;
+        }
+
+        function utils() {
+            return (ctx && ctx.utils) || (window.PxD && window.PxD.utils) || null;
+        }
+
+        function setAwaitingReply(next) {
+            awaitingReply = !!next;
+            if (!panelEl) return;
+            if (awaitingReply) panelEl.classList.add('pxt-chat--awaiting-reply');
+            else panelEl.classList.remove('pxt-chat--awaiting-reply');
+            var ackBtn = panelEl.querySelector('.pxt-chat-ack');
+            if (ackBtn) ackBtn.disabled = !awaitingReply;
+        }
+
+        function acknowledgeSeen() {
+            setAwaitingReply(false);
+        }
+
+        function loadMutePreference() {
+            try {
+                muted = window.localStorage && localStorage.getItem(muteStorageKey) === '1';
+            } catch (e) {
+                muted = false;
+            }
+        }
+
+        function saveMutePreference() {
+            try {
+                if (!window.localStorage) return;
+                if (muted) localStorage.setItem(muteStorageKey, '1');
+                else localStorage.removeItem(muteStorageKey);
+            } catch (e) { /* ignore */ }
+        }
+
+        function updateMuteButton() {
+            if (!panelEl) return;
+            var muteBtn = panelEl.querySelector('.pxt-chat-mute');
+            if (!muteBtn) return;
+            // Unmuted: speaker on; muted: speaker off
+            muteBtn.textContent = muted ? 'MUTE \uD83D\uDD07' : 'MUTE \uD83D\uDD0A';
+            muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+            muteBtn.title = muted ? 'Unmute chat notification sound' : 'Mute chat notification sound';
+            if (muted) muteBtn.classList.add('pxt-chat-mute--on');
+            else muteBtn.classList.remove('pxt-chat-mute--on');
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            saveMutePreference();
+            updateMuteButton();
+        }
+
+        function ensureAudioContext() {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return null;
+            if (!audioCtx) audioCtx = new AC();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(function () { /* ignore */ });
+            }
+            return audioCtx;
+        }
+
+        function unlockAudio() {
+            ensureAudioContext();
+        }
+
+        /** Short two-tone chime via Web Audio (no media file required). */
+        function playChime() {
+            if (!chimeEnabled || muted) return;
+            var ctx = ensureAudioContext();
+            if (!ctx) return;
+
+            function tone(freq, start, dur, peak) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.exponentialRampToValueAtTime(peak, start + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(start);
+                osc.stop(start + dur + 0.02);
+            }
+
+            var play = function () {
+                var now = ctx.currentTime;
+                tone(988, now, 0.12, 0.38);        // B5 — louder
+                tone(1319, now + 0.09, 0.18, 0.32); // E6
+            };
+
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(play).catch(function () { /* autoplay blocked until gesture */ });
+            } else {
+                play();
+            }
+        }
+
+        function notifyPlayerMessage(entry) {
+            playChime();
+
+            var preview = String(entry.message || '').trim();
+            if (preview.length > 120) preview = preview.slice(0, 117) + '\u2026';
+            var toastMsg = 'Player chat: ' + preview;
+            var u = utils();
+            if (u && typeof u.showToast === 'function') {
+                u.showToast(esc(toastMsg), { delay: 4500 });
+            }
+
+            // Browser notification when permitted (useful if the tab is in the background)
+            if (typeof Notification === 'undefined') return;
+            function showBrowserNote() {
+                try {
+                    new Notification(title || 'Terminal Chat', {
+                        body: preview,
+                        tag: 'pxt-chat-player',
+                        renotify: true
+                    });
+                } catch (e) { /* ignore */ }
+            }
+            if (Notification.permission === 'granted') {
+                showBrowserNote();
+            } else if (Notification.permission === 'default' && !notifyPermissionAsked) {
+                notifyPermissionAsked = true;
+                Notification.requestPermission().then(function (perm) {
+                    if (perm === 'granted') showBrowserNote();
+                }).catch(function () { /* ignore */ });
+            }
         }
 
         function setEmptyVisible(show) {
@@ -108,7 +257,7 @@
             opts = opts || {};
             var author = normalizeAuthor(entry.author);
             var message = String(entry.message == null ? '' : entry.message).trim();
-            if (!message) return;
+            if (!message) return null;
             var row = {
                 ts: entry.ts || Date.now(),
                 author: author,
@@ -120,12 +269,21 @@
                 var last = messages[messages.length - 1];
                 if (last.local && last.author === row.author && last.message === row.message
                     && Math.abs((last.ts || 0) - (row.ts || 0)) < 5000) {
-                    return;
+                    return null;
                 }
             }
             messages.push(row);
             while (messages.length > maxMessages) messages.shift();
             renderTranscript();
+
+            // Last-sender highlight: player → awaiting reply; GM → clear
+            if (isPlayerAuthor(author)) {
+                setAwaitingReply(true);
+                if (opts.notify !== false) notifyPlayerMessage(row);
+            } else if (isOperatorAuthor(author, operatorAuthor)) {
+                setAwaitingReply(false);
+            }
+            return row;
         }
 
         /** Pluggable send path — human operator today; future SLM can call the same helper. */
@@ -144,7 +302,7 @@
             }
             var out = { ts: Date.now(), author: author, message: message };
             client.publish(toTopic, out);
-            pushMessage(out, { local: true });
+            pushMessage(out, { local: true, notify: false });
             return true;
         }
 
@@ -154,7 +312,7 @@
                 ts: payload.ts,
                 author: payload.author,
                 message: payload.message
-            });
+            }, { notify: true });
         }
 
         function onSendClick() {
@@ -179,6 +337,8 @@
                 root = el;
                 messages = [];
                 fromHandler = null;
+                awaitingReply = false;
+                notifyPermissionAsked = false;
 
                 if (aiCfg && aiCfg.enabled) {
                     console.info('[pxt-chat] ai.enabled is reserved; agent mode not active in v1');
@@ -188,6 +348,13 @@
                     '<section class="panel panel-pxt-chat">' +
                         '<div class="panel-header panel-header-tight">' +
                             '<h2 class="panel-title">' + esc(title) + '</h2>' +
+                            '<div class="pxt-chat-header-actions">' +
+                                '<button type="button" class="btn pxt-chat-mute" aria-pressed="false" ' +
+                                    'title="Mute chat notification sound">MUTE \uD83D\uDD0A</button>' +
+                                '<button type="button" class="btn pxt-chat-ack" disabled title="Mark player message as seen">' +
+                                    'Acknowledge' +
+                                '</button>' +
+                            '</div>' +
                         '</div>' +
                         '<div class="pxt-chat-body">' +
                             '<div class="pxt-chat-log">' +
@@ -202,15 +369,38 @@
                         '</div>' +
                     '</section>';
 
+                panelEl = el.querySelector('.panel-pxt-chat');
                 transcriptEl = el.querySelector('.pxt-chat-transcript');
                 emptyEl = el.querySelector('.pxt-chat-empty');
                 inputEl = el.querySelector('.pxt-chat-input');
                 var sendBtn = el.querySelector('.pxt-chat-send');
+                var ackBtn = el.querySelector('.pxt-chat-ack');
+                var muteBtn = el.querySelector('.pxt-chat-mute');
+
+                loadMutePreference();
+                updateMuteButton();
 
                 if (sendBtn) sendBtn.addEventListener('click', onSendClick);
+                if (ackBtn) ackBtn.addEventListener('click', acknowledgeSeen);
+                if (muteBtn) muteBtn.addEventListener('click', toggleMute);
                 if (inputEl) inputEl.addEventListener('keydown', onKeyDown);
 
+                // Browsers block audio until a user gesture — unlock on first pane interaction
+                unlockAudioBound = function () {
+                    unlockAudio();
+                    if (panelEl && unlockAudioBound) {
+                        panelEl.removeEventListener('pointerdown', unlockAudioBound);
+                        panelEl.removeEventListener('keydown', unlockAudioBound);
+                    }
+                    unlockAudioBound = null;
+                };
+                if (panelEl) {
+                    panelEl.addEventListener('pointerdown', unlockAudioBound);
+                    panelEl.addEventListener('keydown', unlockAudioBound, true);
+                }
+
                 renderTranscript();
+                setAwaitingReply(false);
 
                 var client = mqtt();
                 if (fromTopic && client && typeof client.subscribe === 'function') {
@@ -230,15 +420,26 @@
                     client.unsubscribe(fromTopic, fromHandler);
                 }
                 fromHandler = null;
+                if (panelEl && unlockAudioBound) {
+                    panelEl.removeEventListener('pointerdown', unlockAudioBound);
+                    panelEl.removeEventListener('keydown', unlockAudioBound, true);
+                }
+                unlockAudioBound = null;
+                if (audioCtx && typeof audioCtx.close === 'function') {
+                    audioCtx.close().catch(function () { /* ignore */ });
+                }
+                audioCtx = null;
                 if (root) {
                     root._pxtChat = null;
                     root.innerHTML = '';
                 }
                 root = null;
+                panelEl = null;
                 transcriptEl = null;
                 inputEl = null;
                 emptyEl = null;
                 messages = [];
+                awaitingReply = false;
             }
         };
     }

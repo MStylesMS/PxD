@@ -181,6 +181,7 @@ normal text chat (scrollable transcript + compose box).
 | `operatorAuthor` | `author` field on outbound messages (default `operator`). |
 | `maxMessages` | In-memory transcript cap (default 200). |
 | `title` | Panel title (default `Terminal Chat`). |
+| `chime` | Play a short Web Audio chime on player messages (default `true`). Operators can also mute via the **MUTE** header button (persisted in `localStorage`). |
 | `ai` | **Reserved** for a future SLM agent (`enabled`, `author`, `mode`). Ignored in v1. |
 
 **Width allow-list:** `full` \| `three-quarters` \| `two-thirds` \| `half`
