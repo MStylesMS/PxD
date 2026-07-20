@@ -111,7 +111,13 @@
     "This starter defines a single 'control' site with the four core panes.",
     "Add a camera-view pane (docs/PANES.md § camera-view) or a widget-grid",
     "pane (docs/WIDGETS.md) as needed — consider splitting into two sites",
-    "(e.g. 'simple' and 'live') if you want a camera-free variant too."
+    "(e.g. 'simple' and 'live') if you want a camera-free variant too.",
+    "",
+    "Optional System Health (PxH) landing link — uncomment/add an external site:",
+    "  { \"id\": \"system-health\", \"title\": \"System Health\", \"type\": \"external\",",
+    "    \"url\": \"/health/\", \"description\": \"Host metrics & maintenance (PxH)\" }",
+    "Use http://<host>:19090/ui/ if nginx /health/ is not configured.",
+    "Remove or omit if this host does not run Paradox Health Monitor."
   ],
   "sites": [
     {
@@ -134,6 +140,13 @@
           ]
         }
       ]
+    },
+    {
+      "id": "system-health",
+      "title": "System Health",
+      "description": "Host metrics, disk, services, IDE prune (Paradox Health Monitor) — remove this site if PxH is not installed",
+      "type": "external",
+      "url": "/health/"
     }
   ]
 }

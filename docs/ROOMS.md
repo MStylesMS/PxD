@@ -163,6 +163,10 @@ rule every theme must satisfy.
 | `footer` | | One pane entry `{ type, config }`, sticky to the bottom of every page in this site |
 | `pages` | `pxd` sites | Array of page objects (see below) |
 
+The starter template includes an optional external site **System Health** (`url: "/health/"`)
+pointing at Paradox Health Monitor (PxH). Remove it from `sites` if the host does not run PxH;
+or use `http://<host>:19090/ui/` when nginx `/health/` is not configured.
+
 ### pages[]
 
 | Field | Required | Description |
