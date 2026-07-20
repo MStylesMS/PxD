@@ -55,8 +55,8 @@
             box.style.color = '';
         } else {
             box.innerHTML = active.map(function (w) { return '<div>' + w.msg + '</div>'; }).join('');
-            box.style.backgroundColor = '#fff3b0';
-            box.style.color = '#222';
+            box.style.backgroundColor = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-warnings-active-bg').trim() || '#fff3b0');
+            box.style.color = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-warnings-active-ink').trim() || '#222');
         }
     }
 
@@ -68,11 +68,11 @@
         if (!el) return;
 
         if (isUp) {
-            el.style.color = '#321111';
+            el.style.color = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-zone-up').trim() || '#321111');
             el.style.fontWeight = '600';
             el.textContent = label + ' Connected';
         } else {
-            el.style.color = '#ffff00';
+            el.style.color = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-zone-down').trim() || '#ffff00');
             el.style.fontWeight = '700';
             el.textContent = label + ' Disconnected';
         }
@@ -112,7 +112,7 @@
     // ── Build warning bar HTML ─────────────────────────────────────────────
     function buildZoneBadges(watchZones) {
         return watchZones.map(function (z) {
-            return '<span data-zone="' + z.id + '" style="color:#ffff00;font-weight:700;">' + z.label + ' \u2717</span>';
+            return '<span data-zone="' + z.id + '" style="color:var(--pxd-zone-down, #ffff00);font-weight:700;">' + z.label + ' \u2717</span>';
         }).join('');
     }
 

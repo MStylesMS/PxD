@@ -27,6 +27,27 @@ Shipped themes live in `apps/PxD/themes/<name>/theme.json`, each a flat
 | `haunted-manor` | Dark maroon/gold — gothic/horror rooms |
 | `crimson-gold` | Deep red/gold — heist/adventure rooms |
 | `parchment-light` | Warm light parchment — bright/vintage-paper rooms |
+| `moscow-burgundy` | SpyCatcher Moscow — burgundy/black, parchment forms, Russo One + Special Elite |
+
+## Theme Viewer
+
+Compare shipped themes in the browser:
+
+```bash
+cd /opt/paradox/apps/PxD
+python3 -m http.server 9090
+# open http://<host>:9090/tools/theme-viewer.html
+# or  http://<host>:9090/tools/theme-viewer.html?theme=haunted-manor
+```
+
+The dropdown switches `themes/<name>/theme.json` core + chrome tokens (and fonts).
+A **Fonts** panel near the top shows `fontTitle` / `fontBody` / `fontMono` samples
+and per-theme font-pair cards (first card = shipped default; alternates are free
+OFL/Apache faces under `tools/theme-viewer-fonts/`).
+
+Chrome tokens (alerts, buttons, forms, emergency, status) ship in each
+`theme.json`. Emergency and game-status palettes are intentionally the same
+across all shipped themes.
 
 If `theme` is omitted, `base` is unrecognized, or plain per-token values are
 given directly as the `theme` object (legacy v1 style, no `base`), the
@@ -145,3 +166,23 @@ All structural CSS in `pxd-base.css` references tokens. Custom panel CSS should 
 ## Contrast helper
 
 `PxD.utils.getContrastColor(hexColor)` returns `"#000000"` or `"#ffffff"` based on the perceived luminance of `hexColor`. Useful for setting text colour on dynamically coloured buttons (lighting scenes).
+
+
+## Extended chrome tokens (v2)
+
+In addition to the core palette above, themes may (and shipped themes do)
+set chrome tokens consumed by `pxd-base.css` and pane scripts:
+
+| Group | Examples | Notes |
+|---|---|---|
+| Accent text | `accentInk` | Ink on primary buttons |
+| Forms | `formBg`, `formInk`, `formPlaceholder`, `formBorder`, `formBgFocus`, `formBgDisabled`, `formInkDisabled` | Inputs/selects/textareas |
+| Disabled game select | `selectDisabledBg`, `selectDisabledInk`, `selectDisabledBorder` | `#gameSelect:disabled` |
+| Alerts | `alertInfo*`, `alertWarning*`, `alertSuccess*`, `alertDanger*`, `alertSecondary*` | Each has Bg/Border/Ink |
+| Warnings log | `warningsBg`, `warningsBorder`, `warningsInk`, `warningsActiveBg`, `warningsActiveInk`, `zoneUp`, `zoneDown` | System pane |
+| Buttons | `btnSuccess*`, `btnDanger*`, `btnInfo*`, `btnWarning*`, `btnSecondary*` | Danger matches alert-danger; Warning matches emergency Restart Software |
+| Hint caution | `hintWarnBg`, `hintWarnInk` | Send Hint flash when clock visibility unknown |
+| Emergency (standard) | `emerAbort*`, `emerSleep*`, … | Same values in every shipped theme |
+| Game status (standard) | `statusReady*`, `statusFailed*`, … | Same values in every shipped theme |
+
+Use `tools/theme-viewer.html` to compare themes and try alternate free font pairs.

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<!--
+  PxD Theme Viewer — developer preview of named themes + proposed chrome tokens
+  ─────────────────────────────────────────────────────────────────────────────
+  Usage (from the PxD repo root):
+    python3 -m http.server 9090
+  Then open:
+    http://localhost:9090/tools/theme-viewer.html
+    http://<host>:9090/tools/theme-viewer.html
+
+  Note: port 8080 is typically Nginx (packaged room output).
+
+  Switch themes with the dropdown. Core tokens come from themes/<name>/theme.json.
+  Extended chrome (alerts, buttons, forms, emergency, status) is preview wiring
+  until those land as real theme tokens in PxD.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PxD Theme Viewer</title>
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/pxd-base.css">
+    <style>
+        /* Viewer chrome + proposed extended token bindings */
+        html, body {
+            min-height: 100%;
+            margin: 0;
+            background:
+                radial-gradient(1200px 600px at 15% -10%, var(--pxd-bg-glow-1, transparent), transparent 60%),
+                radial-gradient(900px 500px at 90% 0%, var(--pxd-bg-glow-2, transparent), transparent 55%),
+                linear-gradient(180deg, var(--pxd-bg-3), var(--pxd-bg-1));
+            color: var(--pxd-ink);
+            font-family: var(--pxd-font-body);
+        }
+        .tv-shell { max-width: 1100px; margin: 0 auto; padding: 20px 18px 48px; }
+        .tv-header {
+            display: flex; flex-wrap: wrap; gap: 12px 20px;
+            align-items: flex-end; justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--pxd-panel-border);
+        }
+        .tv-header h1 {
+            margin: 0;
+            font-family: var(--pxd-font-title);
+            font-size: 1.35rem;
+            letter-spacing: 0.04em;
+        }
+        .tv-header p { margin: 4px 0 0; color: var(--pxd-ink-soft); font-size: 0.85rem; }
+        .tv-picker label {
+            display: block; font-size: 0.72rem; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--pxd-ink-soft); margin-bottom: 4px;
+        }
+        .tv-picker select {
+            min-width: 240px;
+            background: var(--pxd-form-bg, var(--pxd-panel));
+            color: var(--pxd-form-ink, var(--pxd-ink));
+            border: 1px solid var(--pxd-form-border, var(--pxd-panel-border));
+            border-radius: 10px;
+            padding: 0.45rem 0.7rem;
+            font-family: inherit;
+        }
+        .tv-meta {
+            margin: 0 0 16px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: var(--pxd-panel);
+            border: 1px solid var(--pxd-panel-border);
+            box-shadow: var(--pxd-shadow);
+            color: var(--pxd-ink-soft);
+            font-size: 0.88rem;
+        }
+        .tv-meta strong { color: var(--pxd-ink); }
+        .tv-badge {
+            display: inline-block; margin-left: 8px; padding: 1px 8px;
+            border-radius: 999px; font-size: 0.7rem; letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: color-mix(in srgb, var(--pxd-accent) 25%, transparent);
+            border: 1px solid var(--pxd-accent); color: var(--pxd-ink);
+        }
+        .tv-section {
+            margin: 18px 0;
+            padding: 14px 16px;
+            border-radius: var(--pxd-radius);
+            background: var(--pxd-panel);
+            border: 1px solid var(--pxd-panel-border);
+            box-shadow: var(--pxd-shadow);
+        }
+        .tv-section h2 {
+            margin: 0 0 10px;
+            font-family: var(--pxd-font-title);
+            font-size: 0.95rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--pxd-ink-soft);
+        }
+        .tv-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+        .tv-row .alert, .tv-row .btn, .tv-row .status-swatch,
+        .tv-row .form-control, .tv-row .form-select {
+            flex: 1 1 140px; min-width: 120px; margin: 0; text-align: center;
+        }
+        .status-swatch {
+            padding: 0.45rem 0.6rem; border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.2); font-size: 0.85rem;
+        }
+        .tv-token-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+        }
+        .tv-swatch {
+            border-radius: 10px; border: 1px solid var(--pxd-panel-border);
+            overflow: hidden; background: rgba(0,0,0,0.15);
+        }
+        .tv-swatch-chip { height: 42px; }
+        .tv-swatch-label {
+            padding: 6px 8px; font-size: 0.72rem; color: var(--pxd-ink-soft);
+            word-break: break-all;
+        }
+        .tv-note { margin-top: 10px; font-size: 0.78rem; color: var(--pxd-ink-soft); }
+
+        /* ── Extended token bindings (preview of future THEMING) ───────── */
+        .alert-info {
+            background: var(--pxd-alert-info-bg);
+            border-color: var(--pxd-alert-info-border);
+            color: var(--pxd-alert-info-ink);
+        }
+        .alert-warning {
+            background: var(--pxd-alert-warning-bg);
+            border-color: var(--pxd-alert-warning-border);
+            color: var(--pxd-alert-warning-ink);
+        }
+        .alert-success {
+            background: var(--pxd-alert-success-bg);
+            border-color: var(--pxd-alert-success-border);
+            color: var(--pxd-alert-success-ink);
+        }
+        .alert-danger {
+            background: var(--pxd-alert-danger-bg);
+            border-color: var(--pxd-alert-danger-border);
+            color: var(--pxd-alert-danger-ink);
+        }
+        .alert-secondary {
+            background: var(--pxd-alert-secondary-bg);
+            border-color: var(--pxd-alert-secondary-border);
+            color: var(--pxd-alert-secondary-ink);
+        }
+        .page-warnings {
+            border: 1px solid var(--pxd-warnings-border);
+            background: var(--pxd-warnings-bg);
+            color: var(--pxd-warnings-ink);
+            border-radius: 10px; min-height: 64px; padding: 10px;
+        }
+        .form-control, .form-select {
+            background: var(--pxd-form-bg);
+            border: 1px solid var(--pxd-form-border);
+            color: var(--pxd-form-ink);
+            border-radius: 10px;
+        }
+        .form-control::placeholder { color: var(--pxd-form-placeholder); opacity: 1; }
+        .form-control:focus, .form-select:focus {
+            color: var(--pxd-form-ink);
+            background: var(--pxd-form-bg-focus);
+            border-color: var(--pxd-accent);
+            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--pxd-accent) 22%, transparent);
+        }
+        .form-select:disabled, .form-control:disabled,
+        .theme-preview-game-select:disabled {
+            opacity: 0.78;
+            color: var(--pxd-form-ink-disabled);
+            -webkit-text-fill-color: var(--pxd-form-ink-disabled);
+            background: var(--pxd-form-bg-disabled);
+        }
+        #gameSelect:disabled, .theme-preview-game-select:disabled {
+            color: var(--pxd-select-disabled-ink) !important;
+            -webkit-text-fill-color: var(--pxd-select-disabled-ink);
+            background: var(--pxd-select-disabled-bg);
+            border-color: var(--pxd-select-disabled-border);
+            opacity: 1;
+        }
+        .btn-primary {
+            background: var(--pxd-accent);
+            border-color: var(--pxd-accent);
+            color: var(--pxd-accent-ink);
+        }
+        .btn-success {
+            background: var(--pxd-btn-success-bg);
+            border-color: var(--pxd-btn-success-border);
+            color: var(--pxd-btn-success-ink);
+        }
+        .btn-danger {
+            background: var(--pxd-btn-danger-bg);
+            border-color: var(--pxd-btn-danger-border);
+            color: var(--pxd-btn-danger-ink);
+        }
+        .btn-info {
+            background: var(--pxd-btn-info-bg);
+            border-color: var(--pxd-btn-info-border);
+            color: var(--pxd-btn-info-ink);
+        }
+        .btn-warning {
+            background: var(--pxd-btn-warning-bg);
+            border-color: var(--pxd-btn-warning-border);
+            color: var(--pxd-btn-warning-ink);
+        }
+        .btn-secondary, .btn-dark {
+            background: var(--pxd-btn-secondary-bg);
+            border-color: var(--pxd-btn-secondary-border);
+            color: var(--pxd-btn-secondary-ink);
+        }
+        #emergencyBtn { color: var(--pxd-emer-btn-ink); }
+        .emergency-btn-abort { background-color: var(--pxd-emer-abort-bg); border-color: var(--pxd-emer-abort-border); color: var(--pxd-emer-abort-ink); }
+        .emergency-btn-sleep { background-color: var(--pxd-emer-sleep-bg); border-color: var(--pxd-emer-sleep-border); color: var(--pxd-emer-sleep-ink); }
+        .emergency-btn-wake { background-color: var(--pxd-emer-wake-bg); border-color: var(--pxd-emer-wake-border); color: var(--pxd-emer-wake-ink); }
+        .emergency-btn-restart-adapters { background-color: var(--pxd-emer-restart-adapters-bg); border-color: var(--pxd-emer-restart-adapters-border); color: var(--pxd-emer-restart-adapters-ink); }
+        .emergency-btn-restart-software { background-color: var(--pxd-emer-restart-software-bg); border-color: var(--pxd-emer-restart-software-border); color: var(--pxd-emer-restart-software-ink); }
+        .emergency-btn-shutdown-software { background-color: var(--pxd-emer-shutdown-software-bg); border-color: var(--pxd-emer-shutdown-software-border); color: var(--pxd-emer-shutdown-software-ink); }
+        .emergency-btn-reboot-controller { background-color: var(--pxd-emer-reboot-bg); border-color: var(--pxd-emer-reboot-border); color: var(--pxd-emer-reboot-ink); }
+        .emergency-btn-shutdown-controller { background-color: var(--pxd-emer-shutdown-controller-bg); border-color: var(--pxd-emer-shutdown-controller-border); color: var(--pxd-emer-shutdown-controller-ink); }
+
+        /* Font samples + Moscow pair picker */
+        .tv-font-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px;
+        }
+        .tv-font-card {
+            border: 1px solid var(--pxd-panel-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.18);
+        }
+        .tv-font-card .role {
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--pxd-ink-soft);
+            margin-bottom: 4px;
+        }
+        .tv-font-card .family {
+            font-size: 0.78rem;
+            color: var(--pxd-ink-soft);
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        .tv-font-card .sample-title {
+            font-family: var(--pxd-font-title);
+            font-size: 1.35rem;
+            line-height: 1.2;
+            color: var(--pxd-ink);
+            margin-bottom: 4px;
+        }
+        .tv-font-card .sample-body {
+            font-family: var(--pxd-font-body);
+            font-size: 1rem;
+            line-height: 1.35;
+            color: var(--pxd-ink);
+        }
+        .tv-font-card .sample-mono {
+            font-family: var(--pxd-font-mono);
+            font-size: 0.95rem;
+            color: var(--pxd-ink);
+        }
+        .tv-font-pairs { display: none; margin-top: 12px; }
+        .tv-font-pairs.is-visible { display: block; }
+        .tv-font-pair-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .tv-font-pair {
+            text-align: left;
+            border: 1px solid var(--pxd-panel-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.22);
+            color: var(--pxd-ink);
+            cursor: pointer;
+        }
+        .tv-font-pair:hover { border-color: var(--pxd-accent); }
+        .tv-font-pair.is-active {
+            border-color: var(--pxd-accent);
+            box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--pxd-accent) 30%, transparent);
+        }
+        .tv-font-pair .pair-name {
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--pxd-accent-alt, var(--pxd-accent));
+            margin-bottom: 4px;
+        }
+        .tv-font-pair .pair-desc {
+            font-size: 0.75rem;
+            color: var(--pxd-ink-soft);
+            margin-bottom: 8px;
+            min-height: 2.4em;
+        }
+        .tv-font-pair .pair-title {
+            font-size: 1.2rem;
+            line-height: 1.15;
+            margin-bottom: 4px;
+        }
+        .tv-font-pair .pair-body {
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+        .tv-font-pair .pair-license {
+            margin-top: 8px;
+            font-size: 0.68rem;
+            color: var(--pxd-ink-soft);
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-shell">
+        <header class="tv-header">
+            <div>
+                <h1>PxD Theme Viewer</h1>
+                <p>Compare shipped themes and proposed chrome tokens.</p>
+            </div>
+            <div class="tv-picker">
+                <label for="themeSelect">Theme</label>
+                <select id="themeSelect"></select>
+            </div>
+        </header>
+
+        <div class="tv-meta" id="themeMeta">Loading themes…</div>
+
+        <section class="tv-section" id="fontSection">
+            <h2>Fonts</h2>
+            <div class="tv-font-grid" id="fontSamples">
+                <div class="tv-font-card">
+                    <div class="role">Title — fontTitle</div>
+                    <div class="family" id="fontTitleName">—</div>
+                    <div class="sample-title">SpyCatcher Moscow</div>
+                    <div class="sample-title" style="font-size:1rem;">PANEL TITLES / HEADINGS</div>
+                </div>
+                <div class="tv-font-card">
+                    <div class="role">Body — fontBody</div>
+                    <div class="family" id="fontBodyName">—</div>
+                    <div class="sample-body">Send Hint · Adjust Time · System Warnings</div>
+                    <div class="sample-body" style="font-size:0.9rem;color:var(--pxd-ink-soft);">Labels, buttons, form fields</div>
+                </div>
+                <div class="tv-font-card">
+                    <div class="role">Mono — fontMono</div>
+                    <div class="family" id="fontMonoName">—</div>
+                    <div class="sample-mono">error/debug only · 0123456789</div>
+                </div>
+            </div>
+
+            <div class="tv-font-pairs" id="fontPairs">
+                <h2 style="margin-top:14px;">Font pairs</h2>
+                <p class="tv-note" style="margin-top:0;">First card is the shipped default. Alternates are free OFL/Apache faces you can redistribute with PxD.</p>
+                <div class="tv-font-pair-grid" id="fontPairGrid"></div>
+            </div>
+        </section>
+
+        <section class="tv-section">
+            <h2>Core tokens</h2>
+            <div class="tv-token-grid" id="coreSwatches"></div>
+        </section>
+
+        <section class="tv-section">
+            <h2>A — Alerts</h2>
+            <div class="tv-row">
+                <div class="alert alert-info mb-0">Info</div>
+                <div class="alert alert-warning mb-0">Warning / Clock Hidden</div>
+                <div class="alert alert-success mb-0">Success / Clock Visible</div>
+                <div class="alert alert-danger mb-0">Danger</div>
+                <div class="alert alert-secondary mb-0">Secondary / Unknown</div>
+            </div>
+        </section>
+
+        <section class="tv-section">
+            <h2>B + D — Buttons (Danger = A Danger · Warning = E Restart Software)</h2>
+            <div class="tv-row">
+                <button type="button" class="btn btn-primary">Primary</button>
+                <button type="button" class="btn btn-success">Success</button>
+                <button type="button" class="btn btn-danger">Danger</button>
+                <button type="button" class="btn btn-info">Info</button>
+                <button type="button" class="btn btn-warning">Warning</button>
+                <button type="button" class="btn btn-secondary">Secondary</button>
+                <button type="button" class="btn btn-primary" id="hintWarnSample">G Hint warn flash</button>
+            </div>
+        </section>
+
+        <section class="tv-section">
+            <h2>Forms + C — gameSelect:disabled</h2>
+            <div class="tv-row">
+                <input class="form-control" value="Field text">
+                <input class="form-control" placeholder="Placeholder text…">
+                <select class="form-select"><option>Select option</option><option>Another</option></select>
+                <select class="form-select theme-preview-game-select" disabled><option>-- Select Game --</option></select>
+                <input class="form-control" disabled value="Disabled field">
+            </div>
+        </section>
+
+        <section class="tv-section">
+            <h2>F — Game status pills (STANDARD across themes)</h2>
+            <div class="tv-row" id="statusRow"></div>
+        </section>
+
+        <section class="tv-section">
+            <h2>E — Emergency actions (STANDARD across themes)</h2>
+            <div class="tv-row">
+                <button type="button" class="btn emergency-btn-abort">Abort</button>
+                <button type="button" class="btn emergency-btn-sleep">Sleep</button>
+                <button type="button" class="btn emergency-btn-wake">Wake</button>
+                <button type="button" class="btn emergency-btn-restart-adapters">Restart Adapters</button>
+                <button type="button" class="btn emergency-btn-restart-software">Restart Software</button>
+                <button type="button" class="btn emergency-btn-shutdown-software">Shutdown Software</button>
+                <button type="button" class="btn emergency-btn-reboot-controller">Reboot Controller</button>
+                <button type="button" class="btn emergency-btn-shutdown-controller">Shutdown Controller</button>
+            </div>
+        </section>
+
+        <section class="tv-section">
+            <h2>Warnings log chrome</h2>
+            <div class="tv-row">
+                <div class="page-warnings" style="flex:1 1 100%;">Idle warnings chrome — No warnings</div>
+                <div class="page-warnings" id="warningsActive" style="flex:1 1 100%;">Active warning flash sample</div>
+            </div>
+            <p class="tv-note">Chrome tokens (alerts, buttons, forms, emergency, status) now ship in each theme.json. E/F stay standard across themes.</p>
+        </section>
+    </div>
+
+    <script>
+(function () {
+    var TOKEN_MAP = {
+        accent: '--pxd-accent',
+        accentAlt: '--pxd-accent-alt',
+        accentInk: '--pxd-accent-ink',
+        alertDangerBg: '--pxd-alert-danger-bg',
+        alertDangerBorder: '--pxd-alert-danger-border',
+        alertDangerInk: '--pxd-alert-danger-ink',
+        alertInfoBg: '--pxd-alert-info-bg',
+        alertInfoBorder: '--pxd-alert-info-border',
+        alertInfoInk: '--pxd-alert-info-ink',
+        alertSecondaryBg: '--pxd-alert-secondary-bg',
+        alertSecondaryBorder: '--pxd-alert-secondary-border',
+        alertSecondaryInk: '--pxd-alert-secondary-ink',
+        alertSuccessBg: '--pxd-alert-success-bg',
+        alertSuccessBorder: '--pxd-alert-success-border',
+        alertSuccessInk: '--pxd-alert-success-ink',
+        alertWarningBg: '--pxd-alert-warning-bg',
+        alertWarningBorder: '--pxd-alert-warning-border',
+        alertWarningInk: '--pxd-alert-warning-ink',
+        bgColor1: '--pxd-bg-1',
+        bgColor2: '--pxd-bg-2',
+        bgColor3: '--pxd-bg-3',
+        bgGlow1: '--pxd-bg-glow-1',
+        bgGlow2: '--pxd-bg-glow-2',
+        btnDangerBg: '--pxd-btn-danger-bg',
+        btnDangerBorder: '--pxd-btn-danger-border',
+        btnDangerInk: '--pxd-btn-danger-ink',
+        btnInfoBg: '--pxd-btn-info-bg',
+        btnInfoBorder: '--pxd-btn-info-border',
+        btnInfoInk: '--pxd-btn-info-ink',
+        btnSecondaryBg: '--pxd-btn-secondary-bg',
+        btnSecondaryBorder: '--pxd-btn-secondary-border',
+        btnSecondaryInk: '--pxd-btn-secondary-ink',
+        btnSuccessBg: '--pxd-btn-success-bg',
+        btnSuccessBorder: '--pxd-btn-success-border',
+        btnSuccessInk: '--pxd-btn-success-ink',
+        btnWarningBg: '--pxd-btn-warning-bg',
+        btnWarningBorder: '--pxd-btn-warning-border',
+        btnWarningInk: '--pxd-btn-warning-ink',
+        danger: '--pxd-danger',
+        emerAbortBg: '--pxd-emer-abort-bg',
+        emerAbortBorder: '--pxd-emer-abort-border',
+        emerAbortInk: '--pxd-emer-abort-ink',
+        emerBtnInk: '--pxd-emer-btn-ink',
+        emerRebootBg: '--pxd-emer-reboot-bg',
+        emerRebootBorder: '--pxd-emer-reboot-border',
+        emerRebootInk: '--pxd-emer-reboot-ink',
+        emerRestartAdaptersBg: '--pxd-emer-restart-adapters-bg',
+        emerRestartAdaptersBorder: '--pxd-emer-restart-adapters-border',
+        emerRestartAdaptersInk: '--pxd-emer-restart-adapters-ink',
+        emerRestartSoftwareBg: '--pxd-emer-restart-software-bg',
+        emerRestartSoftwareBorder: '--pxd-emer-restart-software-border',
+        emerRestartSoftwareInk: '--pxd-emer-restart-software-ink',
+        emerShutdownControllerBg: '--pxd-emer-shutdown-controller-bg',
+        emerShutdownControllerBorder: '--pxd-emer-shutdown-controller-border',
+        emerShutdownControllerInk: '--pxd-emer-shutdown-controller-ink',
+        emerShutdownSoftwareBg: '--pxd-emer-shutdown-software-bg',
+        emerShutdownSoftwareBorder: '--pxd-emer-shutdown-software-border',
+        emerShutdownSoftwareInk: '--pxd-emer-shutdown-software-ink',
+        emerSleepBg: '--pxd-emer-sleep-bg',
+        emerSleepBorder: '--pxd-emer-sleep-border',
+        emerSleepInk: '--pxd-emer-sleep-ink',
+        emerWakeBg: '--pxd-emer-wake-bg',
+        emerWakeBorder: '--pxd-emer-wake-border',
+        emerWakeInk: '--pxd-emer-wake-ink',
+        fontBody: '--pxd-font-body',
+        fontMono: '--pxd-font-mono',
+        fontTitle: '--pxd-font-title',
+        formBg: '--pxd-form-bg',
+        formBgDisabled: '--pxd-form-bg-disabled',
+        formBgFocus: '--pxd-form-bg-focus',
+        formBorder: '--pxd-form-border',
+        formInk: '--pxd-form-ink',
+        formInkDisabled: '--pxd-form-ink-disabled',
+        formPlaceholder: '--pxd-form-placeholder',
+        hintWarnBg: '--pxd-hint-warn-bg',
+        hintWarnInk: '--pxd-hint-warn-ink',
+        ink: '--pxd-ink',
+        inkSoft: '--pxd-ink-soft',
+        panel: '--pxd-panel',
+        panelBorder: '--pxd-panel-border',
+        radius: '--pxd-radius',
+        selectDisabledBg: '--pxd-select-disabled-bg',
+        selectDisabledBorder: '--pxd-select-disabled-border',
+        selectDisabledInk: '--pxd-select-disabled-ink',
+        shadow: '--pxd-shadow',
+        statusAbortBg: '--pxd-status-abort-bg',
+        statusAbortInk: '--pxd-status-abort-ink',
+        statusClosingBg: '--pxd-status-closing-bg',
+        statusClosingInk: '--pxd-status-closing-ink',
+        statusDefaultBg: '--pxd-status-default-bg',
+        statusDefaultInk: '--pxd-status-default-ink',
+        statusDisconnectedBg: '--pxd-status-disconnected-bg',
+        statusDisconnectedInk: '--pxd-status-disconnected-ink',
+        statusFailedBg: '--pxd-status-failed-bg',
+        statusFailedInk: '--pxd-status-failed-ink',
+        statusGameplayBg: '--pxd-status-gameplay-bg',
+        statusGameplayInk: '--pxd-status-gameplay-ink',
+        statusIntroBg: '--pxd-status-intro-bg',
+        statusIntroInk: '--pxd-status-intro-ink',
+        statusPausedBg: '--pxd-status-paused-bg',
+        statusPausedInk: '--pxd-status-paused-ink',
+        statusReadyBg: '--pxd-status-ready-bg',
+        statusReadyInk: '--pxd-status-ready-ink',
+        statusResettingBg: '--pxd-status-resetting-bg',
+        statusResettingInk: '--pxd-status-resetting-ink',
+        statusSleepingBg: '--pxd-status-sleeping-bg',
+        statusSleepingInk: '--pxd-status-sleeping-ink',
+        statusSolvedBg: '--pxd-status-solved-bg',
+        statusSolvedInk: '--pxd-status-solved-ink',
+        warn: '--pxd-warn',
+        warningsActiveBg: '--pxd-warnings-active-bg',
+        warningsActiveInk: '--pxd-warnings-active-ink',
+        warningsBg: '--pxd-warnings-bg',
+        warningsBorder: '--pxd-warnings-border',
+        warningsInk: '--pxd-warnings-ink',
+        zoneDown: '--pxd-zone-down',
+        zoneUp: '--pxd-zone-up'
+    };
+
+    var CORE_KEYS = Object.keys(TOKEN_MAP);
+
+    // E + F — shared by every theme
+    var FONT_DIR = 'theme-viewer-fonts/';
+    var THEME_FONT_DIR = {
+        'midnight-teal': '../themes/midnight-teal/fonts/',
+        'haunted-manor': '../themes/haunted-manor/fonts/',
+        'moscow-burgundy': '../themes/moscow-burgundy/fonts/'
+    };
+
+    // Per-theme font pairs. First entry is the shipped default.
+    var FONT_PAIRS_BY_THEME = {
+        'midnight-teal': [
+            {
+                id: 'typewriter-cursed',
+                name: 'Control Room (default)',
+                blurb: 'Shipped pair — dossier typewriter titles + distinctive display body.',
+                titleFamily: 'TypewriterBold', bodyFamily: 'CursedTimer',
+                titleFile: 'TypewriterBold.ttf', bodyFile: 'CursedTimer.ttf',
+                fromTheme: true, license: 'Theme-bundled'
+            },
+            {
+                id: 'orbitron-vt323',
+                name: '1980s Terminal',
+                blurb: 'HUD titles + CRT terminal body for a colder ops console.',
+                titleFamily: 'Orbitron', bodyFamily: 'VT323',
+                titleFile: 'Orbitron-variable.ttf', bodyFile: 'VT323-Regular.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            },
+            {
+                id: 'oswald-share',
+                name: 'Ops Condensed',
+                blurb: 'Condensed titles + technical mono labels.',
+                titleFamily: 'Oswald', bodyFamily: 'Share Tech Mono',
+                titleFile: 'Oswald-variable.ttf', bodyFile: 'ShareTechMono-Regular.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            },
+            {
+                id: 'russo-cuprum',
+                name: 'Cold War Sans',
+                blurb: 'Russo One titles + Cuprum UI body.',
+                titleFamily: 'Russo One', bodyFamily: 'Cuprum',
+                titleFile: 'RussoOne-Regular.ttf', bodyFile: 'Cuprum-variable.ttf',
+                license: 'OFL-1.1'
+            }
+        ],
+        'haunted-manor': [
+            {
+                id: 'algerian-almendra',
+                name: 'Manor Gothic (default)',
+                blurb: 'Shipped pair — ornate Algerian titles + Almendra small-caps body.',
+                titleFamily: 'URWAlgerian', bodyFamily: 'AlmendraSC',
+                titleFile: 'URWAlgerian.ttf', bodyFile: 'AlmendraSC-Regular.woff2',
+                fromTheme: true, license: 'Theme-bundled'
+            },
+            {
+                id: 'unifraktur-cinzel',
+                name: 'Blackletter Candle',
+                blurb: 'Fraktur titles + Cinzel body for candlelit horror.',
+                titleFamily: 'UnifrakturMaguntia', bodyFamily: 'Cinzel',
+                titleFile: 'UnifrakturMaguntia-Book.ttf', bodyFile: 'Cinzel-variable.ttf',
+                bodyWeight: '500', license: 'OFL-1.1'
+            },
+            {
+                id: 'medieval-ebg',
+                name: 'Old Manuscript',
+                blurb: 'MedievalSharp titles + EB Garamond readable body.',
+                titleFamily: 'MedievalSharp', bodyFamily: 'EB Garamond',
+                titleFile: 'MedievalSharp.ttf', bodyFile: 'EBGaramond-variable.ttf',
+                license: 'OFL-1.1'
+            },
+            {
+                id: 'cinzel-special',
+                name: 'Seance Dossier',
+                blurb: 'Cinzel display + Special Elite typewriter for occult paperwork.',
+                titleFamily: 'Cinzel', bodyFamily: 'Special Elite',
+                titleFile: 'Cinzel-variable.ttf', bodyFile: 'SpecialElite-Regular.ttf',
+                titleWeight: '700', license: 'OFL + Apache-2.0'
+            }
+        ],
+        'crimson-gold': [
+            {
+                id: 'arial-default',
+                name: 'System Sans (default)',
+                blurb: 'Shipped pair — Arial title and body (no custom faces).',
+                titleFamily: 'Arial', bodyFamily: 'Arial',
+                titleFile: null, bodyFile: null, license: 'System'
+            },
+            {
+                id: 'playfair-source',
+                name: 'Heist Editorial',
+                blurb: 'Playfair Display titles + Source Sans 3 UI body.',
+                titleFamily: 'Playfair Display', bodyFamily: 'Source Sans 3',
+                titleFile: 'PlayfairDisplay-variable.ttf', bodyFile: 'SourceSans3-variable.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            },
+            {
+                id: 'cinzel-special',
+                name: 'Gold Seal Dossier',
+                blurb: 'Cinzel titles + Special Elite typewriter.',
+                titleFamily: 'Cinzel', bodyFamily: 'Special Elite',
+                titleFile: 'Cinzel-variable.ttf', bodyFile: 'SpecialElite-Regular.ttf',
+                titleWeight: '700', license: 'OFL + Apache-2.0'
+            },
+            {
+                id: 'oswald-share',
+                name: 'Casino Condensed',
+                blurb: 'Oswald titles + Share Tech Mono body.',
+                titleFamily: 'Oswald', bodyFamily: 'Share Tech Mono',
+                titleFile: 'Oswald-variable.ttf', bodyFile: 'ShareTechMono-Regular.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            }
+        ],
+        'parchment-light': [
+            {
+                id: 'arial-default',
+                name: 'System Sans (default)',
+                blurb: 'Shipped pair — Arial title and body.',
+                titleFamily: 'Arial', bodyFamily: 'Arial',
+                titleFile: null, bodyFile: null, license: 'System'
+            },
+            {
+                id: 'ebg-source',
+                name: 'Library Paper',
+                blurb: 'EB Garamond titles + Source Sans 3 body.',
+                titleFamily: 'EB Garamond', bodyFamily: 'Source Sans 3',
+                titleFile: 'EBGaramond-variable.ttf', bodyFile: 'SourceSans3-variable.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            },
+            {
+                id: 'libre-cuprum',
+                name: 'Warm Ledger',
+                blurb: 'Libre Baskerville titles + Cuprum UI body.',
+                titleFamily: 'Libre Baskerville', bodyFamily: 'Cuprum',
+                titleFile: 'LibreBaskerville-Regular.ttf', bodyFile: 'Cuprum-variable.ttf',
+                license: 'OFL-1.1'
+            },
+            {
+                id: 'special-source',
+                name: 'Typed Memo',
+                blurb: 'Special Elite titles + Source Sans 3 body.',
+                titleFamily: 'Special Elite', bodyFamily: 'Source Sans 3',
+                titleFile: 'SpecialElite-Regular.ttf', bodyFile: 'SourceSans3-variable.ttf',
+                license: 'Apache-2.0 + OFL'
+            }
+        ],
+        'moscow-burgundy': [
+            {
+                id: 'russo-special',
+                name: 'Dossier Cyrillic (default)',
+                blurb: 'Russo One + Special Elite — 1980s Moscow spy/dossier.',
+                titleFamily: 'Russo One', bodyFamily: 'Special Elite',
+                titleFile: 'RussoOne-Regular.ttf', bodyFile: 'SpecialElite-Regular.ttf',
+                fromTheme: true, license: 'OFL + Apache-2.0'
+            },
+            {
+                id: 'blackops-share',
+                name: 'Cold War Stencil',
+                blurb: 'Military stencil titles + technical mono body.',
+                titleFamily: 'Black Ops One', bodyFamily: 'Share Tech Mono',
+                titleFile: 'BlackOpsOne-Regular.ttf', bodyFile: 'ShareTechMono-Regular.ttf',
+                license: 'OFL-1.1'
+            },
+            {
+                id: 'oswald-cuprum',
+                name: 'Propaganda Sans',
+                blurb: 'Condensed poster titles + Cuprum UI body.',
+                titleFamily: 'Oswald', bodyFamily: 'Cuprum',
+                titleFile: 'Oswald-variable.ttf', bodyFile: 'Cuprum-variable.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            },
+            {
+                id: 'orbitron-vt323',
+                name: '1980s Terminal',
+                blurb: 'Sci-fi HUD titles + CRT terminal body.',
+                titleFamily: 'Orbitron', bodyFamily: 'VT323',
+                titleFile: 'Orbitron-variable.ttf', bodyFile: 'VT323-Regular.ttf',
+                titleWeight: '600', license: 'OFL-1.1'
+            }
+        ]
+    };
+
+    var _activePairByTheme = {};
+    Object.keys(FONT_PAIRS_BY_THEME).forEach(function (id) {
+        _activePairByTheme[id] = FONT_PAIRS_BY_THEME[id][0].id;
+    });
+    var _pairFontStyleEl = null;
+    var _allPairsFacesEl = null;
+
+    var SHIPPED = ['midnight-teal', 'haunted-manor', 'crimson-gold', 'parchment-light', 'moscow-burgundy'];
+
+    var FONT_FORMATS = { ttf: 'truetype', otf: 'opentype', woff: 'woff', woff2: 'woff2' };
+    var fontStyleEl = null;
+
+
+    function applyCore(tokens) {
+        Object.keys(TOKEN_MAP).forEach(function (key) {
+            if (tokens && tokens[key]) {
+                document.documentElement.style.setProperty(TOKEN_MAP[key], tokens[key]);
+            }
+        });
+        refreshDemoChrome();
+    }
+
+    function refreshDemoChrome() {
+        var hint = document.getElementById('hintWarnSample');
+        if (hint) {
+            hint.style.background = 'var(--pxd-hint-warn-bg)';
+            hint.style.borderColor = 'var(--pxd-hint-warn-bg)';
+            hint.style.color = 'var(--pxd-hint-warn-ink)';
+        }
+        var active = document.getElementById('warningsActive');
+        if (active) {
+            active.style.background = 'var(--pxd-warnings-active-bg)';
+            active.style.color = 'var(--pxd-warnings-active-ink)';
+            active.style.borderColor = 'var(--pxd-warnings-border)';
+        }
+    }
+
+    function injectFonts(fonts, themeId) {
+        if (fontStyleEl) fontStyleEl.remove();
+        if (!fonts || !fonts.length) return;
+        var css = fonts.map(function (f) {
+            var src = f.src;
+            if (src.indexOf('http') !== 0 && src.indexOf('../') !== 0 && src.indexOf('/') !== 0) {
+                src = '../themes/' + themeId + '/' + src;
+            }
+            var ext = (src.split('.').pop() || '').toLowerCase();
+            var fmt = FONT_FORMATS[ext] || 'truetype';
+            return '@font-face{font-family:"' + f.family + '";src:url("' + src + '") format("' + fmt + '");' +
+                'font-weight:' + (f.weight || 'normal') + ';font-style:' + (f.style || 'normal') + ';}';
+        }).join('\n');
+        fontStyleEl = document.createElement('style');
+        fontStyleEl.textContent = css;
+        document.head.appendChild(fontStyleEl);
+    }
+
+    function stackFor(family, fallback) {
+        return '"' + family + '", ' + fallback;
+    }
+
+
+    function stackFor(family, fallback) {
+        return '"' + family + '", ' + fallback;
+    }
+
+    function currentThemeId() {
+        return document.getElementById('themeSelect').value;
+    }
+
+    function pairsFor(themeId) {
+        return FONT_PAIRS_BY_THEME[themeId] || [];
+    }
+
+    function fontUrlFor(pair, file) {
+        if (!file) return null;
+        if (pair.fromTheme) {
+            var base = THEME_FONT_DIR[currentThemeId()] || FONT_DIR;
+            return base + file;
+        }
+        return FONT_DIR + file;
+    }
+
+    function applyFontPair(pair) {
+        var themeId = currentThemeId();
+        _activePairByTheme[themeId] = pair.id;
+        if (_pairFontStyleEl) _pairFontStyleEl.remove();
+        var css = '';
+        [
+            { family: pair.titleFamily, file: pair.titleFile, weight: pair.titleWeight || 'normal' },
+            { family: pair.bodyFamily, file: pair.bodyFile, weight: pair.bodyWeight || 'normal' }
+        ].forEach(function (f) {
+            var url = fontUrlFor(pair, f.file);
+            if (!url) return;
+            var ext = (f.file.split('.').pop() || '').toLowerCase();
+            var fmt = FONT_FORMATS[ext] || 'truetype';
+            var weightDecl = (f.file.indexOf('variable') >= 0) ? '100 900' : f.weight;
+            css += '@font-face{font-family:"' + f.family + '";src:url("' + url + '") format("' + fmt + '");' +
+                'font-weight:' + weightDecl + ';font-style:normal;font-display:swap;}';
+        });
+        if (css) {
+            _pairFontStyleEl = document.createElement('style');
+            _pairFontStyleEl.textContent = css;
+            document.head.appendChild(_pairFontStyleEl);
+        }
+        var titleStack = pair.titleFile ? stackFor(pair.titleFamily, 'sans-serif') : (pair.titleFamily + ', sans-serif');
+        var bodyStack = pair.bodyFile ? stackFor(pair.bodyFamily, 'sans-serif') : (pair.bodyFamily + ', sans-serif');
+        // Prefer monospace fallback for mono-ish bodies
+        if (/Mono|Elite|VT323|Timer/i.test(pair.bodyFamily)) {
+            bodyStack = pair.bodyFile ? stackFor(pair.bodyFamily, "'Courier New', monospace") : bodyStack;
+        }
+        document.documentElement.style.setProperty('--pxd-font-title', titleStack);
+        document.documentElement.style.setProperty('--pxd-font-body', bodyStack);
+        updateFontSamples({
+            fontTitle: titleStack,
+            fontBody: bodyStack,
+            fontMono: getComputedStyle(document.documentElement).getPropertyValue('--pxd-font-mono').trim() || "'Courier New', monospace"
+        });
+        renderFontPairs();
+    }
+
+    function updateFontSamples(tokens) {
+        document.getElementById('fontTitleName').textContent = tokens.fontTitle || '—';
+        document.getElementById('fontBodyName').textContent = tokens.fontBody || '—';
+        document.getElementById('fontMonoName').textContent = tokens.fontMono || '—';
+    }
+
+    function renderFontPairs() {
+        var wrap = document.getElementById('fontPairs');
+        var grid = document.getElementById('fontPairGrid');
+        var themeId = currentThemeId();
+        var pairs = pairsFor(themeId);
+        wrap.classList.toggle('is-visible', pairs.length > 0);
+        if (!pairs.length) return;
+        document.querySelector('#fontPairs h2').textContent = themeId + ' — font pairs';
+        var active = _activePairByTheme[themeId] || pairs[0].id;
+        grid.innerHTML = pairs.map(function (pair) {
+            var isActive = pair.id === active ? ' is-active' : '';
+            return '<button type="button" class="tv-font-pair' + isActive + '" data-pair="' + pair.id + '">' +
+                '<div class="pair-name">' + pair.name + '</div>' +
+                '<div class="pair-desc">' + pair.blurb + '</div>' +
+                '<div class="pair-title" style="font-family:\'' + pair.titleFamily + '\', sans-serif;font-weight:' + (pair.titleWeight || 'normal') + ';">SpyCatcher Moscow</div>' +
+                '<div class="pair-body" style="font-family:\'' + pair.bodyFamily + '\', sans-serif;">Send Hint · Adjust Time · 0123456789</div>' +
+                '<div class="pair-license">' + pair.titleFamily + ' + ' + pair.bodyFamily + ' · ' + pair.license + '</div>' +
+                '</button>';
+        }).join('');
+        ensureAllPairFaces(themeId);
+        grid.querySelectorAll('.tv-font-pair').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var pair = pairs.filter(function (p) { return p.id === btn.getAttribute('data-pair'); })[0];
+                if (pair) applyFontPair(pair);
+            });
+        });
+    }
+
+    function ensureAllPairFaces(themeId) {
+        if (_allPairsFacesEl) _allPairsFacesEl.remove();
+        var css = '';
+        var seen = {};
+        pairsFor(themeId).forEach(function (pair) {
+            [
+                { family: pair.titleFamily, file: pair.titleFile, weight: pair.titleWeight || 'normal' },
+                { family: pair.bodyFamily, file: pair.bodyFile, weight: pair.bodyWeight || 'normal' }
+            ].forEach(function (f) {
+                if (!f.file) return;
+                var url = fontUrlFor(pair, f.file);
+                var key = f.family + '|' + url + '|' + f.weight;
+                if (seen[key]) return;
+                seen[key] = true;
+                var ext = (f.file.split('.').pop() || '').toLowerCase();
+                var fmt = FONT_FORMATS[ext] || 'truetype';
+                var weightDecl = (f.file.indexOf('variable') >= 0) ? '100 900' : f.weight;
+                css += '@font-face{font-family:"' + f.family + '";src:url("' + url + '") format("' + fmt + '");' +
+                    'font-weight:' + weightDecl + ';font-style:normal;font-display:swap;}';
+            });
+        });
+        _allPairsFacesEl = document.createElement('style');
+        _allPairsFacesEl.textContent = css;
+        document.head.appendChild(_allPairsFacesEl);
+    }
+
+    function renderCoreSwatches(tokens) {
+        var grid = document.getElementById('coreSwatches');
+        grid.innerHTML = CORE_KEYS.filter(function (k) {
+            return /Color|panel|ink|accent|warn|danger|Glow/.test(k);
+        }).map(function (k) {
+            var v = tokens[k] || '';
+            var chipStyle = /rgba?\(|#|transparent/.test(v)
+                ? 'background:' + v
+                : 'background:var(' + TOKEN_MAP[k] + ')';
+            return '<div class="tv-swatch"><div class="tv-swatch-chip" style="' + chipStyle +
+                '"></div><div class="tv-swatch-label"><strong>' + k + '</strong><br>' + v + '</div></div>';
+        }).join('');
+    }
+
+    function renderStatusRow() {
+        var specs = [
+            ['Disconnected', '--pxd-status-disconnected-bg', '--pxd-status-disconnected-ink'],
+            ['Ready', '--pxd-status-ready-bg', '--pxd-status-ready-ink'],
+            ['Gameplay', '--pxd-status-gameplay-bg', '--pxd-status-gameplay-ink'],
+            ['Paused', '--pxd-status-paused-bg', '--pxd-status-paused-ink'],
+            ['Solved', '--pxd-status-solved-bg', '--pxd-status-solved-ink'],
+            ['Failed', '--pxd-status-failed-bg', '--pxd-status-failed-ink'],
+            ['Resetting', '--pxd-status-resetting-bg', '--pxd-status-resetting-ink'],
+            ['Closing', '--pxd-status-closing-bg', '--pxd-status-closing-ink']
+        ];
+        document.getElementById('statusRow').innerHTML = specs.map(function (s) {
+            return '<div class="status-swatch" style="background:var(' + s[1] + ');color:var(' + s[2] + ')">' + s[0] + '</div>';
+        }).join('');
+    }
+
+
+    function setMeta(name, description, preview) {
+        document.getElementById('themeMeta').innerHTML =
+            '<strong>' + name + '</strong>' +
+            (preview ? '<span class="tv-badge">Preview</span>' : '<span class="tv-badge">Shipped</span>') +
+            '<div style="margin-top:6px">' + (description || '') + '</div>';
+        document.title = 'PxD Theme Viewer — ' + name;
+    }
+
+    function loadShipped(id) {
+        return fetch('../themes/' + id + '/theme.json')
+            .then(function (r) {
+                if (!r.ok) throw new Error('Failed to load ' + id);
+                return r.json();
+            })
+            .then(function (theme) {
+                injectFonts(theme.fonts, id);
+                applyCore(theme.tokens);
+                renderCoreSwatches(theme.tokens);
+                updateFontSamples(theme.tokens);
+                var pair = pairsFor(id).filter(function (p) { return p.id === _activePairByTheme[id]; })[0] || pairsFor(id)[0];
+                if (pair) applyFontPair(pair);
+                else renderFontPairs();
+                setMeta(theme.name || id, theme.description, false);
+            });
+    }
+
+    function loadMoscow() {
+        return fetch('../themes/moscow-burgundy/theme.json')
+            .then(function (r) {
+                if (!r.ok) throw new Error('Failed to load moscow-burgundy');
+                return r.json();
+            })
+            .then(function (theme) {
+                injectFonts(theme.fonts, 'moscow-burgundy');
+                applyCore(theme.tokens);
+                renderCoreSwatches(theme.tokens);
+                updateFontSamples(theme.tokens);
+                var pair = pairsFor('moscow-burgundy').filter(function (p) { return p.id === _activePairByTheme['moscow-burgundy']; })[0]
+                    || pairsFor('moscow-burgundy')[0];
+                if (pair) applyFontPair(pair);
+                setMeta(theme.name || 'moscow-burgundy', theme.description, false);
+            });
+    }
+
+    function selectTheme(id) {
+        return loadShipped(id).catch(function (err) {
+            document.getElementById('themeMeta').textContent = String(err);
+        });
+    }
+
+    function init() {
+        var sel = document.getElementById('themeSelect');
+        SHIPPED.forEach(function (id) {
+            var opt = document.createElement('option');
+            opt.value = id; opt.textContent = id;
+            sel.appendChild(opt);
+        });
+        var params = new URLSearchParams(location.search);
+        var initial = params.get('theme') || 'midnight-teal';
+        if (![].slice.call(sel.options).some(function (o) { return o.value === initial; })) {
+            initial = 'midnight-teal';
+        }
+        sel.value = initial;
+        sel.addEventListener('change', function () {
+            var url = new URL(location.href);
+            url.searchParams.set('theme', sel.value);
+            history.replaceState(null, '', url);
+            selectTheme(sel.value);
+        });
+
+        renderStatusRow();
+        selectTheme(initial);
+    }
+
+    init();
+})();
+    </script>
+</body>
+</html>

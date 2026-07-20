@@ -56,7 +56,7 @@ Then open `rooms/$GAME/pxd/room.json` and edit **in this order**:
 2. `topicRoot` — MQTT topic prefix (e.g. `paradox/myroom`)
 3. `mqtt.broker` / `mqtt.port` — leave `"auto"` for same-host Pi deploys
 4. `theme.base` — pick a named theme (`midnight-teal`, `haunted-manor`,
-   `crimson-gold`, `parchment-light`), add `overrides`/`fonts` if needed
+   `crimson-gold`, `parchment-light`, `moscow-burgundy`), add `overrides`/`fonts` if needed
 5. `media.hero` / `media.favicon` — drop files in `pxd/media/` first
 6. `sites[].pages[].panes[]` — list the panes you need, in order (see
    [PANES.md](PANES.md) for the library)

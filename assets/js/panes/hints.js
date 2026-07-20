@@ -147,8 +147,13 @@
             else { enabled = true; showWarn = false; }
         }
         btn.disabled = !enabled;
-        btn.style.backgroundColor = showWarn ? '#FFD700' : '';
-        btn.style.color = showWarn ? '#000000' : '';
+        if (showWarn) {
+            btn.style.backgroundColor = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-hint-warn-bg').trim() || '#ffcc66');
+            btn.style.color = (getComputedStyle(document.documentElement).getPropertyValue('--pxd-hint-warn-ink').trim() || '#000000');
+        } else {
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+        }
     }
 
     // ── UI: send the hint ──────────────────────────────────────────────────

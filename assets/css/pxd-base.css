@@ -12,43 +12,123 @@
    Design tokens — overridden per-room by pxd.js
    ============================================================ */
 :root {
-    /* Background palette */
-    --pxd-bg-1:           #0c0c0e;
-    --pxd-bg-2:           #1a1a20;
-    --pxd-bg-3:           #252530;
-
-    /* Surface */
-    --pxd-panel:          rgba(20, 20, 28, 0.85);
-    --pxd-panel-border:   rgba(200, 200, 220, 0.20);
-
-    /* Text */
-    --pxd-ink:            #e8e8f0;
-    --pxd-ink-soft:       #a0a0b8;
-
-    /* Accent colours */
-    --pxd-accent:         #6f99c8;
-    --pxd-accent-alt:     #7dc989;
-
-    /* State colours */
-    --pxd-warn:           #f5c842;
-    --pxd-danger:         #e06060;
-
-    /* Shape */
-    --pxd-radius:         14px;
-    --pxd-shadow:         0 12px 28px rgba(0, 0, 0, 0.35);
-
-    /* Typography — 2 custom faces per theme by convention: `fontTitle` for
-       panel titles/headings, `fontBody` for everything else (labels, body
-       text, buttons, inputs). `fontMono` is a plain system-monospace
-       fallback for error/debug text only, not part of that 2-font budget. */
-    --pxd-font-title:     Arial, sans-serif;
-    --pxd-font-body:      Arial, sans-serif;
-    --pxd-font-mono:      'Courier New', monospace;
-
-    /* Background ambient glows — full rgba() colour strings.
-       Default is transparent; rooms override via bgGlow1 / bgGlow2 in room.json. */
-    --pxd-bg-glow-1:      transparent;
-    --pxd-bg-glow-2:      transparent;
+    --pxd-bg-1: #041320;
+    --pxd-bg-2: #0a2d46;
+    --pxd-bg-3: #133c5a;
+    --pxd-panel: rgba(8, 23, 36, 0.85);
+    --pxd-panel-border: rgba(108, 223, 255, 0.28);
+    --pxd-ink: #d8f4ff;
+    --pxd-ink-soft: #9ad5ea;
+    --pxd-accent: #44e0cc;
+    --pxd-accent-alt: #6de79a;
+    --pxd-warn: #ffcc66;
+    --pxd-danger: #ff7272;
+    --pxd-radius: 14px;
+    --pxd-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    --pxd-font-title: TypewriterBold, 'Courier New', monospace;
+    --pxd-font-body: CursedTimer, 'Courier New', monospace;
+    --pxd-font-mono: 'Courier New', monospace;
+    --pxd-bg-glow-1: rgba(68, 224, 204, 0.20);
+    --pxd-bg-glow-2: rgba(109, 231, 154, 0.17);
+    --pxd-accent-ink: #1a1008;
+    --pxd-alert-info-bg: rgba(61, 137, 196, 0.30);
+    --pxd-alert-info-border: rgba(112, 209, 255, 0.60);
+    --pxd-alert-info-ink: #c2ecff;
+    --pxd-alert-warning-bg: rgba(255, 190, 85, 0.25);
+    --pxd-alert-warning-border: rgba(255, 213, 111, 0.68);
+    --pxd-alert-warning-ink: #ffe6ae;
+    --pxd-alert-success-bg: rgba(76, 173, 110, 0.30);
+    --pxd-alert-success-border: rgba(109, 231, 154, 0.62);
+    --pxd-alert-success-ink: #d3ffe6;
+    --pxd-alert-danger-bg: rgba(195, 78, 78, 0.36);
+    --pxd-alert-danger-border: rgba(255, 114, 114, 0.65);
+    --pxd-alert-danger-ink: #ffe0e0;
+    --pxd-alert-secondary-bg: rgba(99, 118, 130, 0.30);
+    --pxd-alert-secondary-border: rgba(154, 173, 186, 0.50);
+    --pxd-alert-secondary-ink: #dbe8ef;
+    --pxd-warnings-bg: rgba(57, 35, 7, 0.60);
+    --pxd-warnings-border: rgba(255, 213, 111, 0.70);
+    --pxd-warnings-ink: #ffcc66;
+    --pxd-warnings-active-bg: #fff3b0;
+    --pxd-warnings-active-ink: #222222;
+    --pxd-zone-up: #321111;
+    --pxd-zone-down: #ffff00;
+    --pxd-btn-success-bg: linear-gradient(180deg, #6de79a, #48c27b);
+    --pxd-btn-success-border: #a9ffd0;
+    --pxd-btn-success-ink: #032113;
+    --pxd-btn-info-bg: linear-gradient(180deg, #70d1ff, #4eaee3);
+    --pxd-btn-info-border: #bde9ff;
+    --pxd-btn-info-ink: #072338;
+    --pxd-btn-secondary-bg: linear-gradient(180deg, #3a5163, #2c404f);
+    --pxd-btn-secondary-border: #748fa2;
+    --pxd-btn-secondary-ink: #dcf6ff;
+    --pxd-btn-danger-bg: rgba(195, 78, 78, 0.36);
+    --pxd-btn-danger-border: rgba(255, 114, 114, 0.65);
+    --pxd-btn-danger-ink: #ffe0e0;
+    --pxd-btn-warning-bg: #ea580c;
+    --pxd-btn-warning-border: #c2410c;
+    --pxd-btn-warning-ink: #ffffff;
+    --pxd-hint-warn-bg: #ffcc66;
+    --pxd-hint-warn-ink: #000000;
+    --pxd-form-bg: rgba(8, 23, 36, 0.85);
+    --pxd-form-ink: #d8f4ff;
+    --pxd-form-placeholder: #9ad5ea;
+    --pxd-form-border: rgba(108, 223, 255, 0.28);
+    --pxd-form-bg-focus: #041320;
+    --pxd-form-bg-disabled: rgba(8, 23, 36, 0.85);
+    --pxd-form-ink-disabled: #9ad5ea;
+    --pxd-select-disabled-bg: #d9edf7;
+    --pxd-select-disabled-ink: #0b1620;
+    --pxd-select-disabled-border: #8abed0;
+    --pxd-emer-abort-bg: #facc15;
+    --pxd-emer-abort-border: #eab308;
+    --pxd-emer-abort-ink: #1f1500;
+    --pxd-emer-sleep-bg: #374151;
+    --pxd-emer-sleep-border: #4b5563;
+    --pxd-emer-sleep-ink: #8bffbe;
+    --pxd-emer-wake-bg: #16a34a;
+    --pxd-emer-wake-border: #15803d;
+    --pxd-emer-wake-ink: #eafff1;
+    --pxd-emer-restart-adapters-bg: #374151;
+    --pxd-emer-restart-adapters-border: #4b5563;
+    --pxd-emer-restart-adapters-ink: #ff9d9d;
+    --pxd-emer-restart-software-bg: #ea580c;
+    --pxd-emer-restart-software-border: #c2410c;
+    --pxd-emer-restart-software-ink: #ffffff;
+    --pxd-emer-shutdown-software-bg: #dc2626;
+    --pxd-emer-shutdown-software-border: #b91c1c;
+    --pxd-emer-shutdown-software-ink: #ffffff;
+    --pxd-emer-reboot-bg: #f97316;
+    --pxd-emer-reboot-border: #ea580c;
+    --pxd-emer-reboot-ink: #fff8ec;
+    --pxd-emer-shutdown-controller-bg: #b91c1c;
+    --pxd-emer-shutdown-controller-border: #991b1b;
+    --pxd-emer-shutdown-controller-ink: #ffffff;
+    --pxd-emer-btn-ink: #2e0606;
+    --pxd-status-disconnected-bg: #ffff00;
+    --pxd-status-disconnected-ink: #000000;
+    --pxd-status-ready-bg: #ffffff;
+    --pxd-status-ready-ink: #000000;
+    --pxd-status-intro-bg: #f8f9fa;
+    --pxd-status-intro-ink: #000000;
+    --pxd-status-gameplay-bg: #f8f9fa;
+    --pxd-status-gameplay-ink: #000000;
+    --pxd-status-paused-bg: #fff3cd;
+    --pxd-status-paused-ink: #000000;
+    --pxd-status-solved-bg: #28a745;
+    --pxd-status-solved-ink: #ffffff;
+    --pxd-status-failed-bg: #dc3545;
+    --pxd-status-failed-ink: #ffffff;
+    --pxd-status-resetting-bg: #343a40;
+    --pxd-status-resetting-ink: #ffffff;
+    --pxd-status-sleeping-bg: #343a40;
+    --pxd-status-sleeping-ink: #ffffff;
+    --pxd-status-abort-bg: #dc3545;
+    --pxd-status-abort-ink: #ffffff;
+    --pxd-status-closing-bg: #6c757d;
+    --pxd-status-closing-ink: #ffffff;
+    --pxd-status-default-bg: #e2e3e5;
+    --pxd-status-default-ink: #000000;
 }
 
 /* ============================================================
@@ -513,14 +593,14 @@ h1, h2, h3, h4, h5 {
    System warnings panel
    ============================================================ */
 .page-warnings {
-    border: 1px solid rgba(255, 213, 111, 0.70);
-    background: rgba(57, 35, 7, 0.60);
+    border: 1px solid var(--pxd-warnings-border);
+    background: var(--pxd-warnings-bg);
     border-radius: 10px;
     min-height: 96px;
     max-height: 130px;
     overflow-y: auto;
     padding: 10px;
-    color: var(--pxd-warn);
+    color: var(--pxd-warnings-ink);
 }
 
 .pfx-warning-bar {
@@ -532,7 +612,7 @@ h1, h2, h3, h4, h5 {
     text-align: center;
     font-weight: 600;
     min-height: 1.2em;
-    color: var(--pxd-warn);
+    color: var(--pxd-warnings-ink);
 }
 
 /* ============================================================
@@ -563,21 +643,26 @@ h6 {
 
 .form-control,
 .form-select {
-    background: var(--pxd-panel);
-    border: 1px solid var(--pxd-panel-border);
+    background: var(--pxd-form-bg);
+    border: 1px solid var(--pxd-form-border);
     border-radius: 10px;
-    color: var(--pxd-ink);
+    color: var(--pxd-form-ink);
     font-family: var(--pxd-font-body);
 }
 
-.form-control::placeholder { color: var(--pxd-ink-soft); }
+.form-control::placeholder { color: var(--pxd-form-placeholder); opacity: 1; }
 
 .form-control:focus,
 .form-select:focus {
-    color: var(--pxd-ink);
-    background: var(--pxd-bg-1);
+    color: var(--pxd-form-ink);
+    background: var(--pxd-form-bg-focus);
     border-color: var(--pxd-accent);
     box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--pxd-accent) 22%, transparent);
+}
+
+.form-select option {
+    background: var(--pxd-form-bg);
+    color: var(--pxd-form-ink);
 }
 
 /* ============================================================
@@ -597,10 +682,16 @@ h6 {
     filter: brightness(1.05);
 }
 
-.btn:disabled,
+.btn:disabled {
+    opacity: 0.58;
+}
+
 .form-select:disabled,
 .form-control:disabled {
-    opacity: 0.58;
+    opacity: 0.78;
+    color: var(--pxd-form-ink-disabled);
+    -webkit-text-fill-color: var(--pxd-form-ink-disabled);
+    background: var(--pxd-form-bg-disabled);
 }
 
 #gameSelect,
@@ -625,48 +716,48 @@ h6 {
 }
 
 #gameSelect:disabled {
-    color: #0b1620 !important;
-    -webkit-text-fill-color: #0b1620;
-    background: #d9edf7;
-    border-color: #8abed0;
+    color: var(--pxd-select-disabled-ink) !important;
+    -webkit-text-fill-color: var(--pxd-select-disabled-ink);
+    background: var(--pxd-select-disabled-bg);
+    border-color: var(--pxd-select-disabled-border);
     opacity: 1;
 }
 
 .btn-primary {
     background: var(--pxd-accent);
     border-color: var(--pxd-accent);
-    color: #1a1008;
+    color: var(--pxd-accent-ink);
 }
 
 .btn-success {
-    background: linear-gradient(180deg, #6de79a, #48c27b);
-    border-color: #a9ffd0;
-    color: #032113;
+    background: var(--pxd-btn-success-bg);
+    border-color: var(--pxd-btn-success-border);
+    color: var(--pxd-btn-success-ink);
 }
 
 .btn-danger {
-    background: linear-gradient(180deg, #ff7373, #da5555);
-    border-color: #ffb0b0;
-    color: #2e0606;
+    background: var(--pxd-btn-danger-bg);
+    border-color: var(--pxd-btn-danger-border);
+    color: var(--pxd-btn-danger-ink);
 }
 
 .btn-info {
-    background: linear-gradient(180deg, #70d1ff, #4eaee3);
-    border-color: #bde9ff;
-    color: #072338;
+    background: var(--pxd-btn-info-bg);
+    border-color: var(--pxd-btn-info-border);
+    color: var(--pxd-btn-info-ink);
 }
 
 .btn-warning {
-    background: linear-gradient(180deg, #ffd56f, #f0be47);
-    border-color: #ffe7af;
-    color: #332100;
+    background: var(--pxd-btn-warning-bg);
+    border-color: var(--pxd-btn-warning-border);
+    color: var(--pxd-btn-warning-ink);
 }
 
 .btn-secondary,
 .btn-dark {
-    background: linear-gradient(180deg, #3a5163, #2c404f);
-    border-color: #748fa2;
-    color: #dcf6ff;
+    background: var(--pxd-btn-secondary-bg);
+    border-color: var(--pxd-btn-secondary-border);
+    color: var(--pxd-btn-secondary-ink);
 }
 
 .btn-outline-secondary,
@@ -680,7 +771,7 @@ h6 {
 .btn-outline-light:hover {
     background: var(--pxd-accent);
     border-color: var(--pxd-accent);
-    color: #1a1008;
+    color: var(--pxd-accent-ink);
 }
 
 .btn-group { display: flex; }
@@ -697,33 +788,33 @@ h6 {
 }
 
 .alert-info {
-    background: rgba(61, 137, 196, 0.30);
-    border-color: rgba(112, 209, 255, 0.60);
-    color: #c2ecff;
+    background: var(--pxd-alert-info-bg);
+    border-color: var(--pxd-alert-info-border);
+    color: var(--pxd-alert-info-ink);
 }
 
 .alert-warning {
-    background: rgba(255, 190, 85, 0.25);
-    border-color: rgba(255, 213, 111, 0.68);
-    color: #ffe6ae;
+    background: var(--pxd-alert-warning-bg);
+    border-color: var(--pxd-alert-warning-border);
+    color: var(--pxd-alert-warning-ink);
 }
 
 .alert-success {
-    background: rgba(76, 173, 110, 0.30);
-    border-color: rgba(109, 231, 154, 0.62);
-    color: #d3ffe6;
+    background: var(--pxd-alert-success-bg);
+    border-color: var(--pxd-alert-success-border);
+    color: var(--pxd-alert-success-ink);
 }
 
 .alert-danger {
-    background: rgba(195, 78, 78, 0.36);
-    border-color: rgba(255, 114, 114, 0.65);
-    color: #ffe0e0;
+    background: var(--pxd-alert-danger-bg);
+    border-color: var(--pxd-alert-danger-border);
+    color: var(--pxd-alert-danger-ink);
 }
 
 .alert-secondary {
-    background: rgba(99, 118, 130, 0.30);
-    border-color: rgba(154, 173, 186, 0.50);
-    color: #dbe8ef;
+    background: var(--pxd-alert-secondary-bg);
+    border-color: var(--pxd-alert-secondary-border);
+    color: var(--pxd-alert-secondary-ink);
 }
 
 /* ============================================================
@@ -749,7 +840,7 @@ h6 {
 
 .time-adjust-btn:hover {
     background: var(--pxd-accent);
-    color: #1a1008;
+    color: var(--pxd-accent-ink);
 }
 
 /* ============================================================
@@ -785,16 +876,16 @@ h6 {
 /* ============================================================
    Emergency modal button variants
    ============================================================ */
-#emergencyBtn { color: #2e0606; }
+#emergencyBtn { color: var(--pxd-emer-btn-ink); }
 
-.emergency-btn-abort             { background-color: #facc15; border-color: #eab308; color: #1f1500; }
-.emergency-btn-sleep             { background-color: #374151; border-color: #4b5563; color: #8bffbe; }
-.emergency-btn-wake              { background-color: #16a34a; border-color: #15803d; color: #eafff1; }
-.emergency-btn-restart-adapters  { background-color: #374151; border-color: #4b5563; color: #ff9d9d; }
-.emergency-btn-restart-software  { background-color: #ea580c; border-color: #c2410c; color: #fff; }
-.emergency-btn-shutdown-software { background-color: #dc2626; border-color: #b91c1c; color: #fff; }
-.emergency-btn-reboot-controller { background-color: #f97316; border-color: #ea580c; color: #fff8ec; }
-.emergency-btn-shutdown-controller { background-color: #b91c1c; border-color: #991b1b; color: #fff; }
+.emergency-btn-abort             { background-color: var(--pxd-emer-abort-bg); border-color: var(--pxd-emer-abort-border); color: var(--pxd-emer-abort-ink); }
+.emergency-btn-sleep             { background-color: var(--pxd-emer-sleep-bg); border-color: var(--pxd-emer-sleep-border); color: var(--pxd-emer-sleep-ink); }
+.emergency-btn-wake              { background-color: var(--pxd-emer-wake-bg); border-color: var(--pxd-emer-wake-border); color: var(--pxd-emer-wake-ink); }
+.emergency-btn-restart-adapters  { background-color: var(--pxd-emer-restart-adapters-bg); border-color: var(--pxd-emer-restart-adapters-border); color: var(--pxd-emer-restart-adapters-ink); }
+.emergency-btn-restart-software  { background-color: var(--pxd-emer-restart-software-bg); border-color: var(--pxd-emer-restart-software-border); color: var(--pxd-emer-restart-software-ink); }
+.emergency-btn-shutdown-software { background-color: var(--pxd-emer-shutdown-software-bg); border-color: var(--pxd-emer-shutdown-software-border); color: var(--pxd-emer-shutdown-software-ink); }
+.emergency-btn-reboot-controller { background-color: var(--pxd-emer-reboot-bg); border-color: var(--pxd-emer-reboot-border); color: var(--pxd-emer-reboot-ink); }
+.emergency-btn-shutdown-controller { background-color: var(--pxd-emer-shutdown-controller-bg); border-color: var(--pxd-emer-shutdown-controller-border); color: var(--pxd-emer-shutdown-controller-ink); }
 
 /* ============================================================
    Scrollbar

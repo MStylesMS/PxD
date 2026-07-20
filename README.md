@@ -47,14 +47,14 @@ rooms with a `pxd/` config are migrated.
 | `game-status` + `game-actions` compact control panes | ✅ |
 | Content pane `aspectRatio` / `forceFit` / `backgroundColor` (ideal logo **4.6:1**) | ✅ |
 | Collapsible sections (`divider` panes) | ✅ |
-| Named themes (midnight-teal, haunted-manor, crimson-gold, parchment-light) | ✅ |
+| Named themes (midnight-teal, haunted-manor, crimson-gold, parchment-light, moscow-burgundy) | ✅ |
 | Multi-instance `widget-grid` panes | ✅ |
 | Multi-instance `camera-view` panes (MSE only) | ✅ |
 | `content`, `nav` panes | ✅ |
 | Packager v2 (multi-site, theme-resolving, marker-file-safe) | ✅ |
 | Agent 22 room (`simple` + `live` sites) | ✅ |
 | Houdini's Challenge room (`simple` + `live` sites) | ✅ |
-| SpyCatcher room | Not migrated — no `pxd/` config exists for this room |
+| SpyCatcher room (`simple` + `live` + GPIO monitor link) | ✅ |
 
 ## Repo layout
 
@@ -82,6 +82,7 @@ apps/PxD/
     widgets/                 Widget base templates + examples
   tools/
     widget-viewer.html       Widget dev preview tool
+    theme-viewer.html        Theme gallery (dropdown switcher for shipped themes + previews)
     camera-finder/           Camera discovery/tuning tool (launch on demand, not a service)
   scripts/
     package.js               Packager (v2)

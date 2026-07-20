@@ -57,6 +57,11 @@
         return gs === 'solved' || gs === 'failed' || gs === 'abort';
     }
 
+    function _themeCss(name, fallback) {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return v || fallback;
+    }
+
     // ── UI: game status pill ───────────────────────────────────────────────
     function updateGameStatus(gameState, timeLeft) {
         var el = _root.querySelector('#gameStatus');
@@ -66,21 +71,21 @@
         var bg = '', fg = '', text = '';
 
         if (!connected) {
-            bg = '#ffff00'; fg = '#000'; text = 'Disconnected!';
+            bg = _themeCss('--pxd-status-disconnected-bg', '#ffff00'); fg = _themeCss('--pxd-status-disconnected-ink', '#000'); text = 'Disconnected!';
         } else {
             switch (gameState) {
-                case 'ready':      bg = '#ffffff'; fg = '#000000'; text = 'Ready!'; break;
-                case 'intro':      bg = '#f8f9fa'; fg = '#000000'; text = 'Intro ' + (timeLeft || '00:00'); break;
-                case 'gameplay':   bg = '#f8f9fa'; fg = '#000000'; text = 'Time left ' + (timeLeft || '00:00'); break;
-                case 'paused':     bg = '#fff3cd'; fg = '#000000'; text = 'Paused at ' + (timeLeft || '00:00'); break;
-                case 'solved':     bg = '#28a745'; fg = '#ffffff'; text = 'Solved! ' + (timeLeft || '00:00'); break;
-                case 'failed':     bg = '#dc3545'; fg = '#ffffff'; text = 'Failed! ' + (timeLeft || '00:00'); break;
-                case 'resetting':  bg = '#343a40'; fg = '#ffffff'; text = 'Resetting...'; break;
-                case 'sleeping':   bg = '#343a40'; fg = '#ffffff'; text = 'Sleeping...'; break;
-                case 'abort':      bg = '#dc3545'; fg = '#ffffff'; text = 'Aborted \u2014 Reset!'; break;
+                case 'ready':      bg = _themeCss('--pxd-status-ready-bg', '#ffffff'); fg = _themeCss('--pxd-status-ready-ink', '#000000'); text = 'Ready!'; break;
+                case 'intro':      bg = _themeCss('--pxd-status-intro-bg', '#f8f9fa'); fg = _themeCss('--pxd-status-intro-ink', '#000000'); text = 'Intro ' + (timeLeft || '00:00'); break;
+                case 'gameplay':   bg = _themeCss('--pxd-status-gameplay-bg', '#f8f9fa'); fg = _themeCss('--pxd-status-gameplay-ink', '#000000'); text = 'Time left ' + (timeLeft || '00:00'); break;
+                case 'paused':     bg = _themeCss('--pxd-status-paused-bg', '#fff3cd'); fg = _themeCss('--pxd-status-paused-ink', '#000000'); text = 'Paused at ' + (timeLeft || '00:00'); break;
+                case 'solved':     bg = _themeCss('--pxd-status-solved-bg', '#28a745'); fg = _themeCss('--pxd-status-solved-ink', '#ffffff'); text = 'Solved! ' + (timeLeft || '00:00'); break;
+                case 'failed':     bg = _themeCss('--pxd-status-failed-bg', '#dc3545'); fg = _themeCss('--pxd-status-failed-ink', '#ffffff'); text = 'Failed! ' + (timeLeft || '00:00'); break;
+                case 'resetting':  bg = _themeCss('--pxd-status-resetting-bg', '#343a40'); fg = _themeCss('--pxd-status-resetting-ink', '#ffffff'); text = 'Resetting...'; break;
+                case 'sleeping':   bg = _themeCss('--pxd-status-sleeping-bg', '#343a40'); fg = _themeCss('--pxd-status-sleeping-ink', '#ffffff'); text = 'Sleeping...'; break;
+                case 'abort':      bg = _themeCss('--pxd-status-abort-bg', '#dc3545'); fg = _themeCss('--pxd-status-abort-ink', '#ffffff'); text = 'Aborted \u2014 Reset!'; break;
                 default:
-                    if (closing) { bg = '#6c757d'; fg = '#ffffff'; text = 'Closing ' + (timeLeft || '00:00'); }
-                    else { bg = '#e2e3e5'; fg = '#000000'; text = gameState + (timeLeft ? ' ' + timeLeft : ''); }
+                    if (closing) { bg = _themeCss('--pxd-status-closing-bg', '#6c757d'); fg = _themeCss('--pxd-status-closing-ink', '#ffffff'); text = 'Closing ' + (timeLeft || '00:00'); }
+                    else { bg = _themeCss('--pxd-status-default-bg', '#e2e3e5'); fg = _themeCss('--pxd-status-default-ink', '#000000'); text = gameState + (timeLeft ? ' ' + timeLeft : ''); }
             }
         }
         el.style.backgroundColor = bg;
