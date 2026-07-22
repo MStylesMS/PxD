@@ -142,7 +142,11 @@
         slotEl.innerHTML = buildHTML(watchZones);
 
         // Subscribe to warning topics
-        var warnTopics = _config.warningTopics || [_topicRoot + '/warnings', _topicRoot + '/+/warnings'];
+        var warnTopics = _config.warningTopics || [
+            _topicRoot + '/warnings',
+            _topicRoot + '/+/warnings',
+            'paradox/+/system/alerts'
+        ];
         var handler = makeWarningHandler();
         warnTopics.forEach(function (t) {
             PxD.mqtt.subscribe(t, handler);

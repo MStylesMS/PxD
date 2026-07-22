@@ -206,7 +206,8 @@ or use `http://<host>:19090/ui/` when nginx `/health/` is not configured.
 ### system.warningTopics
 
 Array of MQTT topic strings (wildcards allowed) whose payloads appear in the
-**System Warnings** pane. Defaults to `[topicRoot/warnings]` when omitted.
+**System Warnings** pane. When omitted, the UI falls back to
+`[topicRoot/warnings, topicRoot/+/warnings, paradox/+/system/alerts]`.
 
 Recommended starter set:
 
