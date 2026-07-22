@@ -20,12 +20,18 @@ cp apps/PxD/templates/rooms/_starter/room.json rooms/<game>/pxd/room.json
 5. `media.hero` — add your banner image to `pxd/media/`
 6. `media.favicon` — add your favicon to `pxd/media/`
 7. `gameControl.emergencyActions` — add room-specific emergency buttons
-8. `system.watchZones` — add the services/devices you want to monitor
-9. `timeLights.lightsScenesTopicRoot` — if your lighting system publishes a
-   dynamic scene list
-10. `sites` — adjust the pane list for your room (add `camera-view` and/or
+8. `system.warningTopics` — keep room `…/warnings` patterns and include
+   `paradox/+/system/alerts` so **PxH** disk/service alerts appear in the
+   System Warnings pane
+9. `system.watchZones` — add the services/devices you want to monitor
+10. `timeLights.lightsScenesTopicRoot` — if your lighting system publishes a
+    dynamic scene list
+11. `sites` — adjust the pane list for your room (add `camera-view` and/or
     `widget-grid` panes as needed, or split into multiple sites); see
-    `docs/PANES.md` for the full pane library
+    `docs/PANES.md` for the full pane library. Keep the external
+    **System Health** site (`/health/`) when this host runs PxH; remove it
+    otherwise (or point at `http://<host>:19090/ui/` if nginx `/health/` is
+    not configured).
 
 After editing, run the packager from `apps/PxD/`:
 

@@ -203,6 +203,21 @@ or use `http://<host>:19090/ui/` when nginx `/health/` is not configured.
 |---|---|---|
 | `hintTopic` | `topicRoot/hints` | Topic to publish hints to |
 
+### system.warningTopics
+
+Array of MQTT topic strings (wildcards allowed) whose payloads appear in the
+**System Warnings** pane. Defaults to `[topicRoot/warnings]` when omitted.
+
+Recommended starter set:
+
+| Topic | Source |
+|---|---|
+| `paradox/<room>/warnings` | Room / game engine warnings |
+| `paradox/<room>/+/warnings` | Per-zone or per-app warnings (PFx, PxO, …) |
+| `paradox/+/system/alerts` | **PxH** host alerts (disk warn/critical, required service down, IDE prune results). Machine id is the host’s `[machine] id` in `pxh.ini` (e.g. `houdini`, `picture`, `agent22`) — not necessarily the room `topicRoot` suffix. |
+
+Payloads with a `message` field are shown as text; otherwise the JSON is stringified.
+
 ### system.watchZones
 
 Array of zone objects:

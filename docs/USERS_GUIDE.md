@@ -384,7 +384,7 @@ Background system health monitoring.
 
 | Field | Default | Effect |
 |---|---|---|
-| `warningTopics` | `[topicRoot/warnings]` | Topics whose messages appear in the log |
+| `warningTopics` | `[topicRoot/warnings]` | Topics whose messages appear in the log. Include `paradox/+/system/alerts` so **PxH** disk/service alerts (controller + picture Pi, etc.) show here |
 | `watchZones` | `[]` | Array of `{id, label, topic, timeoutMs}` zone objects |
 
 ---

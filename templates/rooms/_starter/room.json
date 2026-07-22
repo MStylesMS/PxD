@@ -86,10 +86,16 @@
   "system": {
     "//warningTopics": [
       "MQTT topics whose messages appear in the warning log.",
-      "Supports wildcards: paradox/myroom/+/warnings"
+      "Supports wildcards (+ = one level). Include:",
+      "  - room / app warnings (…/warnings)",
+      "  - PxH host alerts (disk full, required service down) on …/system/alerts",
+      "PxH publishes paradox/<machine.id>/system/alerts — use paradox/+/system/alerts",
+      "to catch every host in the room (controller, picture Pi, etc.)."
     ],
     "warningTopics": [
-      "paradox/myroom/warnings"
+      "paradox/myroom/warnings",
+      "paradox/myroom/+/warnings",
+      "paradox/+/system/alerts"
     ],
     "//watchZones": [
       "One entry per service / device you want to monitor.",
