@@ -209,13 +209,16 @@ Array of MQTT topic strings (wildcards allowed) whose payloads appear in the
 **System Warnings** pane. When omitted, the UI falls back to
 `[topicRoot/warnings, topicRoot/+/warnings, paradox/+/system/alerts]`.
 
+Suite MQTT rules (game vs host): see
+[`apps/PxH/docs/standards/MQTT-CONTRACT.md`](../../PxH/docs/standards/MQTT-CONTRACT.md).
+
 Recommended starter set:
 
 | Topic | Source |
 |---|---|
-| `paradox/<room>/warnings` | Room / game engine warnings |
+| `paradox/<room>/warnings` | Room / game engine warnings (PxO) |
 | `paradox/<room>/+/warnings` | Per-zone or per-app warnings (PFx, PxO, …) |
-| `paradox/+/system/alerts` | **PxH** host alerts (disk warn/critical, required service down, IDE prune results). Machine id is the host’s `[machine] id` in `pxh.ini` (e.g. `houdini`, `picture`, `agent22`) — not necessarily the room `topicRoot` suffix. |
+| `paradox/+/system/alerts` | **PxH host** alerts (disk, UPS, required services, prune) — **not** game warnings. Machine id is `[machine] id` in `pxh.ini` (often matches a host nickname such as `houdini` or `agent22`, but the topic is still host-scoped). |
 
 Payloads with a `message` field are shown as text; otherwise the JSON is stringified.
 

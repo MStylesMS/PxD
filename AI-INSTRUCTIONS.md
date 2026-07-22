@@ -1,4 +1,4 @@
-﻿# PxD — AI Instructions
+# PxD — AI Instructions
 
 PxD is the **operator dashboard** (GM daily tool), browser-served from room packages (`room.json` / widgets).
 
@@ -22,3 +22,7 @@ path-absolute URL (works on LAN and Tailscale).
 - **Canonical doc:** [docs/PROP_ADMIN_REVERSE_PROXY.md](docs/PROP_ADMIN_REVERSE_PROXY.md)
 - **PxD links:** path-absolute `/props/<label>/` in `room.json` `external` sites
 - **Live control:** MQTT and widgets — prop HTTP UI is setup/rescue only
+
+## Suite standards
+
+Suite-wide contracts live in [../PxH/docs/standards/](../PxH/docs/standards/) (folder, not a single file). Read those before changing MQTT topics or shared conventions. If you change a standard, update the file under PxH `docs/standards/` first and propagate to other repos' docs in the same work.
