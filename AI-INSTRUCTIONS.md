@@ -20,8 +20,11 @@ proxies `/props/<mdns-label>/` to the prop; PxD landing links use the same
 path-absolute URL (works on LAN and Tailscale).
 
 - **Canonical doc:** [docs/PROP_ADMIN_REVERSE_PROXY.md](docs/PROP_ADMIN_REVERSE_PROXY.md)
+  (production nginx pattern, troubleshooting, firmware agent prompt)
 - **PxD links:** path-absolute `/props/<label>/` in `room.json` `external` sites
 - **Live control:** MQTT and widgets — prop HTTP UI is setup/rescue only
+- **Room Controller config:** `/opt/paradox/config/nginx-paradox.conf` +
+  `mdns-dns-stub.service` (nginx cannot resolve `*.local` without the stub)
 
 ## Suite standards
 

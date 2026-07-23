@@ -26,6 +26,7 @@ install go2rtc and the `/go2rtc/` nginx proxy — see
 |---|---|
 | [docs/QUICK_START.md](docs/QUICK_START.md) | New room in under 10 minutes |
 | [docs/GO2RTC.md](docs/GO2RTC.md) | **Cameras:** install go2rtc, nginx Tailscale proxy, room.json `wsUrl` |
+| [docs/PROP_ADMIN_REVERSE_PROXY.md](docs/PROP_ADMIN_REVERSE_PROXY.md) | **Prop admin UIs:** `/props/<label>/` nginx + Tailscale, troubleshooting, firmware prompt |
 | [docs/ROOMS.md](docs/ROOMS.md) | room.json field reference — sites, pages, panes, glossary |
 | [docs/PANES.md](docs/PANES.md) | Pane library reference + how to add a new pane type |
 | [docs/THEMING.md](docs/THEMING.md) | Named themes, CSS tokens, custom fonts |
