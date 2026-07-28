@@ -21,6 +21,12 @@
     --pxd-ink-soft: #9ad5ea;
     --pxd-accent: #44e0cc;
     --pxd-accent-alt: #6de79a;
+    --pxd-value-target: #ffd84d;
+    --pxd-value-actual: #a8e5ff;
+    --pxd-battery-ok: #2f8f74;
+    --pxd-battery-low: #ffcc66;
+    --pxd-battery-critical: #ff7272;
+    --pxd-battery-external: #9ad5ea;
     --pxd-warn: #ffcc66;
     --pxd-danger: #ff7272;
     --pxd-radius: 14px;
@@ -1068,6 +1074,41 @@ h6 {
     height:     1px;
     background: var(--pxd-panel-border);
     margin:     3px 0;
+}
+
+.widget-menu-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.widget-menu-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 10px 8px;
+    min-width: 160px;
+}
+
+.widget-menu-input-label {
+    font-size: 0.72rem;
+    color: var(--pxd-ink-soft);
+}
+
+.widget-menu-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-family: var(--pxd-font-mono);
+    background: var(--pxd-form-bg);
+    border: 1px solid var(--pxd-form-border);
+    border-radius: 6px;
+    color: var(--pxd-form-ink);
+}
+
+.widget-menu-input-btn {
+    width: 100%;
+    border-radius: 0 0 6px 6px;
 }
 
 /* ── Interactive widget hover state ─────────────────────────── */

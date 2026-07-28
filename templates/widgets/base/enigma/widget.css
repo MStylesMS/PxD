@@ -1,0 +1,159 @@
+/* enigma widget — target/current codes + optional switch grid */
+
+.wd-enigma {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    container-type: inline-size;
+}
+
+.wd-enigma-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 100%;
+    min-height: 0;
+    padding: 2px 0;
+}
+
+.wd-enigma-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    line-height: 1.15;
+    min-width: 0;
+}
+
+.wd-enigma-lbl {
+    flex: 0 0 auto;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--pxd-ink-soft);
+}
+
+.wd-enigma-val {
+    flex: 1 1 auto;
+    font-family: var(--pxd-font-mono);
+    font-size: clamp(0.72rem, 3.2cqi, 1rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wd-enigma-target {
+    color: var(--pxd-value-target);
+}
+
+.wd-enigma-target.wd-enigma-missing {
+    color: var(--pxd-ink-soft);
+    font-weight: 400;
+}
+
+.wd-enigma-current {
+    color: var(--pxd-value-actual);
+}
+
+.wd-enigma-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-top: auto;
+}
+
+.wd-enigma-solved {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    background: var(--pxd-status-solved-bg);
+    color: var(--pxd-status-solved-ink);
+}
+
+.wd-enigma-batt-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-left: auto;
+}
+
+.wd-enigma-batt {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+}
+
+.wd-enigma-batt-warn {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: var(--pxd-battery-low);
+    flex-shrink: 0;
+}
+
+.wd-enigma-batt-wrap[data-status="critical"] .wd-enigma-batt-warn {
+    color: var(--pxd-battery-critical);
+}
+
+.wd-enigma-batt-pct {
+    font-size: 0.62rem;
+    color: var(--pxd-ink-soft);
+    font-family: var(--pxd-font-mono);
+}
+
+/* Full (2×2) layout */
+.wd-enigma-full .wd-enigma-header {
+    flex-shrink: 0;
+}
+
+.wd-enigma-grid {
+    flex: 1 1 auto;
+    display: grid;
+    gap: 3px;
+    align-content: start;
+    min-height: 0;
+    margin-top: 0.25rem;
+    overflow: hidden;
+}
+
+.wd-enigma-grid-empty {
+    opacity: 0.35;
+}
+
+.wd-enigma-cell {
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--pxd-panel-border) 40%, transparent);
+    border: 1px solid var(--pxd-panel-border);
+    box-sizing: border-box;
+}
+
+.wd-enigma-cell.wd-enigma-on {
+    background: color-mix(in srgb, var(--pxd-value-actual) 35%, var(--pxd-panel));
+    border-color: var(--pxd-value-actual);
+}
+
+.wd-enigma-cell.wd-enigma-target {
+    border-width: 2px;
+    border-color: var(--pxd-value-target);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--pxd-value-target) 30%, transparent) inset;
+}
+
+/* Compact at smallest width (1×1 tile) */
+@container (max-width: 95px) {
+    .wd-enigma-compact .wd-enigma-row {
+        flex-direction: column;
+        gap: 0.1rem;
+        align-items: flex-start;
+    }
+    .wd-enigma-lbl {
+        font-size: 0.55rem;
+    }
+    .wd-enigma-val {
+        font-size: 0.68rem;
+    }
+}

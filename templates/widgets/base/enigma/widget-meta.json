@@ -1,0 +1,40 @@
+{
+  "label": "enigma — 2×1 compact / 2×2 full",
+  "quickStates": [
+    {
+      "label": "Normal",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":\"58-26-65\",\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"],\"target_grid\":[\"10001\",\"01100\",\"00110\",\"10010\"]},\"battery\":{\"profile\":\"12v-lead-acid\",\"percent\":72,\"status\":\"ok\"}}",
+      "color": "#44e0cc"
+    },
+    {
+      "label": "Solved",
+      "payload": "{\"code\":{\"code\":\"58-26-65\",\"target\":\"58-26-65\",\"solved\":true,\"grid\":[\"10001\",\"01100\",\"00110\",\"10010\"],\"target_grid\":[\"10001\",\"01100\",\"00110\",\"10010\"]},\"battery\":{\"percent\":80,\"status\":\"ok\"}}",
+      "color": "#28a745"
+    },
+    {
+      "label": "No target",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":null,\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"],\"target_grid\":null},\"battery\":{\"percent\":90,\"status\":\"ok\"}}",
+      "color": "#9ad5ea"
+    },
+    {
+      "label": "Low battery",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":\"58-26-65\",\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"],\"target_grid\":[\"10001\",\"01100\",\"00110\",\"10010\"]},\"battery\":{\"percent\":35,\"status\":\"low\"}}",
+      "color": "#ffcc66"
+    },
+    {
+      "label": "Critical",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":\"58-26-65\",\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"],\"target_grid\":[\"10001\",\"01100\",\"00110\",\"10010\"]},\"battery\":{\"percent\":8,\"status\":\"critical\"}}",
+      "color": "#ff7272"
+    },
+    {
+      "label": "External",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":\"58-26-65\",\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"],\"target_grid\":[\"10001\",\"01100\",\"00110\",\"10010\"]},\"battery\":{\"profile\":\"external\",\"percent\":null,\"status\":\"external\"}}",
+      "color": "#9ad5ea"
+    },
+    {
+      "label": "Old firmware",
+      "payload": "{\"code\":{\"code\":\"12-34-56\",\"target\":\"58-26-65\",\"solved\":false,\"grid\":[\"10101\",\"01000\",\"00110\",\"10010\"]},\"battery\":{\"percent\":60,\"status\":\"ok\"}}",
+      "color": "#6c757d"
+    }
+  ]
+}

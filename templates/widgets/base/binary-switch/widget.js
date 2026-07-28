@@ -167,10 +167,10 @@
 
         /** CSS colour for the on state (applied to icon + label).
          *  Not used when icons are file paths — the image conveys state instead. */
-        ON_COLOR:             '#198754',
+        ON_COLOR:             'var(--pxd-status-solved-bg)',
 
         /** CSS colour for the off state. */
-        OFF_COLOR:            '#dc3545',
+        OFF_COLOR:            'var(--pxd-danger)',
 
         // Glyph / icons ------------------------------------------------------
         //
@@ -228,19 +228,8 @@
     // ── Material Symbols font loader (opt-in, ligature mode only) ───────────
     // Only called when ICON_ON / ICON_OFF are ligature names.
     // NOT called by the default glyph CONFIG.
-    const MAT_SYM_ID   = 'pxd-material-symbols';
-    const MAT_SYM_HREF =
-        'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined' +
-        ':opsz,wght,FILL,GRAD@24,400,1,0';
-
     function ensureMaterialSymbols() {
-        if (!document.getElementById(MAT_SYM_ID)) {
-            const link = document.createElement('link');
-            link.id   = MAT_SYM_ID;
-            link.rel  = 'stylesheet';
-            link.href = MAT_SYM_HREF;
-            document.head.appendChild(link);
-        }
+        console.warn('[binary-switch] ligature icons require a local font bundle; use inline SVG glyphs (default).');
     }
 
 

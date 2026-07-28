@@ -53,10 +53,10 @@
 
         /** CSS colour for the open state (applied to icon + label).
          *  Not used when icons are file paths — the image conveys state instead. */
-        OPEN_COLOR:           '#dc3545',
+        OPEN_COLOR:           'var(--pxd-danger)',
 
         /** CSS colour for the closed state. */
-        CLOSED_COLOR:         '#198754',
+        CLOSED_COLOR:         'var(--pxd-status-solved-bg)',
 
         // Icons (see header comment for format options) ----------------------
         //
@@ -100,26 +100,10 @@
     }());
 
 
-    // ── Material Symbols font loader (opt-in, ligature mode only) ───────────
-    // Only called when ICON_OPEN / ICON_CLOSED are ligature names (e.g. 'door_open').
-    // NOT called by the default inline-SVG CONFIG.
-    //
-    // Loads from Google CDN — requires internet access.
-    // For offline kiosk deployment: replace MAT_SYM_HREF with a local @font-face
-    // stylesheet path, or switch CONFIG icons back to inline SVG / file paths.
-    const MAT_SYM_ID   = 'pxd-material-symbols';
-    const MAT_SYM_HREF =
-        'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined' +
-        ':opsz,wght,FILL,GRAD@24,400,0,0&icon_names=door_front,door_open';
-
+    // Ligature mode requires a locally bundled Material Symbols font (offline rule).
+    // Default CONFIG uses inline SVG — no network fetch.
     function ensureMaterialSymbols() {
-        if (!document.getElementById(MAT_SYM_ID)) {
-            const link = document.createElement('link');
-            link.id   = MAT_SYM_ID;
-            link.rel  = 'stylesheet';
-            link.href = MAT_SYM_HREF;
-            document.head.appendChild(link);
-        }
+        console.warn('[binary-door] ligature icons require a local font bundle; use inline SVG (default).');
     }
 
 

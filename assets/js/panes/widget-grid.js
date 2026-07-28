@@ -54,6 +54,10 @@
                 if (ctx.disableBtn) ctx.disableBtn.disabled = true;
             }
 
+            appendCustomMenuItems(ctx.popoverEl, def.menuItems, commandTopic, ctx.mqtt, function () {
+                ctx.popoverEl.hidden = true;
+            });
+
             ctx.registry[ctx.id] = {
                 def: def, cardEl: ctx.cardEl, bodyEl: ctx.bodyEl, popoverEl: ctx.popoverEl,
                 commandTopic: commandTopic, heartbeatTimeoutMs: heartbeatMs,
@@ -113,6 +117,83 @@
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function appendCustomMenuItems(popover, items, commandTopic, mqtt, closePopover) {
+        if (!popover || !Array.isArray(items) || !items.length) return;
+
+        var sep = document.createElement('div');
+        sep.className = 'widget-menu-sep';
+        popover.appendChild(sep);
+
+        items.forEach(function (item) {
+            if (!item) return;
+            if (item.type === 'sep') {
+                var s = document.createElement('div');
+                s.className = 'widget-menu-sep';
+                popover.appendChild(s);
+                return;
+            }
+            if (item.type === 'input') {
+                var row = document.createElement('div');
+                row.className = 'widget-menu-input-row';
+                if (item.label) {
+                    var lbl = document.createElement('span');
+                    lbl.className = 'widget-menu-input-label';
+                    lbl.textContent = item.label;
+                    row.appendChild(lbl);
+                }
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'widget-menu-input';
+                input.placeholder = item.placeholder || '';
+                input.autocomplete = 'off';
+                var applyBtn = document.createElement('button');
+                applyBtn.type = 'button';
+                applyBtn.className = 'widget-menu-item widget-menu-input-btn';
+                applyBtn.textContent = item.buttonLabel || 'Apply';
+                applyBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (typeof item.onSubmit === 'function') {
+                        item.onSubmit(input.value.trim(), closePopover);
+                    }
+                });
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') applyBtn.click();
+                });
+                row.appendChild(input);
+                row.appendChild(applyBtn);
+                popover.appendChild(row);
+                return;
+            }
+            if (item.href) {
+                var link = document.createElement('a');
+                link.className = 'widget-menu-item widget-menu-link';
+                link.href = item.href;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = item.label || 'Open';
+                link.addEventListener('click', function () { closePopover(); });
+                popover.appendChild(link);
+                return;
+            }
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'widget-menu-item';
+            btn.textContent = item.label || 'Action';
+            if (item.disabled) btn.disabled = true;
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (item.confirm && !window.confirm(item.confirm)) return;
+                closePopover();
+                if (item.publish && commandTopic && mqtt) {
+                    mqtt.publish(commandTopic, item.publish);
+                } else if (typeof item.onSelect === 'function') {
+                    item.onSelect();
+                }
+            });
+            popover.appendChild(btn);
+        });
     }
 
     function factory(config, ctx) {
@@ -336,6 +417,7 @@
                 _pending = {
                     id: id, cardEl: chrome.card, bodyEl: chrome.body, popoverEl: chrome.popover,
                     enableBtn: chrome.enableBtn, disableBtn: chrome.disableBtn,
+                    mqtt: ctx.mqtt,
                     registry: _registry,
                     onRegistered: function (widgetId) {
                         startHeartbeat(widgetId);

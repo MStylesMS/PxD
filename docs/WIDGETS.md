@@ -129,18 +129,38 @@ element; `pxd-base.css` maps `data-size` to width/height rules.
 
 ## Card controls — the ⋯ menu
 
-Every widget card has a `⋯` button in its header. Clicking it (or
-right-clicking the card) opens a Bootstrap Dropdown:
+Every widget card has a `⋯` button in its header. Clicking it opens a
+custom popover menu:
 
 | Item | Action |
 |---|---|
 | **Enable** | Publishes `{"command":"enable"}` to the resolved command topic |
 | **Disable** | Publishes `{"command":"disable"}` to the resolved command topic |
 | **Hide** | Removes the card from the grid until page reload |
+| *(custom)* | Optional items from `menuItems` in `PxD.widgets.register()` — actions, inline inputs, external links |
 
 The card's visual state updates only when the prop echoes state back via its
 state topic — never optimistically. Passive widgets (`COMMAND_TOPIC: null`)
 show Enable/Disable greyed out; Hide is always available.
+
+### Custom menu items (`menuItems`)
+
+Widgets may pass an optional `menuItems` array when registering:
+
+| Shape | Behaviour |
+|---|---|
+| `{ label, publish: { command, … } }` | Publishes JSON to `commandTopic` |
+| `{ label, onSelect() }` | Custom handler (popover closes first) |
+| `{ label, href }` | Opens link in a new tab |
+| `{ label, confirm }` | Browser confirm dialog before action |
+| `{ type: 'input', label, placeholder, buttonLabel, onSubmit(value, close) }` | Inline text field + Apply |
+| `{ type: 'sep' }` | Separator line |
+
+Example (Enigma prop widget): Identify, Set target, Sleep, Open Prop UI.
+
+### Heartbeat / offline
+
+The widget-grid loader sets `data-widget-state="disconnected"` (dimmed card) when no MQTT message arrives within `heartbeatTimeoutMs`. Default **30000** ms; use **15000** for props that publish state every 10 s. Set **0** to disable (e.g. change-only publishers monitored elsewhere).
 
 ---
 
@@ -340,7 +360,14 @@ can be edited via the widget viewer without opening `widget.js`.
 
 ---
 
-## Widget factory API (template tier)
+## Widget factory API (template tier) — planned
+
+> **Status:** Not yet implemented in the shipped loader. All base templates and
+> room widgets today use the **IIFE + `PxD.widgets.register()`** pattern with an
+> inline `CONFIG` block and literal `STATE_TOPIC` / `COMMAND_TOPIC` strings.
+> The `PxD.widgetTypes` registry, per-instance `config.json`, and
+> `BASE_TOPIC`/`PROP_TOPIC` derivation described below are the target design
+> but are not wired in `widget-grid.js` yet.
 
 Template factories are registered with `PxD.widgetTypes.register()`.
 This call lives in the shared template JS and is never copied per instance.
@@ -497,6 +524,7 @@ packager. A starter scaffold (`_starter/`) is provided for custom widgets.
 | `binary-switch` | `1x1` | Active | Power/device switch; click publishes allOn/allOff |
 | `countdown` | `2x1` | Passive | Countdown clock with warn/danger colour bands |
 | `bomb-timer` | `3x1` | Passive | Suitcase/bomb countdown with gameState colour + battery glyph |
+| `enigma` | `1x1` / `2x1` / `2x2` | Passive | Px-Enigma target/current codes + switch grid + prop menu actions |
 | `lights-control` | `1x1` | Active | Colour scene picker + brightness; glyph tinted by scene×brightness |
 | `troffer-control` | `3x1` | Active | Paradox Troffer (white on/off, RGB, brightness, UV) |
 | `text-display` | `4x1` | Passive | Arbitrary text field from payload |
