@@ -2,29 +2,31 @@
 
 Display-only monitor for **Px-Enigma-ESP8266** props via MQTT `state`.
 
-## Sizes
+## Sizes and layouts
 
-| `SIZE` | Layout |
-|--------|--------|
-| `1x1` | Compact: target + current + battery |
-| `2x1` | Compact (half width) — recommended for narrow dashboards |
-| `2x2` | Full: compact header + live switch grid |
+Card tile size (`SIZE`) sets the widget-grid footprint (Bootstrap 12-col aligned):
+
+| `SIZE` | Name | Footprint |
+|---|---|---|
+| `3x1` | Quarter | col-3 wide, short |
+| `4x1` | Third | col-4 wide, short |
+| `3x2` | Quarter Grid | col-3 wide, tall + switch grid |
+| `4x2` | Third Grid | col-4 wide, tall + switch grid |
+| `2x2` | Full | half width, tall + large grid |
+
+Inner **layout mode** (compact / compact-grid / full) can be switched from the ⋯ menu on `2x2` cards. Quarter and Third short tiles are compact-only; Quarter Grid and Third Grid tiles use compact-grid.
 
 ## CONFIG
 
-Edit the inline `CONFIG` block in `widget.js`:
-
-- `STATE_TOPIC` — full MQTT state topic (e.g. `paradox/spycatcher/moscow/enigma/state`)
-- `COMMAND_TOPIC` — commands topic for Identify / Set Target / Sleep menu actions
-- `PROP_UI_URL` — path-absolute reverse-proxy URL (e.g. `/props/enigma-machine/`)
-- `HEARTBEAT_TIMEOUT_MS` — default **15000** (prop publishes every 10 s)
+- `STATE_TOPIC`, `COMMAND_TOPIC`, `PROP_UI_URL`
+- `LAYOUT_MODE` — optional default inner layout
+- `SWITCH_COUNT` — numbered switches on grid (default **20**)
+- `HEARTBEAT_TIMEOUT_MS` — default **15000**
 
 ## State fields
 
-Uses `code.code`, `code.target`, `code.solved`, `code.grid`, `code.target_grid` (optional — grid degrades without it), and `battery.status` / `battery.percent`.
-
-Battery colours use theme tokens (`--pxd-battery-*`); low/critical also show a warning triangle icon.
+Uses `code.*`, `puzzle.mode` (Latch/Live), `battery.*`, and optional grid fields.
 
 ## Menu actions (⋯)
 
-Identify, Set target (inline input), Sleep (confirm), Open Prop UI — requires firmware ≥ 1.0.2 for `sleep` and `target_grid`.
+Identify, Set target, Sleep, Layout picker (when available), Open Prop UI.

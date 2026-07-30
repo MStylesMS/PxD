@@ -119,11 +119,14 @@ element; `pxd-base.css` maps `data-size` to width/height rules.
 | `SIZE` | Approx width | Approx height | Bootstrap-ish |
 |---|---|---|---|
 | `"1x1"` | ~16.7 % (6/row) | 110 px | col-2 |
-| `"3x1"` | 25 % (4/row) | 110 px | col-3 |
+| `"3x1"` | 25 % (4/row) | 110 px | col-3 (Quarter) |
+| `"4x1"` | 33.3 % (3/row) | 110 px | col-4 (Third) |
 | `"2x1"` | 50 % | 110 px | col-6 |
+| `"3x2"` | 25 % | 220 px | col-3, tall (Quarter Grid) |
+| `"4x2"` | 33.3 % | 220 px | col-4, tall (Third Grid) |
 | `"2x2"` | 50 % | 220 px | col-6 |
-| `"4x1"` | 100 % | 110 px | col-12 |
-| `"4x2"` | 100 % | 220 px | col-12 |
+| `"12x1"` | 100 % | 110 px | col-12 |
+| `"12x2"` | 100 % | 220 px | col-12 |
 
 ---
 
@@ -157,6 +160,27 @@ Widgets may pass an optional `menuItems` array when registering:
 | `{ type: 'sep' }` | Separator line |
 
 Example (Enigma prop widget): Identify, Set target, Sleep, Open Prop UI.
+
+**Dynamic menu items:** pass `menuItems` as a **function** returning a fresh
+array when the widget needs menu entries that reflect runtime state (e.g. a
+layout picker with a checkmark on the active mode). The widget-grid loader
+re-resolves function `menuItems` each time the ⋯ menu opens.
+
+Example pattern (Enigma layout picker):
+
+```javascript
+PxD.widgets.register({
+    menuItems: function () {
+        return [
+            { label: 'Identify', publish: { command: 'identify' } },
+            { label: 'Layout: Compact', onSelect: function () { setLayout('compact'); } },
+        ];
+    },
+});
+```
+
+Persist operator layout choices in `sessionStorage` if they should survive
+menu reopen within the same browser session.
 
 ### Heartbeat / offline
 

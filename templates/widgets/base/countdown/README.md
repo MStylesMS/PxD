@@ -61,10 +61,10 @@ minute), the display jumps between values.
 | CONFIG `SIZE` | Best for |
 |---|---|
 | `"2x1"` *(default)* | MM:SS countdown, snug layout |
-| `"4x1"` | MM:SS with more horizontal breathing room |
+| `"12x1"` | MM:SS with more horizontal breathing room |
 | `"2x2"` | H:MM:SS counters or when a large, prominent display is needed |
 
-For `"h:mm:ss"` format, `"2x2"` or `"4x1"` is recommended to avoid clipping.
+For `"h:mm:ss"` format, `"2x2"` or `"12x1"` is recommended to avoid clipping.
 
 ---
 

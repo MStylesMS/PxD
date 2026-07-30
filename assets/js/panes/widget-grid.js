@@ -54,7 +54,7 @@
                 if (ctx.disableBtn) ctx.disableBtn.disabled = true;
             }
 
-            appendCustomMenuItems(ctx.popoverEl, def.menuItems, commandTopic, ctx.mqtt, function () {
+            appendCustomMenuItems(ctx.popoverEl, resolveMenuItems(def), commandTopic, ctx.mqtt, function () {
                 ctx.popoverEl.hidden = true;
             });
 
@@ -119,19 +119,57 @@
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function resolveMenuItems(def) {
+        if (!def || def.menuItems == null) return [];
+        if (typeof def.menuItems === 'function') return def.menuItems();
+        return Array.isArray(def.menuItems) ? def.menuItems : [];
+    }
+
     function appendCustomMenuItems(popover, items, commandTopic, mqtt, closePopover) {
         if (!popover || !Array.isArray(items) || !items.length) return;
 
+        var block = document.createElement('div');
+        block.setAttribute('data-widget-custom-menu', '1');
+
         var sep = document.createElement('div');
         sep.className = 'widget-menu-sep';
-        popover.appendChild(sep);
+        block.appendChild(sep);
 
         items.forEach(function (item) {
             if (!item) return;
             if (item.type === 'sep') {
                 var s = document.createElement('div');
                 s.className = 'widget-menu-sep';
-                popover.appendChild(s);
+                block.appendChild(s);
+                return;
+            }
+            if (item.type === 'select') {
+                var selRow = document.createElement('div');
+                selRow.className = 'widget-menu-input-row';
+                if (item.label) {
+                    var selLbl = document.createElement('span');
+                    selLbl.className = 'widget-menu-input-label';
+                    selLbl.textContent = item.label;
+                    selRow.appendChild(selLbl);
+                }
+                var select = document.createElement('select');
+                select.className = 'widget-menu-select';
+                (item.options || []).forEach(function (opt) {
+                    var option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    if (opt.value === item.value) option.selected = true;
+                    select.appendChild(option);
+                });
+                select.addEventListener('change', function (e) {
+                    e.stopPropagation();
+                    if (typeof item.onChange === 'function') {
+                        item.onChange(select.value, closePopover);
+                    }
+                });
+                select.addEventListener('click', function (e) { e.stopPropagation(); });
+                selRow.appendChild(select);
+                block.appendChild(selRow);
                 return;
             }
             if (item.type === 'input') {
@@ -163,7 +201,7 @@
                 });
                 row.appendChild(input);
                 row.appendChild(applyBtn);
-                popover.appendChild(row);
+                block.appendChild(row);
                 return;
             }
             if (item.href) {
@@ -174,7 +212,7 @@
                 link.rel = 'noopener noreferrer';
                 link.textContent = item.label || 'Open';
                 link.addEventListener('click', function () { closePopover(); });
-                popover.appendChild(link);
+                block.appendChild(link);
                 return;
             }
             var btn = document.createElement('button');
@@ -192,7 +230,19 @@
                     item.onSelect();
                 }
             });
-            popover.appendChild(btn);
+            block.appendChild(btn);
+        });
+
+        popover.appendChild(block);
+    }
+
+    function refreshCustomMenuItems(entry, mqtt) {
+        if (!entry || !entry.popoverEl) return;
+        entry.popoverEl.querySelectorAll('[data-widget-custom-menu]').forEach(function (el) {
+            el.remove();
+        });
+        appendCustomMenuItems(entry.popoverEl, resolveMenuItems(entry.def), entry.commandTopic, mqtt, function () {
+            entry.popoverEl.hidden = true;
         });
     }
 
@@ -257,6 +307,10 @@
             menuBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 if (popover.hidden) {
+                    var entry = _registry[id];
+                    if (entry && typeof entry.def.menuItems === 'function') {
+                        refreshCustomMenuItems(entry, ctx.mqtt);
+                    }
                     var rect = menuBtn.getBoundingClientRect();
                     popover.style.top = (rect.bottom + 4) + 'px';
                     popover.style.right = (window.innerWidth - rect.right) + 'px';

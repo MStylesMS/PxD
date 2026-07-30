@@ -973,14 +973,18 @@ h6 {
 }
 
 /* ── Tile sizes ──────────────────────────────────────────────
-   1x1 ≈ Bootstrap col-2 (6/row). 3x1 ≈ col-3 (4/row). 2x* ≈ half. 4x* = full.
+   Bootstrap 12-col mapping: 3x1 = col-3 (Quarter). 4x1 = col-4 (Third).
+   3x2 / 4x2 = same width, double height (grid tiles). 2x* = half. 12x* = full.
 */
 .widget-card[data-size="1x1"] { width: calc(16.666% - 8px); min-height: 110px; }
 .widget-card[data-size="3x1"] { width: calc(25% - 8px);     min-height: 110px; }
+.widget-card[data-size="4x1"] { width: calc(33.333% - 7px); min-height: 110px; }
 .widget-card[data-size="2x1"] { width: calc(50% - 5px);  min-height: 110px; }
+.widget-card[data-size="3x2"] { width: calc(25% - 8px);     min-height: 220px; }
+.widget-card[data-size="4x2"] { width: calc(33.333% - 7px); min-height: 220px; }
 .widget-card[data-size="2x2"] { width: calc(50% - 5px);  min-height: 220px; }
-.widget-card[data-size="4x1"] { width: 100%;             min-height: 110px; }
-.widget-card[data-size="4x2"] { width: 100%;             min-height: 220px; }
+.widget-card[data-size="12x1"] { width: 100%;            min-height: 110px; }
+.widget-card[data-size="12x2"] { width: 100%;            min-height: 220px; }
 
 /* ── Disconnected state ─────────────────────────────────────── */
 .widget-card[data-widget-state="disconnected"] { opacity: 0.42; }
@@ -1111,6 +1115,19 @@ h6 {
     border-radius: 0 0 6px 6px;
 }
 
+.widget-menu-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-family: var(--pxd-font-mono);
+    background: var(--pxd-form-bg);
+    border: 1px solid var(--pxd-form-border);
+    border-radius: 6px;
+    color: var(--pxd-form-ink);
+    cursor: pointer;
+}
+
 /* ── Interactive widget hover state ─────────────────────────── */
 .widget-interactive {
     cursor: pointer;
@@ -1124,14 +1141,20 @@ h6 {
 @container (max-width: 480px) {
     .widget-card[data-size="1x1"],
     .widget-card[data-size="3x1"],
+    .widget-card[data-size="4x1"],
     .widget-card[data-size="2x1"] { width: calc(50% - 5px); }
+    .widget-card[data-size="3x2"],
+    .widget-card[data-size="4x2"],
     .widget-card[data-size="2x2"] { width: 100%; }
 }
 
 @container (max-width: 280px) {
     .widget-card[data-size="1x1"],
     .widget-card[data-size="3x1"],
+    .widget-card[data-size="4x1"],
     .widget-card[data-size="2x1"],
+    .widget-card[data-size="3x2"],
+    .widget-card[data-size="4x2"],
     .widget-card[data-size="2x2"] { width: 100%; }
 }
 

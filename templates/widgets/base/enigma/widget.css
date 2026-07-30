@@ -10,7 +10,7 @@
 .wd-enigma-wrap {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.25rem;
     height: 100%;
     min-height: 0;
     padding: 2px 0;
@@ -22,6 +22,10 @@
     gap: 0.4rem;
     line-height: 1.15;
     min-width: 0;
+}
+
+.wd-enigma-cur-row {
+    align-items: center;
 }
 
 .wd-enigma-lbl {
@@ -55,34 +59,54 @@
     color: var(--pxd-value-actual);
 }
 
+.wd-enigma-current.wd-enigma-solved-code {
+    color: var(--pxd-battery-ok);
+}
+
 .wd-enigma-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.35rem;
     margin-top: auto;
+    min-width: 0;
 }
 
-.wd-enigma-solved {
+.wd-enigma-mode {
+    flex: 0 1 auto;
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    padding: 0.1rem 0.35rem;
+    color: var(--pxd-ink-soft);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wd-enigma-solved {
+    flex: 0 0 auto;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.05rem 0.3rem;
     border-radius: 4px;
     background: var(--pxd-status-solved-bg);
     color: var(--pxd-status-solved-ink);
+    margin-left: 0.25rem;
 }
 
 .wd-enigma-batt-wrap {
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
+    flex-shrink: 0;
     margin-left: auto;
 }
 
 .wd-enigma-batt {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.25rem;
+    height: 1.25rem;
     flex-shrink: 0;
 }
 
@@ -103,8 +127,7 @@
     font-family: var(--pxd-font-mono);
 }
 
-/* Full (2×2) layout */
-.wd-enigma-full .wd-enigma-header {
+.wd-enigma-has-grid .wd-enigma-header {
     flex-shrink: 0;
 }
 
@@ -114,7 +137,7 @@
     gap: 3px;
     align-content: start;
     min-height: 0;
-    margin-top: 0.25rem;
+    margin-top: 0.1rem;
     overflow: hidden;
 }
 
@@ -130,11 +153,19 @@
     background: color-mix(in srgb, var(--pxd-panel-border) 40%, transparent);
     border: 1px solid var(--pxd-panel-border);
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pxd-font-mono);
+    font-weight: 600;
+    color: var(--pxd-ink-soft);
+    line-height: 1;
 }
 
 .wd-enigma-cell.wd-enigma-on {
-    background: color-mix(in srgb, var(--pxd-value-actual) 35%, var(--pxd-panel));
-    border-color: var(--pxd-value-actual);
+    background: color-mix(in srgb, var(--pxd-battery-ok) 38%, var(--pxd-panel));
+    border-color: var(--pxd-battery-ok);
+    color: color-mix(in srgb, var(--pxd-battery-ok) 85%, #ffffff);
 }
 
 .wd-enigma-cell.wd-enigma-target {
@@ -143,9 +174,50 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--pxd-value-target) 30%, transparent) inset;
 }
 
-/* Compact at smallest width (1×1 tile) */
-@container (max-width: 95px) {
-    .wd-enigma-compact .wd-enigma-row {
+/* Quarter Grid / Third Grid — tall tiles, larger cells */
+.wd-enigma-layout-compact-grid .wd-enigma-header {
+    gap: 0.08rem;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-row {
+    gap: 0.25rem;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-val {
+    font-size: clamp(0.62rem, 2.6cqi, 0.82rem);
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-grid {
+    gap: 3px;
+    align-content: center;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-cell {
+    min-height: 22px;
+    font-size: clamp(0.48rem, 3cqi, 0.62rem);
+}
+
+/* Half Grid — half-width tall tile, smaller cells */
+.wd-enigma-layout-half-grid .wd-enigma-header {
+    gap: 0.1rem;
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-val {
+    font-size: clamp(0.65rem, 2.8cqi, 0.88rem);
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-grid {
+    gap: 2px;
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-cell {
+    min-height: 15px;
+    font-size: clamp(0.42rem, 2cqi, 0.52rem);
+}
+
+/* Compact at narrow tile width */
+@container (max-width: 120px) {
+    .wd-enigma-layout-compact .wd-enigma-row {
         flex-direction: column;
         gap: 0.1rem;
         align-items: flex-start;
