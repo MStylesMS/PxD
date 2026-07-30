@@ -99,20 +99,27 @@
 .wd-enigma-batt-wrap {
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.25rem;
     flex-shrink: 0;
     margin-left: auto;
+    min-height: 20px;
 }
 
 .wd-enigma-batt {
-    width: 1.25rem;
-    height: 1.25rem;
+    display: block;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
     flex-shrink: 0;
 }
 
 .wd-enigma-batt-warn {
-    width: 0.75rem;
-    height: 0.75rem;
+    display: block;
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
     color: var(--pxd-battery-low);
     flex-shrink: 0;
 }
@@ -139,6 +146,10 @@
     min-height: 0;
     margin-top: 0.1rem;
     overflow: hidden;
+}
+
+.wd-enigma-has-grid .wd-enigma-grid {
+    overflow: visible;
 }
 
 .wd-enigma-grid-empty {
@@ -174,45 +185,110 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--pxd-value-target) 30%, transparent) inset;
 }
 
-/* Quarter Grid / Third Grid — tall tiles, larger cells */
+/* Quarter Grid / Third Grid — tall tiles, square cells sized from height */
 .wd-enigma-layout-compact-grid .wd-enigma-header {
-    gap: 0.08rem;
+    gap: 0.1rem;
 }
 
 .wd-enigma-layout-compact-grid .wd-enigma-row {
-    gap: 0.25rem;
+    gap: 0.35rem;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-lbl {
+    font-size: 0.68rem;
 }
 
 .wd-enigma-layout-compact-grid .wd-enigma-val {
-    font-size: clamp(0.62rem, 2.6cqi, 0.82rem);
+    font-size: clamp(0.78rem, 3.6cqi, 1.05rem);
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-mode {
+    font-size: 0.68rem;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-batt {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-batt-warn {
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+    min-height: 13px;
+}
+
+.wd-enigma-layout-compact-grid .wd-enigma-batt-pct {
+    font-size: 0.68rem;
 }
 
 .wd-enigma-layout-compact-grid .wd-enigma-grid {
-    gap: 3px;
-    align-content: center;
+    gap: 2px;
+    align-content: stretch;
+    justify-content: center;
+    align-self: center;
+    margin-top: 0;
 }
 
 .wd-enigma-layout-compact-grid .wd-enigma-cell {
-    min-height: 22px;
-    font-size: clamp(0.48rem, 3cqi, 0.62rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+    font-size: clamp(0.55rem, calc(var(--cell-size, 28px) * 0.48), 0.85rem);
 }
 
-/* Half Grid — half-width tall tile, smaller cells */
+/* Half Grid — half-width tall tile */
 .wd-enigma-layout-half-grid .wd-enigma-header {
     gap: 0.1rem;
 }
 
+.wd-enigma-layout-half-grid .wd-enigma-lbl {
+    font-size: 0.65rem;
+}
+
 .wd-enigma-layout-half-grid .wd-enigma-val {
-    font-size: clamp(0.65rem, 2.8cqi, 0.88rem);
+    font-size: clamp(0.72rem, 3.2cqi, 0.98rem);
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-mode {
+    font-size: 0.65rem;
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-batt {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-batt-warn {
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+    min-height: 13px;
+}
+
+.wd-enigma-layout-half-grid .wd-enigma-batt-pct {
+    font-size: 0.66rem;
 }
 
 .wd-enigma-layout-half-grid .wd-enigma-grid {
     gap: 2px;
+    align-content: stretch;
+    justify-content: center;
+    align-self: center;
+    margin-top: 0;
 }
 
 .wd-enigma-layout-half-grid .wd-enigma-cell {
-    min-height: 15px;
-    font-size: clamp(0.42rem, 2cqi, 0.52rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+    font-size: clamp(0.5rem, calc(var(--cell-size, 22px) * 0.46), 0.72rem);
 }
 
 /* Compact at narrow tile width */

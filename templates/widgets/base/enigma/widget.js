@@ -36,6 +36,10 @@
     let _gridEl = null;
     let _layoutMode = 'compact';
     let _stateSub = null;
+    let _gridResizeObs = null;
+    let _gridMetrics = { cols: 0, rows: 0 };
+
+    const GRID_GAP_PX = 2;
 
     let _last = {
         target: null,
@@ -113,7 +117,7 @@
         if (s === 'external') {
             return batteryWarnIcon(false) +
                 '<svg class="wd-enigma-batt" viewBox="0 0 24 24" aria-label="External power">' +
-                '<path fill="' + col + '" d="M16 7h1v10h-1V7zm-3-2h4v2h-4V5zM6 9h2v6H6V9zm8 0h2v6h-2V9z"/></svg>';
+                '<path fill="' + col + '" d="M15 6h2v12h-2V6zm-4-1h6v2h-6V5zM5 9h3v6H5V9zm11 0h3v6h-3V9z"/></svg>';
         }
         const warn = s === 'low' || s === 'critical';
         const fillPct = (pct != null && !isNaN(pct)) ? Math.max(0, Math.min(100, pct)) : null;
@@ -123,18 +127,67 @@
             const filled = Math.round((fillPct / 100) * segments);
             for (let i = 0; i < segments; i++) {
                 const on = i < filled;
-                segHtml += '<rect class="wd-enigma-batt-seg' + (on ? ' wd-enigma-batt-seg-on' : '') + '" x="' +
-                    (5 + i * 2.8) + '" y="9" width="2.2" height="6" rx="0.4" fill="' +
-                    (on ? col : 'transparent') + '" stroke="' + col + '" stroke-width="0.6"/>';
+                segHtml += '<rect class="wd-enigma-batt-seg' + (on ? ' wd-enigma-batt-seg-on' : '') +
+                    '" x="' + (5.5 + i * 3.1) + '" y="9" width="2.6" height="6" rx="0.5" fill="' +
+                    (on ? col : 'rgba(255,255,255,0.08)') + '"/>';
             }
         }
         return batteryWarnIcon(warn) +
             '<svg class="wd-enigma-batt" viewBox="0 0 24 24" aria-hidden="true">' +
-            '<rect x="4" y="7" width="14" height="10" rx="1.5" fill="none" stroke="' + col + '" stroke-width="1.5"/>' +
-            '<rect x="18" y="10" width="2" height="4" rx="0.5" fill="' + col + '"/>' +
+            '<rect x="3.5" y="6.5" width="15" height="11" rx="2" fill="none" stroke="' + col +
+            '" stroke-width="2"/>' +
+            '<rect x="18.5" y="10" width="2.5" height="4" rx="0.75" fill="' + col + '"/>' +
             segHtml +
             '</svg>' +
             (fillPct != null && s !== 'unknown' ? '<span class="wd-enigma-batt-pct">' + Math.round(fillPct) + '%</span>' : '');
+    }
+
+    function countGridRows(rows) {
+        let n = 0;
+        rows.forEach(function (rowStr) {
+            if (/[^-]/.test(String(rowStr || ''))) n += 1;
+        });
+        return n;
+    }
+
+    function scheduleFitGridSquares() {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(fitGridSquares);
+        });
+    }
+
+    function fitGridSquares() {
+        if (!_gridEl || !_gridMetrics.cols || !_gridMetrics.rows) return;
+        if (_gridEl.classList.contains('wd-enigma-grid-empty')) return;
+
+        const rect = _gridEl.getBoundingClientRect();
+        if (rect.height <= 0) return;
+
+        const cols = _gridMetrics.cols;
+        const rows = _gridMetrics.rows;
+        const gap = GRID_GAP_PX;
+        // Fill available height, then set width equal to height for square cells.
+        const size = Math.floor((rect.height - (rows - 1) * gap) / rows);
+        if (size < 8) return;
+
+        _gridEl.style.gridTemplateColumns = 'repeat(' + cols + ', ' + size + 'px)';
+        _gridEl.style.gridAutoRows = size + 'px';
+        _gridEl.style.setProperty('--cell-size', size + 'px');
+    }
+
+    function ensureGridResizeObserver() {
+        if (!_gridEl || _gridResizeObs) return;
+        _gridResizeObs = new ResizeObserver(function () {
+            fitGridSquares();
+        });
+        _gridResizeObs.observe(_gridEl);
+    }
+
+    function clearGridResizeObserver() {
+        if (_gridResizeObs) {
+            _gridResizeObs.disconnect();
+            _gridResizeObs = null;
+        }
     }
 
     function renderGrid(grid, targetGrid) {
@@ -144,6 +197,9 @@
         const tgtRows = Array.isArray(targetGrid) ? targetGrid : null;
         if (!rows.length) {
             _gridEl.classList.add('wd-enigma-grid-empty');
+            _gridMetrics = { cols: 0, rows: 0 };
+            _gridEl.style.gridTemplateColumns = '';
+            _gridEl.style.gridAutoRows = '';
             return;
         }
         _gridEl.classList.remove('wd-enigma-grid-empty');
@@ -166,9 +222,8 @@
                 _gridEl.appendChild(cell);
             }
         });
-        if (maxCols > 0) {
-            _gridEl.style.gridTemplateColumns = 'repeat(' + maxCols + ', minmax(0, 1fr))';
-        }
+        _gridMetrics = { cols: maxCols, rows: countGridRows(rows) };
+        scheduleFitGridSquares();
     }
 
     function render() {
@@ -265,7 +320,13 @@
         _rootEl.innerHTML = buildInnerHtml(v.layout);
         applyLayoutClasses(v.layout);
         bindElements();
+        if (showsGrid(v.layout)) {
+            ensureGridResizeObserver();
+        } else {
+            clearGridResizeObserver();
+        }
         render();
+        if (showsGrid(v.layout)) scheduleFitGridSquares();
     }
 
     function buildMenuItems() {
@@ -333,6 +394,7 @@
             PxD.mqtt.subscribe(CONFIG.STATE_TOPIC, _stateSub);
         },
         unmount: function () {
+            clearGridResizeObserver();
             if (_stateSub) {
                 PxD.mqtt.unsubscribe(CONFIG.STATE_TOPIC, _stateSub);
                 _stateSub = null;
