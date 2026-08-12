@@ -561,15 +561,17 @@ commands. Copy from `templates/widgets/base/binary-switch/`.
 
 | Key | Default | Notes |
 |---|---|---|
-| `GLYPH` | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` |
+| `GLYPH` | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` \| `sconce` \| `ceiling-lamp` |
 | `ON_COMMAND` | `"allOn"` | Published as `{ command: "allOn" }` (object, not stringified) |
 | `OFF_COMMAND` | `"allOff"` | Published as `{ command: "allOff" }` |
 | `ON_VALUE` | `"on"` | State-field value that means on |
 | `ICON_ON` / `ICON_OFF` | `null` | Optional overrides; when set, replace the glyph pair |
 
 Glyph summary: **plug** / **fan** / **tv** use a filled icon for ON and the same
-icon with a circle+slash for OFF; **bulb** uses a solid bulb with rays for ON
-and an outline bulb (no rays) for OFF. **tv** is a classic CRT set with
+icon with a circle+slash for OFF; **bulb**, **sconce**, and **ceiling-lamp** use a
+solid bulb (with fixture) plus rays for ON and a hollow/outline bulb with no rays
+for OFF. **sconce** is a thin left wall line + stub + round bulb; **ceiling-lamp**
+is a pendant stem + bowl shade with a bulb under the rim. **tv** is a classic CRT set with
 rabbit-ear antennas.
 
 ### lights-control

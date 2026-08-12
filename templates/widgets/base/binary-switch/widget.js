@@ -9,7 +9,7 @@
  *   2. Edit only the CONFIG block below.
  *   3. Add the widget to room.json → widgets and run the packager.
  *
- * Glyphs — set GLYPH to one of: 'plug' | 'fan' | 'bulb' | 'tv'
+ * Glyphs — set GLYPH to one of: 'plug' | 'fan' | 'bulb' | 'tv' | 'sconce' | 'ceiling-lamp'
  *   Built-in SVG pairs are offline-safe (fill="currentColor", viewBox 0 0 24 24).
  *
  * Icon overrides — set ICON_ON / ICON_OFF to one of:
@@ -125,6 +125,54 @@
                 '<path d="M6.2 6.2l11.6 11.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' +
                 '</svg>',
         },
+
+        sconce: {
+            // Thin left wall line + short stub + round bulb (sketch-style)
+            on: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<path d="M4 3.2v17.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+                '<path d="M4 12h3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+                '<circle cx="13.2" cy="12" r="5.1"/>' +
+                '<path d="M11.4 16.6h3.6l-.7 2.1h-2.2z"/>' +
+                '<path d="M18.6 6.2l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
+                '<path d="M20.4 12h2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
+                '<path d="M18.6 17.8l1.5 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
+                '</svg>',
+
+            off: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<path d="M4 3.2v17.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+                '<path d="M4 12h3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+                '<circle cx="13.2" cy="12" r="5.1" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+                '<path d="M11.4 16.6h3.6l-.7 2.1h-2.2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>' +
+                '</svg>',
+        },
+
+        'ceiling-lamp': {
+            // Pendant: stem + wide bowl shade + bulb under rim
+            on: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<rect x="10.8" y="1.2" width="2.4" height="1.2" rx="0.4"/>' +
+                '<rect x="11.25" y="2.2" width="1.5" height="4.2" rx="0.5"/>' +
+                '<path d="M4.2 6.4h15.6c.7 0 1.15.7.8 1.25L17.2 14.1c-.35.55-1 .9-1.7.9H8.5c-.7 0-1.35-.35-1.7-.9L3.4 7.65c-.35-.55.1-1.25.8-1.25z"/>' +
+                '<path d="M6.4 7.6h11.2l-1.7 3.4c-.2.4-.6.65-1.05.65H9.15c-.45 0-.85-.25-1.05-.65L6.4 7.6z" opacity="0.28"/>' +
+                '<path d="M9.6 16.7c-.95-.85-1.55-2-1.55-3.25 0-1.95 1.8-3.55 3.95-3.55s3.95 1.6 3.95 3.55c0 1.25-.6 2.4-1.55 3.25H9.6z"/>' +
+                '<rect x="10.55" y="16.85" width="2.9" height="0.95" rx="0.25"/>' +
+                '<rect x="10.95" y="17.95" width="2.1" height="1.35" rx="0.4"/>' +
+                '<path d="M4.2 16.2h2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>' +
+                '<path d="M17.4 16.2h2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>' +
+                '<path d="M5.5 19.4l1.7-1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>' +
+                '<path d="M18.5 19.4l-1.7-1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>' +
+                '<path d="M12 21.3v-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>' +
+                '</svg>',
+
+            off: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+                '<rect x="10.8" y="1.2" width="2.4" height="1.2" rx="0.4"/>' +
+                '<rect x="11.25" y="2.2" width="1.5" height="4.2" rx="0.5"/>' +
+                '<path d="M4.2 6.4h15.6c.7 0 1.15.7.8 1.25L17.2 14.1c-.35.55-1 .9-1.7.9H8.5c-.7 0-1.35-.35-1.7-.9L3.4 7.65c-.35-.55.1-1.25.8-1.25z"/>' +
+                '<path d="M6.4 7.6h11.2l-1.7 3.4c-.2.4-.6.65-1.05.65H9.15c-.45 0-.85-.25-1.05-.65L6.4 7.6z" opacity="0.28"/>' +
+                '<path fill-rule="evenodd" d="M12 10.2c-1.9 0-3.45 1.4-3.45 3.15 0 1.1.55 2.1 1.4 2.8l.35.25v.85h3.4v-.85l.35-.25c.85-.7 1.4-1.7 1.4-2.8 0-1.75-1.55-3.15-3.45-3.15zm0 1.55c1.05 0 1.9.75 1.9 1.6 0 .6-.35 1.15-.9 1.45l-.5.25v.4h-1v-.4l-.5-.25c-.55-.3-.9-.85-.9-1.45 0-.85.85-1.6 1.9-1.6z"/>' +
+                '<rect x="10.55" y="16.85" width="2.9" height="0.95" rx="0.25"/>' +
+                '<rect x="10.95" y="17.95" width="2.1" height="1.35" rx="0.4"/>' +
+                '</svg>',
+        },
     };
     /* eslint-enable max-len */
 
@@ -174,7 +222,8 @@
 
         // Glyph / icons ------------------------------------------------------
         //
-        // GLYPH selects a built-in SVG pair: 'plug' | 'fan' | 'bulb' | 'tv'
+        // GLYPH selects a built-in SVG pair:
+        // 'plug' | 'fan' | 'bulb' | 'tv' | 'sconce' | 'ceiling-lamp'
         // Set ICON_ON / ICON_OFF to override (inline SVG, file path, or ligature).
 
         GLYPH:                'plug',

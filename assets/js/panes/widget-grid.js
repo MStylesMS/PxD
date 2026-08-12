@@ -429,17 +429,24 @@
             }, 1000);
         }
 
+        function assetUrl(path) {
+            var build = (typeof window !== 'undefined' && window.PXD_BUILD) ? String(window.PXD_BUILD) : '';
+            if (!build) return path;
+            return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(build);
+        }
+
         function loadCSS(href) {
             return new Promise(function (resolve) {
                 var attr = 'data-widget-css';
+                var cacheKey = href;
                 var all = document.querySelectorAll('link[' + attr + ']');
                 for (var i = 0; i < all.length; i++) {
-                    if (all[i].getAttribute(attr) === href) { resolve(); return; }
+                    if (all[i].getAttribute(attr) === cacheKey) { resolve(); return; }
                 }
                 var link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.setAttribute(attr, href);
-                link.href = href;
+                link.setAttribute(attr, cacheKey);
+                link.href = assetUrl(href);
                 link.onload = resolve;
                 link.onerror = resolve;
                 document.head.appendChild(link);
@@ -449,7 +456,7 @@
         function loadScript(src) {
             return new Promise(function (resolve, reject) {
                 var s = document.createElement('script');
-                s.src = src;
+                s.src = assetUrl(src);
                 s.onload = resolve;
                 s.onerror = function () { reject(new Error('Failed to load: ' + src)); };
                 document.head.appendChild(s);

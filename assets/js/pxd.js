@@ -223,11 +223,17 @@
     }
 
     // ── Pane-type script loading ───────────────────────────────────────────
+    function assetUrl(path) {
+        var build = (typeof window !== 'undefined' && window.PXD_BUILD) ? String(window.PXD_BUILD) : '';
+        if (!build) return path;
+        return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(build);
+    }
+
     function loadPaneScript(type) {
         return new Promise(function (resolve) {
             if (_paneTypes[type]) { resolve(); return; } // already loaded
             var s = document.createElement('script');
-            s.src = 'assets/js/panes/' + type + '.js';
+            s.src = assetUrl('assets/js/panes/' + type + '.js');
             s.onload = resolve;
             s.onerror = function () {
                 console.error('[PxD] Failed to load pane script:', type);

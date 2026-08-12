@@ -32,7 +32,7 @@ command (configurable) to the configured command topic.
    | `OFF_LABEL` | | `"OFF"` | Label shown in the off state |
    | `ON_COLOR` | | `#198754` | CSS colour for on state (icon + label) |
    | `OFF_COLOR` | | `#dc3545` | CSS colour for off state |
-   | `GLYPH` | | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` |
+   | `GLYPH` | | `"plug"` | Built-in SVG pair: `plug` \| `fan` \| `bulb` \| `tv` \| `sconce` \| `ceiling-lamp` |
    | `ICON_ON` | | `null` | Optional override for the on icon |
    | `ICON_OFF` | | `null` | Optional override for the off icon |
    | `INTERACTIVE` | | `true` | `false` disables click-to-command |
@@ -58,9 +58,11 @@ command (configurable) to the configured command topic.
 | `fan` | Four-blade fan with hub | Same fan + circle/slash prohibition mark |
 | `bulb` | Solid bulb with radiating rays | Outline bulb, empty interior, no rays |
 | `tv` | Classic CRT TV with rabbit-ear antennas | Same TV + circle/slash prohibition mark |
+| `sconce` | Thin wall line + stub + solid round bulb + rays | Same wall/stub + hollow bulb, no rays |
+| `ceiling-lamp` | Pendant stem + bowl shade + solid bulb + rays | Same pendant + hollow bulb, no rays |
 
 ```js
-GLYPH: 'fan',   // or 'plug' | 'bulb' | 'tv'
+GLYPH: 'fan',   // or 'plug' | 'bulb' | 'tv' | 'sconce' | 'ceiling-lamp'
 ```
 
 To replace the glyph pair entirely, set `ICON_ON` / `ICON_OFF` (inline SVG,

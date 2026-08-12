@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="media/favicon.ico">
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/pxd-base.css">
-    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css?v={{PXD_BUILD}}">
+    <link rel="stylesheet" href="assets/css/pxd-base.css?v={{PXD_BUILD}}">
+    <link rel="stylesheet" href="assets/css/layout.css?v={{PXD_BUILD}}">
     <title>{{PXD_TITLE}}</title>
     <script>
         // Identifies which site + page of room.json this generated file renders.
         window.PXD_PAGE = { site: "{{PXD_SITE}}", page: "{{PXD_PAGE}}" };
+        // Package-time stamp; used as a cache-buster query on dynamic JS/CSS loads.
+        window.PXD_BUILD = "{{PXD_BUILD}}";
     </script>
 </head>
 <body data-pxd-site="{{PXD_SITE}}" data-pxd-page="{{PXD_PAGE}}">
@@ -31,9 +33,9 @@
     <!-- Toast container -->
     <div id="pxd-toast-container" style="position:fixed;bottom:16px;right:16px;z-index:1080;pointer-events:none;"></div>
 
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/paho-mqtt.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/pxd.js"></script>
+    <script src="assets/js/jquery.min.js?v={{PXD_BUILD}}"></script>
+    <script src="assets/js/paho-mqtt.js?v={{PXD_BUILD}}"></script>
+    <script src="assets/js/bootstrap.bundle.min.js?v={{PXD_BUILD}}"></script>
+    <script src="assets/js/pxd.js?v={{PXD_BUILD}}"></script>
 </body>
 </html>
