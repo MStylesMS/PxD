@@ -179,7 +179,8 @@
         }
 
         function render() {
-            if (prevTop = transcriptEl.scrollTop;
+            if (!transcriptEl) return;
+            var prevTop = transcriptEl.scrollTop;
             var html = '';
             var visible = 0;
             for (var i = 0; i < order.length; i++) {
@@ -209,8 +210,7 @@
                         : 'Waiting for GM / game TTS…';
                 }
             }
-            scrollTranscriptAfterRender(prevTop)
-            transcriptEl.scrollTop = transcriptEl.scrollHeight;
+            scrollTranscriptAfterRender(prevTop);
         }
 
         function applyHello(msg) {
@@ -398,6 +398,8 @@
                 footerEl = el.querySelector('.speech-tx-footer');
                 statusEl = el.querySelector('.speech-tx-status');
                 var sendBtn = el.querySelector('.speech-tx-send');
+                if (sendBtn) sendBtn.addEventListener('click', sendSpeak);
+                if (inputEl) inputEl.addEventListener('keydown', onKeyDown);
                 if (transcriptEl) {
                     transcriptEl.addEventListener('scroll', onTranscriptScroll, { passive: true });
                 }
@@ -434,9 +436,7 @@
                 inputEl = null;
                 footerEl = null;
                 statusEl = null;
-                stickToBottom = true
-                footerEl = null;
-                statusEl = null;
+                stickToBottom = true;
                 byId.clear();
                 order = [];
             }
