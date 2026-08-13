@@ -223,11 +223,17 @@
     }
 
     // ── Pane-type script loading ───────────────────────────────────────────
+    function assetUrl(path) {
+        var build = (typeof window !== 'undefined' && window.PXD_BUILD) ? String(window.PXD_BUILD) : '';
+        if (!build) return path;
+        return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(build);
+    }
+
     function loadPaneScript(type) {
         return new Promise(function (resolve) {
             if (_paneTypes[type]) { resolve(); return; } // already loaded
             var s = document.createElement('script');
-            s.src = 'assets/js/panes/' + type + '.js';
+            s.src = assetUrl('assets/js/panes/' + type + '.js');
             s.onload = resolve;
             s.onerror = function () {
                 console.error('[PxD] Failed to load pane script:', type);
@@ -535,6 +541,10 @@
         bgColor3: '--pxd-bg-3',
         bgGlow1: '--pxd-bg-glow-1',
         bgGlow2: '--pxd-bg-glow-2',
+        batteryCritical: '--pxd-battery-critical',
+        batteryExternal: '--pxd-battery-external',
+        batteryLow: '--pxd-battery-low',
+        batteryOk: '--pxd-battery-ok',
         btnDangerBg: '--pxd-btn-danger-bg',
         btnDangerBorder: '--pxd-btn-danger-border',
         btnDangerInk: '--pxd-btn-danger-ink',
@@ -621,6 +631,8 @@
         statusSleepingInk: '--pxd-status-sleeping-ink',
         statusSolvedBg: '--pxd-status-solved-bg',
         statusSolvedInk: '--pxd-status-solved-ink',
+        valueActual: '--pxd-value-actual',
+        valueTarget: '--pxd-value-target',
         warn: '--pxd-warn',
         warningsActiveBg: '--pxd-warnings-active-bg',
         warningsActiveInk: '--pxd-warnings-active-ink',

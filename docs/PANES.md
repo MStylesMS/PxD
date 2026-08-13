@@ -36,6 +36,7 @@ everything full-width. See `docs/ROOMS.md` § grid.
 | `widget-grid` | Grid of MQTT-bound prop/puzzle widget tiles | **Yes** — each instance has its own widget set |
 | `camera-view` | go2rtc live camera stream viewer (MSE) | **Yes** — each instance has its own camera list |
 | `pxt-chat` | Operator ↔ PxT terminal chat window | **Yes** — each instance has its own topic root |
+| `speech-transcript` | Live STT/TTS transcript (PxS WebSocket) + MQTT speak | **Yes** — each instance has its own WS/MQTT config |
 | `nav` | Auto-built links to every page in the current site | Yes (rarely needed more than once) |
 | `divider` | Not a visual card — starts a new collapsible section | N/A |
 
@@ -45,8 +46,8 @@ top-level `room.json` key (`gameControl`, `timeLights`, etc.) rather than
 their own `config` object — their own `config` is typically `{}`. This is
 unchanged from PxD v1 and lets one room reuse the same settings across
 multiple pages/sites without repeating them. `widget-grid`, `camera-view`,
-and `pxt-chat` are true multi-instance panes: all of their configuration
-lives in the pane's own `config`.
+`pxt-chat`, and `speech-transcript` are true multi-instance panes: all of
+their configuration lives in the pane's own `config`.
 
 **Do not** place `game-control` on the same page as `game-status` /
 `game-actions` — pick one control surface. A common Live layout is
@@ -197,6 +198,55 @@ simple site after `hints`; full-width on live immediately under
 
 Payload shape (both directions): `{ "ts"?: number, "author": string, "message": string }`.
 See `apps/PxT/docs/MQTT_API.md` and `docs/archive/PR_PXT_CHAT_PANE.md`.
+
+### `speech-transcript`
+
+```jsonc
+{ "type": "speech-transcript", "width": "half", "narrowWidth": "full", "config": {
+  "wsUrl": "/speech/v1/transcript",
+  "mqttBaseTopic": "paradox/<room>/speech",
+  "ttsId": "main",
+  "source": "ui",
+  "showStt": true,
+  "showFooter": true,
+  "title": "Player Transcript",
+  "maxTurns": 500
+} }
+```
+
+Live Paradox Speech (PxS) transcript for the **current game only**. Connects
+to the PxS WebSocket (`hello` → models; `snapshot` → history; live
+`partial` / `final` / `tts` / `session_cleared`). Compose publishes MQTT
+`{ command: "speak", id, text, source }` to `{mqttBaseTopic}/commands` so
+multi-GM windows stay in sync via the shared bus (not a local-only echo).
+
+Visual language matches `pxt-chat`:
+
+- **STT** left / player alignment — single line **`S1:`** (bold) + plain
+  text; no Room/time meta row; no per-message border
+- **TTS** right / operator alignment — plain spoken text
+- On `session_cleared`, the transcript wipes
+
+| Config | Description |
+|---|---|
+| `wsUrl` | Path (`/speech/v1/transcript`) or full `ws(s)://` URL. Path-absolute uses the page host + `ws`/`wss` (nginx `/speech/` proxy on venue hosts). |
+| `mqttBaseTopic` | PxS MQTT base (required for Speak). Commands → `{mqttBaseTopic}/commands`. |
+| `ttsId` | TTS instance id for speak (default `main`). |
+| `source` | Speak source tag (`ui` default; `gm` also accepted by PxS). |
+| `showStt` | When `false`, hide STT bubbles (standalone Live Transcript page). Default `true`. |
+| `showFooter` | Small STT/TTS model footer from WS `hello`. Default `true`. |
+| `standalone` | Adds taller standalone layout CSS. Default `false`. |
+| `title` | Panel title (default `Player Transcript`). |
+| `maxTurns` | In-memory turn cap (default 500). |
+| `reconnectMs` | WS reconnect delay (default 2000). |
+
+**Width allow-list:** `full` \| `three-quarters` \| `two-thirds` \| `half`
+(same as `pxt-chat`). Room packages set `mqttBaseTopic` to that room’s
+speech base (example first package: immediately **before** `hints` on
+simple + live; standalone Live Transcript site uses full-width
+`showStt: false` under logo + `game-status`).
+
+See `apps/PxS/docs/SPEC.md` §6 (WS) and §10 (UI).
 
 ### `nav`
 

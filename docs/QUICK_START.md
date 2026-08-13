@@ -8,7 +8,7 @@ For full detail on any topic below, see [USERS_GUIDE.md](USERS_GUIDE.md).
 
 ## Prerequisites
 
-- Node.js 18+ on the machine running the packager
+- Node.js 24 LTS on the machine running the packager
 - A reachable MQTT broker (Mosquitto on the same Pi is typical)
 - Nginx already serving `/opt/paradox/html/` (standard on a Paradox Pi)
 

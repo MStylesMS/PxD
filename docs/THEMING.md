@@ -74,6 +74,12 @@ were verified this way.
 | `--pxd-ink-soft` | secondary text colour | `inkSoft` | `#a0a0b8` |
 | `--pxd-accent` | primary accent (buttons, focus rings) | `accent` | `#6f99c8` |
 | `--pxd-accent-alt` | secondary accent | `accentAlt` | `#7dc989` |
+| `--pxd-value-target` | prop target value (e.g. Enigma target code) | `valueTarget` | `#ffd84d` |
+| `--pxd-value-actual` | prop current/live value | `valueActual` | `#a8e5ff` |
+| `--pxd-battery-ok` | battery good / OK tier | `batteryOk` | `#2f8f74` |
+| `--pxd-battery-low` | battery low warning tier | `batteryLow` | `#ffcc66` |
+| `--pxd-battery-critical` | battery critical tier | `batteryCritical` | `#ff7272` |
+| `--pxd-battery-external` | external/wall power (no percent) | `batteryExternal` | `#9ad5ea` |
 | `--pxd-warn` | warning colour | `warn` | `#f5c842` |
 | `--pxd-danger` | danger colour | `danger` | `#e06060` |
 | `--pxd-radius` | panel border-radius | `radius` | `14px` |

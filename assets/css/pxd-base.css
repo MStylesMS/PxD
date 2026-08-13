@@ -21,6 +21,12 @@
     --pxd-ink-soft: #9ad5ea;
     --pxd-accent: #44e0cc;
     --pxd-accent-alt: #6de79a;
+    --pxd-value-target: #ffd84d;
+    --pxd-value-actual: #a8e5ff;
+    --pxd-battery-ok: #2f8f74;
+    --pxd-battery-low: #ffcc66;
+    --pxd-battery-critical: #ff7272;
+    --pxd-battery-external: #9ad5ea;
     --pxd-warn: #ffcc66;
     --pxd-danger: #ff7272;
     --pxd-radius: 14px;
@@ -590,6 +596,104 @@ h1, h2, h3, h4, h5 {
 }
 
 /* ============================================================
+   Speech transcript (PxS) — reuses pxt-chat bubble colors
+   ============================================================ */
+.panel-speech-tx {
+    min-height: 280px;
+}
+
+.speech-tx-status {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--pxd-ink-soft);
+    opacity: 0.9;
+}
+
+.speech-tx-status[data-state="open"] {
+    color: var(--pxd-accent-alt, var(--pxd-accent));
+}
+
+.speech-tx-status[data-state="reconnect"],
+.speech-tx-status[data-state="connecting"] {
+    color: var(--pxd-warn, #ffcc66);
+}
+
+.speech-tx-log {
+    max-height: 360px;
+    /* Single scroll surface: transcript owns overflow; log only clips. */
+    overflow: hidden;
+}
+
+.speech-tx-transcript {
+    max-height: 360px;
+    overflow-y: auto;
+    /* Prevent browser scroll-anchoring from nudging history on new rows. */
+    overflow-anchor: none;
+}
+
+/* Borderless rows (keep alignment colors from pxt-chat side classes) */
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    padding: 2px 4px;
+    max-width: 100%;
+}
+
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg--player {
+    border-color: transparent;
+}
+
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg--operator {
+    background: transparent;
+}
+
+.speech-tx-msg--partial .pxt-chat-msg-body {
+    opacity: 0.75;
+    font-style: italic;
+}
+
+/* Single-line body (speaker: text); no meta row */
+.speech-tx-line {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.speech-tx-speaker {
+    font-weight: 700;
+}
+
+.speech-tx-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 16px;
+    font-size: 0.72rem;
+    color: var(--pxd-ink-soft);
+    opacity: 0.9;
+    padding: 0 2px;
+    line-height: 1.3;
+}
+
+.speech-tx-foot-stt,
+.speech-tx-foot-tts {
+    min-width: 0;
+}
+
+/* Live Transcript site: taller log, still scroll-contained */
+.panel-speech-tx.speech-tx--standalone {
+    min-height: 420px;
+}
+
+.panel-speech-tx.speech-tx--standalone .speech-tx-log,
+.panel-speech-tx.speech-tx--standalone .speech-tx-transcript {
+    max-height: min(60vh, 560px);
+}
+
+/* ============================================================
    System warnings panel
    ============================================================ */
 .page-warnings {
@@ -967,14 +1071,18 @@ h6 {
 }
 
 /* ── Tile sizes ──────────────────────────────────────────────
-   1x1 ≈ Bootstrap col-2 (6/row). 3x1 ≈ col-3 (4/row). 2x* ≈ half. 4x* = full.
+   Bootstrap 12-col mapping: 3x1 = col-3 (Quarter). 4x1 = col-4 (Third).
+   3x2 / 4x2 = same width, double height (grid tiles). 2x* = half. 12x* = full.
 */
 .widget-card[data-size="1x1"] { width: calc(16.666% - 8px); min-height: 110px; }
 .widget-card[data-size="3x1"] { width: calc(25% - 8px);     min-height: 110px; }
+.widget-card[data-size="4x1"] { width: calc(33.333% - 7px); min-height: 110px; }
 .widget-card[data-size="2x1"] { width: calc(50% - 5px);  min-height: 110px; }
+.widget-card[data-size="3x2"] { width: calc(25% - 8px);     min-height: 220px; }
+.widget-card[data-size="4x2"] { width: calc(33.333% - 7px); min-height: 220px; }
 .widget-card[data-size="2x2"] { width: calc(50% - 5px);  min-height: 220px; }
-.widget-card[data-size="4x1"] { width: 100%;             min-height: 110px; }
-.widget-card[data-size="4x2"] { width: 100%;             min-height: 220px; }
+.widget-card[data-size="12x1"] { width: 100%;            min-height: 110px; }
+.widget-card[data-size="12x2"] { width: 100%;            min-height: 220px; }
 
 /* ── Disconnected state ─────────────────────────────────────── */
 .widget-card[data-widget-state="disconnected"] { opacity: 0.42; }
@@ -1070,6 +1178,54 @@ h6 {
     margin:     3px 0;
 }
 
+.widget-menu-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.widget-menu-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 10px 8px;
+    min-width: 160px;
+}
+
+.widget-menu-input-label {
+    font-size: 0.72rem;
+    color: var(--pxd-ink-soft);
+}
+
+.widget-menu-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-family: var(--pxd-font-mono);
+    background: var(--pxd-form-bg);
+    border: 1px solid var(--pxd-form-border);
+    border-radius: 6px;
+    color: var(--pxd-form-ink);
+}
+
+.widget-menu-input-btn {
+    width: 100%;
+    border-radius: 0 0 6px 6px;
+}
+
+.widget-menu-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-family: var(--pxd-font-mono);
+    background: var(--pxd-form-bg);
+    border: 1px solid var(--pxd-form-border);
+    border-radius: 6px;
+    color: var(--pxd-form-ink);
+    cursor: pointer;
+}
+
 /* ── Interactive widget hover state ─────────────────────────── */
 .widget-interactive {
     cursor: pointer;
@@ -1083,14 +1239,20 @@ h6 {
 @container (max-width: 480px) {
     .widget-card[data-size="1x1"],
     .widget-card[data-size="3x1"],
+    .widget-card[data-size="4x1"],
     .widget-card[data-size="2x1"] { width: calc(50% - 5px); }
+    .widget-card[data-size="3x2"],
+    .widget-card[data-size="4x2"],
     .widget-card[data-size="2x2"] { width: 100%; }
 }
 
 @container (max-width: 280px) {
     .widget-card[data-size="1x1"],
     .widget-card[data-size="3x1"],
+    .widget-card[data-size="4x1"],
     .widget-card[data-size="2x1"],
+    .widget-card[data-size="3x2"],
+    .widget-card[data-size="4x2"],
     .widget-card[data-size="2x2"] { width: 100%; }
 }
 

@@ -1,0 +1,89 @@
+/* wallclock widget — px-clock-esp8266 time + dual bar display */
+
+.wd-wallclock {
+    height: 100%;
+    container-type: inline-size;
+}
+
+.wd-wallclock-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    height: 100%;
+    min-height: 0;
+    padding: 2px 0;
+}
+
+.wd-wallclock-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.wd-wallclock-time {
+    font-family: var(--pxd-font-mono);
+    font-size: clamp(1rem, 5cqi, 1.35rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    color: var(--pxd-ink);
+    white-space: nowrap;
+}
+
+.wd-wallclock-state {
+    flex-shrink: 0;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--pxd-panel-border) 50%, transparent);
+    color: var(--pxd-ink-soft);
+}
+
+.wd-wallclock-secs {
+    font-family: var(--pxd-font-mono);
+    font-size: 0.62rem;
+    color: var(--pxd-ink-soft);
+}
+
+.wd-wallclock-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: auto;
+}
+
+.wd-wallclock-bar-row {
+    display: flex;
+    width: 100%;
+}
+
+.wd-wallclock-bar {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+}
+
+.wd-wallclock-seg {
+    flex: 1 1 0;
+    height: 0.45rem;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--pxd-panel-border) 45%, transparent);
+    border: 1px solid var(--pxd-panel-border);
+    box-sizing: border-box;
+}
+
+.wd-wallclock-seg-on {
+    background: color-mix(in srgb, var(--pxd-value-target) 55%, var(--pxd-panel));
+    border-color: var(--pxd-value-target);
+}
+
+.wd-wallclock-bar-bottom .wd-wallclock-seg-on,
+.wd-wallclock-bar[data-bar="bottom"] .wd-wallclock-seg-on {
+    background: color-mix(in srgb, var(--pxd-battery-ok) 50%, var(--pxd-panel));
+    border-color: var(--pxd-battery-ok);
+}

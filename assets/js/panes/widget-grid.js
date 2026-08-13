@@ -54,6 +54,10 @@
                 if (ctx.disableBtn) ctx.disableBtn.disabled = true;
             }
 
+            appendCustomMenuItems(ctx.popoverEl, resolveMenuItems(def), commandTopic, ctx.mqtt, function () {
+                ctx.popoverEl.hidden = true;
+            });
+
             ctx.registry[ctx.id] = {
                 def: def, cardEl: ctx.cardEl, bodyEl: ctx.bodyEl, popoverEl: ctx.popoverEl,
                 commandTopic: commandTopic, heartbeatTimeoutMs: heartbeatMs,
@@ -113,6 +117,133 @@
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function resolveMenuItems(def) {
+        if (!def || def.menuItems == null) return [];
+        if (typeof def.menuItems === 'function') return def.menuItems();
+        return Array.isArray(def.menuItems) ? def.menuItems : [];
+    }
+
+    function appendCustomMenuItems(popover, items, commandTopic, mqtt, closePopover) {
+        if (!popover || !Array.isArray(items) || !items.length) return;
+
+        var block = document.createElement('div');
+        block.setAttribute('data-widget-custom-menu', '1');
+
+        var sep = document.createElement('div');
+        sep.className = 'widget-menu-sep';
+        block.appendChild(sep);
+
+        items.forEach(function (item) {
+            if (!item) return;
+            if (item.type === 'sep') {
+                var s = document.createElement('div');
+                s.className = 'widget-menu-sep';
+                block.appendChild(s);
+                return;
+            }
+            if (item.type === 'select') {
+                var selRow = document.createElement('div');
+                selRow.className = 'widget-menu-input-row';
+                if (item.label) {
+                    var selLbl = document.createElement('span');
+                    selLbl.className = 'widget-menu-input-label';
+                    selLbl.textContent = item.label;
+                    selRow.appendChild(selLbl);
+                }
+                var select = document.createElement('select');
+                select.className = 'widget-menu-select';
+                (item.options || []).forEach(function (opt) {
+                    var option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    if (opt.value === item.value) option.selected = true;
+                    select.appendChild(option);
+                });
+                select.addEventListener('change', function (e) {
+                    e.stopPropagation();
+                    if (typeof item.onChange === 'function') {
+                        item.onChange(select.value, closePopover);
+                    }
+                });
+                select.addEventListener('click', function (e) { e.stopPropagation(); });
+                selRow.appendChild(select);
+                block.appendChild(selRow);
+                return;
+            }
+            if (item.type === 'input') {
+                var row = document.createElement('div');
+                row.className = 'widget-menu-input-row';
+                if (item.label) {
+                    var lbl = document.createElement('span');
+                    lbl.className = 'widget-menu-input-label';
+                    lbl.textContent = item.label;
+                    row.appendChild(lbl);
+                }
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'widget-menu-input';
+                input.placeholder = item.placeholder || '';
+                input.autocomplete = 'off';
+                var applyBtn = document.createElement('button');
+                applyBtn.type = 'button';
+                applyBtn.className = 'widget-menu-item widget-menu-input-btn';
+                applyBtn.textContent = item.buttonLabel || 'Apply';
+                applyBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (typeof item.onSubmit === 'function') {
+                        item.onSubmit(input.value.trim(), closePopover);
+                    }
+                });
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') applyBtn.click();
+                });
+                row.appendChild(input);
+                row.appendChild(applyBtn);
+                block.appendChild(row);
+                return;
+            }
+            if (item.href) {
+                var link = document.createElement('a');
+                link.className = 'widget-menu-item widget-menu-link';
+                link.href = item.href;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = item.label || 'Open';
+                link.addEventListener('click', function () { closePopover(); });
+                block.appendChild(link);
+                return;
+            }
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'widget-menu-item';
+            btn.textContent = item.label || 'Action';
+            if (item.disabled) btn.disabled = true;
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (item.confirm && !window.confirm(item.confirm)) return;
+                closePopover();
+                if (item.publish && commandTopic && mqtt) {
+                    mqtt.publish(commandTopic, item.publish);
+                } else if (typeof item.onSelect === 'function') {
+                    item.onSelect();
+                }
+            });
+            block.appendChild(btn);
+        });
+
+        popover.appendChild(block);
+    }
+
+    function refreshCustomMenuItems(entry, mqtt) {
+        if (!entry || !entry.popoverEl) return;
+        entry.popoverEl.querySelectorAll('[data-widget-custom-menu]').forEach(function (el) {
+            el.remove();
+        });
+        appendCustomMenuItems(entry.popoverEl, resolveMenuItems(entry.def), entry.commandTopic, mqtt, function () {
+            entry.popoverEl.hidden = true;
+        });
     }
 
     function factory(config, ctx) {
@@ -176,6 +307,10 @@
             menuBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 if (popover.hidden) {
+                    var entry = _registry[id];
+                    if (entry && typeof entry.def.menuItems === 'function') {
+                        refreshCustomMenuItems(entry, ctx.mqtt);
+                    }
                     var rect = menuBtn.getBoundingClientRect();
                     popover.style.top = (rect.bottom + 4) + 'px';
                     popover.style.right = (window.innerWidth - rect.right) + 'px';
@@ -294,17 +429,24 @@
             }, 1000);
         }
 
+        function assetUrl(path) {
+            var build = (typeof window !== 'undefined' && window.PXD_BUILD) ? String(window.PXD_BUILD) : '';
+            if (!build) return path;
+            return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(build);
+        }
+
         function loadCSS(href) {
             return new Promise(function (resolve) {
                 var attr = 'data-widget-css';
+                var cacheKey = href;
                 var all = document.querySelectorAll('link[' + attr + ']');
                 for (var i = 0; i < all.length; i++) {
-                    if (all[i].getAttribute(attr) === href) { resolve(); return; }
+                    if (all[i].getAttribute(attr) === cacheKey) { resolve(); return; }
                 }
                 var link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.setAttribute(attr, href);
-                link.href = href;
+                link.setAttribute(attr, cacheKey);
+                link.href = assetUrl(href);
                 link.onload = resolve;
                 link.onerror = resolve;
                 document.head.appendChild(link);
@@ -314,7 +456,7 @@
         function loadScript(src) {
             return new Promise(function (resolve, reject) {
                 var s = document.createElement('script');
-                s.src = src;
+                s.src = assetUrl(src);
                 s.onload = resolve;
                 s.onerror = function () { reject(new Error('Failed to load: ' + src)); };
                 document.head.appendChild(s);
@@ -336,6 +478,7 @@
                 _pending = {
                     id: id, cardEl: chrome.card, bodyEl: chrome.body, popoverEl: chrome.popover,
                     enableBtn: chrome.enableBtn, disableBtn: chrome.disableBtn,
+                    mqtt: ctx.mqtt,
                     registry: _registry,
                     onRegistered: function (widgetId) {
                         startHeartbeat(widgetId);

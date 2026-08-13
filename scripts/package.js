@@ -30,6 +30,11 @@ const path = require('path');
 
 const MARKER_FILE = '.pxd-generated';
 
+// Unique per package run — stamped into HTML and used as ?v= cache-buster so
+// browsers that previously received long-lived Cache-Control on .js/.css still
+// pick up rebuilt control UI assets after a package.
+const BUILD_ID = new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
+
 // ── Argument parsing ────────────────────────────────────────────────────────
 function parseArgs(argv) {
     const args = {};
@@ -217,7 +222,8 @@ function buildPxdSite(site, config, roomDir, outDir, fwDir, theme) {
         let html = layoutHtmlSrc
             .replace(/\{\{PXD_TITLE\}\}/g, escapeHtml(pageObj.title || config.title || 'PxD'))
             .replace(/\{\{PXD_SITE\}\}/g, escapeHtml(site.id))
-            .replace(/\{\{PXD_PAGE\}\}/g, escapeHtml(pageObj.id));
+            .replace(/\{\{PXD_PAGE\}\}/g, escapeHtml(pageObj.id))
+            .replace(/\{\{PXD_BUILD\}\}/g, escapeHtml(BUILD_ID));
         writeFile(path.join(siteOutDir, pageObj.id + '.html'), html);
         if (idx === 0) writeFile(path.join(siteOutDir, 'index.html'), html); // default page for this site
     });

@@ -72,28 +72,28 @@
 
         INTERACTIVE:          false,
         COMMAND_TOPIC:        null,
-        HEARTBEAT_TIMEOUT_MS: 30000,
+        HEARTBEAT_TIMEOUT_MS: 15000,
     };
     // ── END CONFIG ──────────────────────────────────────────────────────────
 
 
     const STATE_COLORS = {
-        ready:      '#9a9a9a',
-        not_ready:  '#6c757d',
-        countdown:  '#ffffff',
-        running:    '#ffffff',
-        paused:     '#ffffff',
-        defused:    '#198754',
-        solved:     '#198754',
-        detonated:  '#dc3545',
-        failed:     '#dc3545',
+        ready:      'var(--pxd-ink-soft)',
+        not_ready:  'var(--pxd-ink-soft)',
+        countdown:  'var(--pxd-ink)',
+        running:    'var(--pxd-ink)',
+        paused:     'var(--pxd-ink)',
+        defused:    'var(--pxd-status-solved-bg)',
+        solved:     'var(--pxd-status-solved-bg)',
+        detonated:  'var(--pxd-danger)',
+        failed:     'var(--pxd-danger)',
     };
 
     const BATTERY_COLORS = {
-        good: '#2f8f74',
-        warn: '#e0a800',
-        bad:  '#dc3545',
-        usb:  '#6c757d',
+        good: 'var(--pxd-battery-ok)',
+        warn: 'var(--pxd-battery-low)',
+        bad:  'var(--pxd-battery-critical)',
+        usb:  'var(--pxd-battery-external)',
     };
 
 
