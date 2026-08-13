@@ -12,7 +12,7 @@
  * config (pane entry):
  *   {
  *     "wsUrl": "/speech/v1/transcript",   // path or full ws(s):// URL
- *     "mqttBaseTopic": "paradox/agent22/speech",
+ *     "mqttBaseTopic": "paradox/<room>/speech",  // room-specific; required for Speak
  *     "ttsId": "main",
  *     "source": "ui",                     // MQTT speak source tag
  *     "showStt": true,                    // false = TTS-only (Live Transcript page)

@@ -204,7 +204,7 @@ See `apps/PxT/docs/MQTT_API.md` and `docs/archive/PR_PXT_CHAT_PANE.md`.
 ```jsonc
 { "type": "speech-transcript", "width": "half", "narrowWidth": "full", "config": {
   "wsUrl": "/speech/v1/transcript",
-  "mqttBaseTopic": "paradox/agent22/speech",
+  "mqttBaseTopic": "paradox/<room>/speech",
   "ttsId": "main",
   "source": "ui",
   "showStt": true,
@@ -241,9 +241,10 @@ Visual language matches `pxt-chat`:
 | `reconnectMs` | WS reconnect delay (default 2000). |
 
 **Width allow-list:** `full` \| `three-quarters` \| `two-thirds` \| `half`
-(same as `pxt-chat`). Agent22 places this pane **immediately before**
-`hints` on simple + live. The standalone **Live Transcript** site uses a
-full-width instance with `showStt: false` under logo + `game-status`.
+(same as `pxt-chat`). Room packages set `mqttBaseTopic` to that room’s
+speech base (example first package: immediately **before** `hints` on
+simple + live; standalone Live Transcript site uses full-width
+`showStt: false` under logo + `game-status`).
 
 See `apps/PxS/docs/SPEC.md` §6 (WS) and §10 (UI).
 
