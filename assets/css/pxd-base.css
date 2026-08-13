@@ -623,10 +623,15 @@ h1, h2, h3, h4, h5 {
 
 .speech-tx-log {
     max-height: 360px;
+    /* Single scroll surface: transcript owns overflow; log only clips. */
+    overflow: hidden;
 }
 
 .speech-tx-transcript {
     max-height: 360px;
+    overflow-y: auto;
+    /* Prevent browser scroll-anchoring from nudging history on new rows. */
+    overflow-anchor: none;
 }
 
 /* Borderless rows (keep alignment colors from pxt-chat side classes) */

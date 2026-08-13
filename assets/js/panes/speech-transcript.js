@@ -83,28 +83,119 @@
         /** Auto-follow new lines only while the user is near the bottom. */
         var stickToBottom = true;
         var STICK_PX = 64;
+        /** Ignore scroll events fired by our own scrollTop writes. */
+        var ignoreScrollEvent = false;
+        var logEl = null;
 
         function mqtt() {
             return (ctx && ctx.mqtt) || (window.PxD && window.PxD.mqtt) || null;
         }
 
+        /**
+         * The element the user actually scrolls. Both .speech-tx-log and
+         * .speech-tx-transcript can grow a scrollbar depending on CSS; pick
+         * whichever currently overflows (prefer transcript).
+         */
+        function scrollParent() {
+            if (transcriptEl && transcriptEl.scrollHeight > transcriptEl.clientHeight + 1) {
+                return transcriptEl;
+            }
+            if (logEl && logEl.scrollHeight > logEl.clientHeight + 1) {
+                return logEl;
+            }
+            return transcriptEl || logEl;
+        }
+
         function isNearBottom() {
-            if (!transcriptEl) return true;
-            var gap = transcriptEl.scrollHeight - transcriptEl.scrollTop - transcriptEl.clientHeight;
+            var el = scrollParent();
+            if (!el) return true;
+            var gap = el.scrollHeight - el.scrollTop - el.clientHeight;
             return gap <= STICK_PX;
         }
 
         function onTranscriptScroll() {
+            if (ignoreScrollEvent) return;
             stickToBottom = isNearBottom();
         }
 
-        function scrollTranscriptAfterRender(prevTop) {
-            if (!transcriptEl) return;
+        /**
+         * Snapshot the first message still on-screen so a full innerHTML
+         * rebuild (and new lines at the bottom) does not drift the viewport.
+         * Restoring raw scrollTop alone still slips ~1 line when row heights
+         * change or the browser clamps after scrollHeight grows.
+         */
+        function captureScrollAnchor() {
+            var el = scrollParent();
+            if (!el || stickToBottom) return null;
+            var viewTop = el.scrollTop;
+            var nodes = el.querySelectorAll
+                ? el.querySelectorAll('.speech-tx-msg[data-turn]')
+                : [];
+            // When the log scrolls, messages live inside transcriptEl.
+            if ((!nodes || !nodes.length) && transcriptEl && el !== transcriptEl) {
+                nodes = transcriptEl.querySelectorAll('.speech-tx-msg[data-turn]');
+            }
+            var i;
+            for (i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                // offsetTop is relative to offsetParent; use bounding rects vs scroller.
+                var elRect = el.getBoundingClientRect();
+                var nRect = node.getBoundingClientRect();
+                var nodeTop = nRect.top - elRect.top + el.scrollTop;
+                var nodeBottom = nodeTop + node.offsetHeight;
+                if (nodeBottom > viewTop + 1) {
+                    return {
+                        turnId: node.getAttribute('data-turn') || '',
+                        offset: nodeTop - viewTop,
+                        top: viewTop
+                    };
+                }
+            }
+            return { turnId: '', offset: 0, top: viewTop };
+        }
+
+        function findTurnNode(turnId) {
+            if (!turnId || !transcriptEl) return null;
+            // Avoid CSS.escape dependency; turn ids are simple tokens.
+            var nodes = transcriptEl.querySelectorAll('.speech-tx-msg[data-turn]');
+            for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].getAttribute('data-turn') === turnId) return nodes[i];
+            }
+            return null;
+        }
+
+        function applyScrollTop(el, value) {
+            if (!el) return;
+            ignoreScrollEvent = true;
+            el.scrollTop = value;
+            // Release on next frame so user scrolls still count.
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(function () { ignoreScrollEvent = false; });
+            } else {
+                setTimeout(function () { ignoreScrollEvent = false; }, 0);
+            }
+        }
+
+        function restoreScrollAnchor(anchor) {
+            var el = scrollParent();
+            if (!el) return;
             if (stickToBottom) {
-                transcriptEl.scrollTop = transcriptEl.scrollHeight;
-            } else if (typeof prevTop === 'number' && isFinite(prevTop)) {
-                // Full innerHTML replace resets scroll; restore so history stays put.
-                transcriptEl.scrollTop = prevTop;
+                applyScrollTop(el, el.scrollHeight);
+                return;
+            }
+            if (!anchor) return;
+            if (anchor.turnId) {
+                var node = findTurnNode(anchor.turnId);
+                if (node) {
+                    var elRect = el.getBoundingClientRect();
+                    var nRect = node.getBoundingClientRect();
+                    var nodeTop = nRect.top - elRect.top + el.scrollTop;
+                    applyScrollTop(el, Math.max(0, nodeTop - (anchor.offset || 0)));
+                    return;
+                }
+            }
+            if (typeof anchor.top === 'number' && isFinite(anchor.top)) {
+                applyScrollTop(el, anchor.top);
             }
         }
 
@@ -180,7 +271,7 @@
 
         function render() {
             if (!transcriptEl) return;
-            var prevTop = transcriptEl.scrollTop;
+            var anchor = captureScrollAnchor();
             var html = '';
             var visible = 0;
             for (var i = 0; i < order.length; i++) {
@@ -210,7 +301,7 @@
                         : 'Waiting for GM / game TTS…';
                 }
             }
-            scrollTranscriptAfterRender(prevTop);
+            restoreScrollAnchor(anchor);
         }
 
         function applyHello(msg) {
@@ -392,6 +483,7 @@
                     '</section>';
 
                 panelEl = el.querySelector('.panel-speech-tx');
+                logEl = el.querySelector('.speech-tx-log');
                 transcriptEl = el.querySelector('.speech-tx-transcript');
                 emptyEl = el.querySelector('.speech-tx-empty');
                 inputEl = el.querySelector('.speech-tx-input');
@@ -400,8 +492,12 @@
                 var sendBtn = el.querySelector('.speech-tx-send');
                 if (sendBtn) sendBtn.addEventListener('click', sendSpeak);
                 if (inputEl) inputEl.addEventListener('keydown', onKeyDown);
+                // Listen on both potential scroll containers.
                 if (transcriptEl) {
                     transcriptEl.addEventListener('scroll', onTranscriptScroll, { passive: true });
+                }
+                if (logEl) {
+                    logEl.addEventListener('scroll', onTranscriptScroll, { passive: true });
                 }
 
                 stickToBottom = true;
@@ -428,15 +524,22 @@
                         transcriptEl.removeEventListener('scroll', onTranscriptScroll);
                     } catch (e) { /* ignore */ }
                 }
+                if (logEl) {
+                    try {
+                        logEl.removeEventListener('scroll', onTranscriptScroll);
+                    } catch (e) { /* ignore */ }
+                }
                 if (root) root.innerHTML = '';
                 root = null;
                 panelEl = null;
+                logEl = null;
                 transcriptEl = null;
                 emptyEl = null;
                 inputEl = null;
                 footerEl = null;
                 statusEl = null;
                 stickToBottom = true;
+                ignoreScrollEvent = false;
                 byId.clear();
                 order = [];
             }
