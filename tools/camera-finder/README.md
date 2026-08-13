@@ -5,10 +5,11 @@ comparing go2rtc delivery methods (WebRTC/MSE/HLS/MJPEG) side by side — so
 you can grab a working stream URL to paste into a PxD room's `camera-view`
 config.
 
-You can run it ad hoc (`node server.js`) or enable the optional
-`camera-finder.service` (port 8090, also proxied at `/camera-finder/` when
-nginx is configured). Full production install (binary, systemd, Tailscale
-nginx proxy): **[docs/GO2RTC.md](../../docs/GO2RTC.md)**.
+Run it **ad hoc** when needed (`node server.js` on port 8090). It is **not** a
+boot service and is **not** installed/enabled by `install-services.sh` or listed
+in PxH service monitoring — only go2rtc stays as a persistent camera service.
+A unit template exists at `config/camera-finder.service` for rare manual use.
+Full go2rtc production install: **[docs/GO2RTC.md](../../docs/GO2RTC.md)**.
 
 ## Relationship to the room's real go2rtc
 

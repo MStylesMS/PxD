@@ -26,8 +26,8 @@ Browser (LAN or Tailscale)
     ▼
 Room Controller Pi
     go2rtc.service     (:1984 API/MSE, :8554 RTSP restream)
-    camera-finder.service  (:8090; optional; also at /camera-finder/)
-    nginx              proxies /go2rtc/ and /camera-finder/
+    camera-finder      (on-demand only: node server.js :8090 — not a boot service)
+    nginx              proxies /go2rtc/ (and /camera-finder/ if you run finder)
 ```
 
 **Do not** put `ws://10.x.x.x:1984/...` in `room.json` if operators browse over
@@ -48,11 +48,12 @@ the HTML page:
 
 1. Install the go2rtc binary  
 2. Create `/opt/paradox/config/go2rtc.yaml` with this room’s streams  
-3. Install `go2rtc.service` (and optionally `camera-finder.service`)  
-4. Wire services into `install-services.sh` / `paradox-control.sh` (if not already)  
-5. Add nginx `/go2rtc/` (+ `/camera-finder/`) proxy blocks and reload nginx  
+3. Install `go2rtc.service` only (camera-finder is on-demand, not a boot service)  
+4. Wire go2rtc into `install-services.sh` / `paradox-control.sh` (if not already)  
+5. Add nginx `/go2rtc/` proxy blocks and reload nginx  
 6. Point `room.json` cameras at `/go2rtc/api/ws?src=…`  
 7. Package the site; verify on LAN **and** Tailscale  
+8. When tuning cameras: `cd apps/PxD/tools/camera-finder && node server.js` (stop when done)  
 
 ---
 
@@ -135,25 +136,32 @@ Shipped templates (track in the paradox install repo):
 | File | Role |
 |---|---|
 | `/opt/paradox/config/go2rtc.service` | Runs `/opt/paradox/bin/go2rtc -config …/go2rtc.yaml` as `paradox` |
-| `/opt/paradox/config/camera-finder.service` | Optional UI on `:8090`; reuses system go2rtc |
+| `/opt/paradox/config/camera-finder.service` | **Template only** — occasional utility, not installed by default |
 
-Install / enable (Combined or Mirror Room Controllers — not picture-only):
+Install / enable go2rtc (Combined or Mirror Room Controllers — not picture-only):
 
 ```bash
 sudo cp /opt/paradox/config/go2rtc.service /etc/systemd/system/
-sudo cp /opt/paradox/config/camera-finder.service /etc/systemd/system/   # optional
 sudo systemctl daemon-reload
 sudo systemctl enable --now go2rtc.service
-sudo systemctl enable --now camera-finder.service   # optional
 
-# Or, if install-services.sh already includes these units:
+# Or:
 /opt/paradox/scripts/install-services.sh
 /opt/paradox/scripts/paradox-control.sh start
 /opt/paradox/scripts/paradox-control.sh status
 ```
 
-`paradox-control.sh` should treat `go2rtc` (and `camera-finder` if installed)
-like `pfx` / `houdini-game` for `start|stop|restart|status|logs`.
+**camera-finder is on-demand only** (do not enable as a boot service; do not
+list it in PxH `services.optional`). When you need discovery/tuning:
+
+```bash
+cd /opt/paradox/apps/PxD/tools/camera-finder
+node server.js          # :8090; reuses system go2rtc on :1984 if present
+# Ctrl+C when finished
+```
+
+`paradox-control.sh` manages `go2rtc` like `pfx` / `pxo` for
+`start|stop|restart|status|logs`. It does not start camera-finder.
 
 ---
 
@@ -290,7 +298,7 @@ use a desktop browser or upgrade iOS.
 | Purpose | Discover / compare / tune | Serve room dashboard 24/7 |
 | Config | `tools/camera-finder/go2rtc.yaml` (scratch) | `/opt/paradox/config/go2rtc.yaml` |
 | When go2rtc already on `:1984` | Reuses it; does not start Docker | — |
-| Boot | Optional `camera-finder.service` | Required for Live View |
+| Boot | **No** — run `node server.js` only when tuning | Required for Live View |
 | UI URL | `:8090` or `/camera-finder/` via nginx | `/go2rtc/` (built-in go2rtc UI) |
 
 Copy confirmed `streams:` entries from the finder scratch file into the
