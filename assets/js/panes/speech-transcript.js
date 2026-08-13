@@ -17,7 +17,7 @@
  *     "source": "ui",                     // MQTT speak source tag
  *     "showStt": true,                    // false = TTS-only (Live Transcript page)
  *     "showFooter": true,                 // model / voice footer
- *     "title": "Speech",
+ *     "title": "Player Transcript",
  *     "maxTurns": 500,
  *     "reconnectMs": 2000
  *   }
@@ -32,16 +32,6 @@
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function formatTSec(t) {
-        var n = Number(t);
-        if (!isFinite(n) || n < 0) return '';
-        var m = Math.floor(n / 60);
-        var s = Math.floor(n % 60);
-        var d = Math.round((n % 1) * 10);
-        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') +
-            (d ? '.' + d : '');
     }
 
     /**
@@ -81,7 +71,7 @@
         var showStt = config.showStt !== false;
         var showFooter = config.showFooter !== false;
         var standalone = config.standalone === true;
-        var title = String(config.title || 'Speech');
+        var title = String(config.title || 'Player Transcript');
         var maxTurns = Number(config.maxTurns);
         if (!isFinite(maxTurns) || maxTurns < 20) maxTurns = 500;
         var reconnectMs = Number(config.reconnectMs);
@@ -150,6 +140,18 @@
             }
         }
 
+        function lineText(t, isTts, partial) {
+            var body = String(t.text || '');
+            if (partial) body += (body ? ' …' : '…');
+            // TTS: spoken text only (no GM/time meta)
+            if (isTts) return body;
+            // STT: speaker at start of the line — "S1: check check check"
+            var sp = t.speaker != null && String(t.speaker).trim() !== ''
+                ? String(t.speaker).trim()
+                : '';
+            return sp ? (sp + ': ' + body) : body;
+        }
+
         function render() {
             if (!transcriptEl) return;
             var html = '';
@@ -162,20 +164,13 @@
                 visible += 1;
                 var isTts = role === 'tts';
                 var side = isTts ? 'operator' : 'player';
-                var label = isTts
-                    ? ('GM' + (t.source ? ' · ' + t.source : ''))
-                    : ('Room' + (t.speaker != null && t.speaker !== '' ? ' · ' + t.speaker : ''));
                 var partial = !t.final && !isTts;
                 html +=
                     '<div class="speech-tx-msg pxt-chat-msg pxt-chat-msg--' + side +
                         (partial ? ' speech-tx-msg--partial' : '') +
                         '" data-turn="' + esc(t.turn_id) + '">' +
-                        '<div class="pxt-chat-msg-meta">' +
-                            '<span class="pxt-chat-msg-author">' + esc(label) + '</span>' +
-                            '<span class="speech-tx-t">' + esc(formatTSec(t.t_sec)) + '</span>' +
-                        '</div>' +
-                        '<div class="pxt-chat-msg-body">' + esc(t.text || '') +
-                            (partial ? ' …' : '') +
+                        '<div class="pxt-chat-msg-body speech-tx-line">' +
+                            esc(lineText(t, isTts, partial)) +
                         '</div>' +
                     '</div>';
             }

@@ -634,10 +634,10 @@ h1, h2, h3, h4, h5 {
     font-style: italic;
 }
 
-.speech-tx-t {
-    font-variant-numeric: tabular-nums;
-    font-family: var(--pxd-font-mono, ui-monospace, monospace);
-    font-size: 0.72rem;
+/* Single-line body (speaker: text); no meta row */
+.speech-tx-line {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .speech-tx-footer {

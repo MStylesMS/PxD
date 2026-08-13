@@ -209,7 +209,7 @@ See `apps/PxT/docs/MQTT_API.md` and `docs/archive/PR_PXT_CHAT_PANE.md`.
   "source": "ui",
   "showStt": true,
   "showFooter": true,
-  "title": "Speech",
+  "title": "Player Transcript",
   "maxTurns": 500
 } }
 ```
@@ -222,7 +222,8 @@ multi-GM windows stay in sync via the shared bus (not a local-only echo).
 
 Visual language matches `pxt-chat`:
 
-- **STT** left / player colors (`pxt-chat-msg--player`)
+- **STT** left / player colors (`pxt-chat-msg--player`) — single line
+  `S1: check check check` (speaker prefix only; no Room/time meta row)
 - **TTS** right / operator colors (`pxt-chat-msg--operator`), including GM
   and game-automated lines
 - On `session_cleared`, the transcript wipes
@@ -236,7 +237,7 @@ Visual language matches `pxt-chat`:
 | `showStt` | When `false`, hide STT bubbles (standalone Live Transcript page). Default `true`. |
 | `showFooter` | Small STT/TTS model footer from WS `hello`. Default `true`. |
 | `standalone` | Adds taller standalone layout CSS. Default `false`. |
-| `title` | Panel title (default `Speech`). |
+| `title` | Panel title (default `Player Transcript`). |
 | `maxTurns` | In-memory turn cap (default 500). |
 | `reconnectMs` | WS reconnect delay (default 2000). |
 
