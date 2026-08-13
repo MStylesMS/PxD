@@ -222,10 +222,9 @@ multi-GM windows stay in sync via the shared bus (not a local-only echo).
 
 Visual language matches `pxt-chat`:
 
-- **STT** left / player colors (`pxt-chat-msg--player`) — single line
-  `S1: check check check` (speaker prefix only; no Room/time meta row)
-- **TTS** right / operator colors (`pxt-chat-msg--operator`), including GM
-  and game-automated lines
+- **STT** left / player alignment — single line **`S1:`** (bold) + plain
+  text; no Room/time meta row; no per-message border
+- **TTS** right / operator alignment — plain spoken text
 - On `session_cleared`, the transcript wipes
 
 | Config | Description |

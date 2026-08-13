@@ -629,6 +629,23 @@ h1, h2, h3, h4, h5 {
     max-height: 360px;
 }
 
+/* Borderless rows (keep alignment colors from pxt-chat side classes) */
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    padding: 2px 4px;
+    max-width: 100%;
+}
+
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg--player {
+    border-color: transparent;
+}
+
+.panel-speech-tx .speech-tx-msg.pxt-chat-msg--operator {
+    background: transparent;
+}
+
 .speech-tx-msg--partial .pxt-chat-msg-body {
     opacity: 0.75;
     font-style: italic;
@@ -638,6 +655,10 @@ h1, h2, h3, h4, h5 {
 .speech-tx-line {
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.speech-tx-speaker {
+    font-weight: 700;
 }
 
 .speech-tx-footer {

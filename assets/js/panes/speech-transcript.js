@@ -140,16 +140,18 @@
             }
         }
 
-        function lineText(t, isTts, partial) {
+        /** HTML for one line: bold "S1:" + plain body (STT); plain body (TTS). */
+        function lineHtml(t, isTts, partial) {
             var body = String(t.text || '');
             if (partial) body += (body ? ' …' : '…');
             // TTS: spoken text only (no GM/time meta)
-            if (isTts) return body;
-            // STT: speaker at start of the line — "S1: check check check"
+            if (isTts) return esc(body);
+            // STT: speaker at start — <strong>S1:</strong> check check check
             var sp = t.speaker != null && String(t.speaker).trim() !== ''
                 ? String(t.speaker).trim()
                 : '';
-            return sp ? (sp + ': ' + body) : body;
+            if (!sp) return esc(body);
+            return '<strong class="speech-tx-speaker">' + esc(sp) + ':</strong> ' + esc(body);
         }
 
         function render() {
@@ -170,7 +172,7 @@
                         (partial ? ' speech-tx-msg--partial' : '') +
                         '" data-turn="' + esc(t.turn_id) + '">' +
                         '<div class="pxt-chat-msg-body speech-tx-line">' +
-                            esc(lineText(t, isTts, partial)) +
+                            lineHtml(t, isTts, partial) +
                         '</div>' +
                     '</div>';
             }
