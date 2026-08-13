@@ -80,9 +80,32 @@
         var sttModels = [];
         var ttsModels = [];
         var connState = 'connecting';
+        /** Auto-follow new lines only while the user is near the bottom. */
+        var stickToBottom = true;
+        var STICK_PX = 64;
 
         function mqtt() {
             return (ctx && ctx.mqtt) || (window.PxD && window.PxD.mqtt) || null;
+        }
+
+        function isNearBottom() {
+            if (!transcriptEl) return true;
+            var gap = transcriptEl.scrollHeight - transcriptEl.scrollTop - transcriptEl.clientHeight;
+            return gap <= STICK_PX;
+        }
+
+        function onTranscriptScroll() {
+            stickToBottom = isNearBottom();
+        }
+
+        function scrollTranscriptAfterRender(prevTop) {
+            if (!transcriptEl) return;
+            if (stickToBottom) {
+                transcriptEl.scrollTop = transcriptEl.scrollHeight;
+            } else if (typeof prevTop === 'number' && isFinite(prevTop)) {
+                // Full innerHTML replace resets scroll; restore so history stays put.
+                transcriptEl.scrollTop = prevTop;
+            }
         }
 
         function setConn(state, detail) {
@@ -134,6 +157,7 @@
         function clearTranscript(reason) {
             byId.clear();
             order = [];
+            stickToBottom = true;
             render();
             if (emptyEl && reason) {
                 emptyEl.textContent = reason;
@@ -155,7 +179,7 @@
         }
 
         function render() {
-            if (!transcriptEl) return;
+            if (prevTop = transcriptEl.scrollTop;
             var html = '';
             var visible = 0;
             for (var i = 0; i < order.length; i++) {
@@ -185,7 +209,7 @@
                         : 'Waiting for GM / game TTS…';
                 }
             }
-            // Keep pinned to bottom
+            scrollTranscriptAfterRender(prevTop)
             transcriptEl.scrollTop = transcriptEl.scrollHeight;
         }
 
@@ -208,6 +232,8 @@
                 byId.set(String(t.turn_id), t);
             }
             trimOrder();
+            // Fresh history load: jump to latest (user can scroll up after).
+            stickToBottom = true;
             render();
         }
 
@@ -372,9 +398,11 @@
                 footerEl = el.querySelector('.speech-tx-footer');
                 statusEl = el.querySelector('.speech-tx-status');
                 var sendBtn = el.querySelector('.speech-tx-send');
-                if (sendBtn) sendBtn.addEventListener('click', sendSpeak);
-                if (inputEl) inputEl.addEventListener('keydown', onKeyDown);
+                if (transcriptEl) {
+                    transcriptEl.addEventListener('scroll', onTranscriptScroll, { passive: true });
+                }
 
+                stickToBottom = true;
                 updateFooter();
                 render();
                 connectWs();
@@ -393,12 +421,20 @@
                     } catch (e) { /* ignore */ }
                     ws = null;
                 }
+                if (transcriptEl) {
+                    try {
+                        transcriptEl.removeEventListener('scroll', onTranscriptScroll);
+                    } catch (e) { /* ignore */ }
+                }
                 if (root) root.innerHTML = '';
                 root = null;
                 panelEl = null;
                 transcriptEl = null;
                 emptyEl = null;
                 inputEl = null;
+                footerEl = null;
+                statusEl = null;
+                stickToBottom = true
                 footerEl = null;
                 statusEl = null;
                 byId.clear();
