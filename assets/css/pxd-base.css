@@ -600,6 +600,28 @@ h1, h2, h3, h4, h5 {
    ============================================================ */
 .panel-speech-tx {
     min-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-speech-tx .speech-tx-body,
+.panel-speech-tx .pxt-chat-body.speech-tx-body {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Double-height transcript when the pane spans 2+ grid rows (beside stacked
+   hints + props). Fills the row-span and raises the scroll area cap. */
+.pxd-pane[class*="pxd-rs-"] > .panel-speech-tx {
+    height: 100%;
+    min-height: 560px;
+}
+
+.pxd-pane[class*="pxd-rs-"] > .panel-speech-tx .speech-tx-log,
+.pxd-pane[class*="pxd-rs-"] > .panel-speech-tx .speech-tx-transcript {
+    flex: 1 1 auto;
+    max-height: 720px;
+    min-height: 280px;
 }
 
 .speech-tx-status {
@@ -1539,6 +1561,22 @@ html.pxd-narrow .pxd-pane {
 .pxd-w-third            { grid-column: span 4; }
 .pxd-w-quarter          { grid-column: span 3; }
 
+/* Optional multi-row panes (room.json → rowSpan / narrowRowSpan). */
+.pxd-rs-2 { grid-row: span 2; }
+.pxd-rs-3 { grid-row: span 3; }
+.pxd-rs-4 { grid-row: span 4; }
+.pxd-rs-5 { grid-row: span 5; }
+.pxd-rs-6 { grid-row: span 6; }
+
+/* Tall panes (row-span > 1): fill the spanned rows so nested scroll areas
+   can use the extra height (e.g. transcript beside stacked hints + props). */
+.pxd-pane[class*="pxd-rs-"] {
+    min-height: 0;
+}
+.pxd-pane[class*="pxd-rs-"] > .panel {
+    min-height: 100%;
+}
+
 /* Narrow viewport (html.pxd-narrow): optional per-pane width overrides via
    narrowWidth. Default promotions keep pairs usable. */
 html.pxd-narrow .pxd-w-three-quarters { grid-column: span 12; }
@@ -1552,6 +1590,14 @@ html.pxd-narrow .pxd-nw-two-thirds       { grid-column: span 8; }
 html.pxd-narrow .pxd-nw-half             { grid-column: span 6; }
 html.pxd-narrow .pxd-nw-third            { grid-column: span 4; }
 html.pxd-narrow .pxd-nw-quarter          { grid-column: span 3; }
+
+/* narrowRowSpan overrides (and collapse multi-row when stacking full-width). */
+html.pxd-narrow .pxd-nrs-1 { grid-row: span 1; }
+html.pxd-narrow .pxd-nrs-2 { grid-row: span 2; }
+html.pxd-narrow .pxd-nrs-3 { grid-row: span 3; }
+html.pxd-narrow .pxd-nrs-4 { grid-row: span 4; }
+html.pxd-narrow .pxd-nrs-5 { grid-row: span 5; }
+html.pxd-narrow .pxd-nrs-6 { grid-row: span 6; }
 
 /* Phone <480px: everything stacks full-width. Kept below the default
    narrow breakpoint (700) so status|actions can sit half+half when narrow. */
@@ -1568,6 +1614,13 @@ html.pxd-narrow .pxd-nw-quarter          { grid-column: span 3; }
     html.pxd-narrow .pxd-nw-half,
     html.pxd-narrow .pxd-nw-third,
     html.pxd-narrow .pxd-nw-quarter { grid-column: span 12; }
+
+    .pxd-rs-2, .pxd-rs-3, .pxd-rs-4, .pxd-rs-5, .pxd-rs-6,
+    html.pxd-narrow .pxd-nrs-2,
+    html.pxd-narrow .pxd-nrs-3,
+    html.pxd-narrow .pxd-nrs-4,
+    html.pxd-narrow .pxd-nrs-5,
+    html.pxd-narrow .pxd-nrs-6 { grid-row: span 1; }
 }
 
 /* Section dividers. */

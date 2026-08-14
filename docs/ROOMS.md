@@ -131,9 +131,12 @@ recommended for anything beyond a quick prototype.
 |---|---|---|
 | `narrowBreakpointPx` | `992` | Viewport width (px) at which panes switch from `width`/`order` to `narrowWidth`/`narrowOrder`. Phone stacking at `<480px` is fixed in CSS. Agent 22 Live uses `700`. |
 
-Pane entries may also set `order`, `narrowWidth`, and `narrowOrder` — see
-`docs/PANES.md`. Example Live top row: wide = status\|logo\|actions; below
-the breakpoint = logo full on top, then status\|actions half+half.
+Pane entries may also set `order`, `narrowWidth`, `narrowOrder`, `rowSpan`,
+and `narrowRowSpan` — see `docs/PANES.md`. Example Live top row: wide =
+status\|logo\|actions; below the breakpoint = logo full on top, then
+status\|actions half+half. Example operator block: transcript `half` +
+`rowSpan: 2` on the left, with `hints` + `widget-grid` half-width stacked on
+the right (set `narrowRowSpan: 1` when the transcript goes full-width).
 
 ### mqtt
 

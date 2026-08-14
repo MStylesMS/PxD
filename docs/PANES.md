@@ -6,17 +6,21 @@ in `room.json` has the shape:
 ```jsonc
 { "type": "<pane-type>", "width": "full|three-quarters|two-thirds|half|third|quarter",
   "order": 1, "narrowWidth": "full", "narrowOrder": 2,
+  "rowSpan": 2, "narrowRowSpan": 1,
   "config": { /* type-specific */ } }
 ```
 
 `width` defaults to `"full"` if omitted. Panes flow left-to-right in a
-12-column grid and wrap. Optional layout fields:
+12-column CSS Grid and wrap (Bootstrap is used for controls/modals, not the
+pane grid). Optional layout fields:
 
 | Field | Description |
 |---|---|
 | `order` | CSS grid order at wide viewports. When any pane in a row sets `order`/`narrowOrder`, panes without one sort after (auto 100+). |
 | `narrowWidth` | Width token used when the viewport is below `grid.narrowBreakpointPx` (default 992) |
 | `narrowOrder` | Grid order used in that narrow mode |
+| `rowSpan` | Span 2–6 grid rows (default 1). Use with half-width to place one tall pane beside two stacked half-width siblings (e.g. transcript \| hints + props). |
+| `narrowRowSpan` | Row span in narrow mode (use `1` when the pane goes full-width so it does not leave a blank row). |
 
 Default narrow promotions (when `narrowWidth` is omitted): `quarter`→half,
 `third`→half, `two-thirds`/`three-quarters`→full. Phone (`<480px`) stacks

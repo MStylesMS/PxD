@@ -274,17 +274,35 @@
         return (!isNaN(v) && v >= -99 && v <= 999) ? v : null;
     }
 
+    function sanitizeRowSpan(n, fallback) {
+        var v = parseInt(n, 10);
+        if (!isNaN(v) && v >= 1 && v <= 6) return v;
+        return fallback != null ? fallback : 1;
+    }
+
     /**
-     * Build the class list for a pane slot: width + optional narrowWidth.
-     * Grid order is applied via CSS variables (see applyPaneOrder) so
-     * unordered panes can sort after explicit orders (CSS default order is 0,
-     * which would otherwise put cameras/etc. above status|logo|actions).
+     * Build the class list for a pane slot: width + optional narrowWidth +
+     * optional rowSpan/narrowRowSpan. Grid order is applied via CSS variables
+     * (see applyPaneOrder) so unordered panes can sort after explicit orders
+     * (CSS default order is 0, which would otherwise put cameras/etc. above
+     * status|logo|actions).
+     *
+     * rowSpan lets one pane occupy multiple grid rows (e.g. a tall transcript
+     * on the left beside two stacked half-width panes on the right). This is
+     * CSS Grid row-span — not Bootstrap columns (Bootstrap alone cannot stack
+     * two cards beside one taller sibling without nested columns).
      */
     function paneClassName(paneCfg) {
         var width = sanitizeWidth(paneCfg.width, 'full');
         var classes = ['pxd-pane', 'pxd-w-' + width];
         if (paneCfg.narrowWidth) {
             classes.push('pxd-nw-' + sanitizeWidth(paneCfg.narrowWidth, width));
+        }
+        var rs = sanitizeRowSpan(paneCfg.rowSpan, 1);
+        if (rs > 1) classes.push('pxd-rs-' + rs);
+        if (paneCfg.narrowRowSpan != null) {
+            var nrs = sanitizeRowSpan(paneCfg.narrowRowSpan, rs);
+            classes.push('pxd-nrs-' + nrs);
         }
         return classes.join(' ');
     }
