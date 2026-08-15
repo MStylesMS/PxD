@@ -260,6 +260,106 @@ function buildPxdSite(site, config, roomDir, outDir, fwDir, theme) {
 }
 
 // ── Landing page ─────────────────────────────────────────────────────────────
+/** Default Game Views site ids (order preserved from room.json when present). */
+const DEFAULT_GAME_VIEW_IDS = new Set(['simple', 'live', 'live-transcript']);
+
+function siteHref(s) {
+    if (s.type === 'external') return s.url || '';
+    return s.id ? `${s.id}/index.html` : '';
+}
+
+function renderLandingItem(s) {
+    const href = siteHref(s);
+    if (!href) return '';
+    return `<li><a href="${escapeHtml(href)}" title="${escapeHtml(s.description || '')}">` +
+        `${escapeHtml(s.title || s.id)}</a>` +
+        (s.description ? ` <span class="pxd-landing-desc">${escapeHtml(s.description)}</span>` : '') +
+        `</li>`;
+}
+
+/**
+ * Build ordered landing sections.
+ *
+ * room.json options (all optional):
+ *   landing.sections: [ { "title": "Game Views", "sites": ["simple","live",…] }, … ]
+ *   site.landingSection: "Game Views" | "Utilities" | custom title
+ *
+ * Defaults when nothing is set and there are both game-view and other sites:
+ *   Game Views  → simple, live, live-transcript (ids present, room order)
+ *   Utilities   → everything else; system-health / health last
+ */
+function buildLandingSections(sites, config) {
+    const linkable = sites.filter((s) => siteHref(s));
+    if (!linkable.length) return [];
+
+    const landing = config.landing || {};
+    if (Array.isArray(landing.sections) && landing.sections.length) {
+        const byId = new Map(linkable.map((s) => [s.id, s]));
+        const used = new Set();
+        const sections = [];
+        for (const sec of landing.sections) {
+            const title = String(sec.title || sec.id || 'Section').trim() || 'Section';
+            const ids = Array.isArray(sec.sites) ? sec.sites : [];
+            const items = [];
+            for (const id of ids) {
+                const s = byId.get(id);
+                if (s) { items.push(s); used.add(id); }
+            }
+            if (items.length) sections.push({ title, items });
+        }
+        const leftovers = linkable.filter((s) => !used.has(s.id));
+        if (leftovers.length) {
+            const util = sections.find((s) => /^utilities$/i.test(s.title));
+            if (util) util.items.push(...leftovers);
+            else sections.push({ title: 'Utilities', items: leftovers });
+        }
+        // Ensure system-health / health is last within Utilities
+        for (const sec of sections) {
+            if (!/^utilities$/i.test(sec.title)) continue;
+            sec.items.sort((a, b) => {
+                const ah = (a.id === 'system-health' || a.id === 'health') ? 1 : 0;
+                const bh = (b.id === 'system-health' || b.id === 'health') ? 1 : 0;
+                return ah - bh;
+            });
+        }
+        return sections;
+    }
+
+    // Per-site landingSection labels
+    const hasPerSite = linkable.some((s) => s.landingSection);
+    if (hasPerSite) {
+        const order = [];
+        const map = new Map();
+        for (const s of linkable) {
+            const title = String(s.landingSection || 'Utilities').trim() || 'Utilities';
+            if (!map.has(title)) {
+                map.set(title, []);
+                order.push(title);
+            }
+            map.get(title).push(s);
+        }
+        return order.map((title) => ({ title, items: map.get(title) }));
+    }
+
+    // Default split when classic game-view ids coexist with utilities
+    const gameViews = linkable.filter((s) => DEFAULT_GAME_VIEW_IDS.has(s.id));
+    const utilities = linkable.filter((s) => !DEFAULT_GAME_VIEW_IDS.has(s.id));
+    if (gameViews.length && utilities.length) {
+        utilities.sort((a, b) => {
+            const ah = (a.id === 'system-health' || a.id === 'health') ? 1 : 0;
+            const bh = (b.id === 'system-health' || b.id === 'health') ? 1 : 0;
+            return ah - bh;
+        });
+        return [
+            { title: 'Game Views', items: gameViews },
+            { title: 'Utilities', items: utilities }
+        ];
+    }
+
+    // Flat single list (no section headings)
+    return [{ title: '', items: linkable }];
+}
+
 function buildLandingPage(sites, config, outDir) {
     const buildable = sites.filter((s) => s.type !== 'external' || s.url); // external needs a url to link
     if (buildable.length === 1 && buildable[0].type === 'pxd') {
@@ -277,13 +377,14 @@ function buildLandingPage(sites, config, outDir) {
     }
 
     const logo = config.media && config.media.logo;
-    const rows = sites.map((s) => {
-        const href = s.type === 'external' ? s.url : `${s.id}/index.html`;
-        if (!href) return '';
-        return `<li><a href="${escapeHtml(href)}" title="${escapeHtml(s.description || '')}">` +
-            `${escapeHtml(s.title || s.id)}</a>` +
-            (s.description ? ` <span class="pxd-landing-desc">${escapeHtml(s.description)}</span>` : '') +
-            `</li>`;
+    const sections = buildLandingSections(sites, config);
+    const bodySections = sections.map((sec) => {
+        const items = sec.items.map(renderLandingItem).filter(Boolean).join('\n');
+        if (!items) return '';
+        if (!sec.title) return `<ul class="pxd-landing-list">${items}</ul>`;
+        return `<section class="pxd-landing-section">` +
+            `<h2 class="pxd-landing-section-title">${escapeHtml(sec.title)}</h2>` +
+            `<ul class="pxd-landing-list">${items}</ul></section>`;
     }).join('\n');
 
     const html = `<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8">` +
@@ -291,13 +392,20 @@ function buildLandingPage(sites, config, outDir) {
         `<title>${escapeHtml(config.title || 'PxD')}</title>` +
         `<style>body{font-family:Arial,sans-serif;background:#111;color:#eee;display:flex;` +
         `flex-direction:column;align-items:center;padding:40px 16px;}` +
-        `img{max-width:320px;margin-bottom:24px;}ul{list-style:none;padding:0;width:100%;max-width:420px;}` +
+        `img{max-width:320px;margin-bottom:24px;}` +
+        `.pxd-landing-section{width:100%;max-width:420px;margin:0 0 28px 0;}` +
+        `.pxd-landing-section-title{margin:0 0 12px 0;font-size:0.95rem;font-weight:700;` +
+        `letter-spacing:0.06em;text-transform:uppercase;color:#bbb;border-bottom:1px solid #333;` +
+        `padding-bottom:8px;}` +
+        `ul.pxd-landing-list,ul{list-style:none;padding:0;margin:0;width:100%;max-width:420px;}` +
         `li{margin:10px 0;}a{color:#6cf;font-size:1.1rem;text-decoration:none;}a:hover{text-decoration:underline;}` +
         `.pxd-landing-desc{display:block;color:#999;font-size:0.85rem;}</style></head>` +
         `<body>${logo ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(config.title || '')}">` : ''}` +
-        `<h1>${escapeHtml(config.title || 'PxD')}</h1><ul>${rows}</ul></body></html>\n`;
+        `<h1>${escapeHtml(config.title || 'PxD')}</h1>${bodySections}</body></html>\n`;
     writeFile(path.join(outDir, 'index.html'), html);
-    console.log(`  [landing] link list → ${buildable.length} site(s)`);
+    const n = sections.reduce((acc, s) => acc + s.items.length, 0);
+    const labeled = sections.filter((s) => s.title).length;
+    console.log(`  [landing] link list → ${n} site(s)` + (labeled ? `, ${labeled} section(s)` : ''));
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────

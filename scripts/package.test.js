@@ -115,6 +115,49 @@ console.log('\nTest 2: Multi-site — pxd + external + manual');
     cleanup(roomDir); cleanup(outDir);
 }
 
+// ── Test 2b: landing Game Views / Utilities sections ────────────────────────
+console.log('\nTest 2b: Landing page Game Views + Utilities sections');
+{
+    const roomDir = makeRoomDir({
+        pxdVersion: '2', title: 'Section Room', topicRoot: 'paradox/sec',
+        mqtt: { broker: 'auto', port: 'auto', wsPath: '/mqtt' },
+        landing: {
+            sections: [
+                { title: 'Game Views', sites: ['simple', 'live', 'live-transcript'] },
+                { title: 'Utilities', sites: ['camera-finder', 'system-health'] }
+            ]
+        },
+        sites: [
+            { id: 'simple', title: 'Simple', type: 'pxd',
+                pages: [{ id: 'main', title: 'Main', panes: [{ type: 'content', width: 'full', config: {} }] }] },
+            { id: 'live', title: 'Live View', type: 'pxd',
+                pages: [{ id: 'main', title: 'Main', panes: [{ type: 'content', width: 'full', config: {} }] }] },
+            { id: 'live-transcript', title: 'Live Transcript', type: 'pxd',
+                pages: [{ id: 'main', title: 'Main', panes: [{ type: 'content', width: 'full', config: {} }] }] },
+            { id: 'camera-finder', title: 'Camera Finder', type: 'external', url: '/camera-finder/' },
+            { id: 'system-health', title: 'System Health', type: 'external', url: '/health/' }
+        ]
+    });
+    const outDir = makeTempDir();
+    const result = run(`--room-dir ${roomDir} --out ${outDir}`);
+    if (result.ok) {
+        const landing = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
+        assert(landing.includes('Game Views'), 'landing has Game Views section');
+        assert(landing.includes('Utilities'), 'landing has Utilities section');
+        assert(landing.includes('simple/index.html'), 'landing links Simple');
+        assert(landing.includes('live-transcript/index.html'), 'landing links Live Transcript');
+        assert(landing.includes('/camera-finder/'), 'landing links Camera Finder');
+        assert(landing.includes('/health/'), 'landing links System Health');
+        const gv = landing.indexOf('Game Views');
+        const ut = landing.indexOf('Utilities');
+        const health = landing.indexOf('/health/');
+        const cam = landing.indexOf('/camera-finder/');
+        assert(gv >= 0 && ut > gv, 'Game Views section appears before Utilities');
+        assert(cam >= 0 && health > cam, 'System Health appears after Camera Finder in Utilities');
+    }
+    cleanup(roomDir); cleanup(outDir);
+}
+
 // ── Test 3: theme resolution ─────────────────────────────────────────────────
 console.log('\nTest 3: Named theme resolves to flat tokens');
 {
