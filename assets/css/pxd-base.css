@@ -719,14 +719,27 @@ h1, h2, h3, h4, h5 {
     min-width: 0;
 }
 
-/* Live Transcript site: taller log, still scroll-contained */
+/* Live Transcript site: fill remaining viewport, single scroll surface */
 .panel-speech-tx.speech-tx--standalone {
-    min-height: 420px;
+    /* Hero + game-status row is compact; leave most of the viewport for captions. */
+    min-height: min(70vh, 720px);
+    height: min(70vh, 720px);
+}
+
+.panel-speech-tx.speech-tx--standalone .speech-tx-body,
+.panel-speech-tx.speech-tx--standalone .pxt-chat-body.speech-tx-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .panel-speech-tx.speech-tx--standalone .speech-tx-log,
 .panel-speech-tx.speech-tx--standalone .speech-tx-transcript {
-    max-height: min(60vh, 560px);
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
 }
 
 /* ============================================================
