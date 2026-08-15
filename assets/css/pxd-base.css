@@ -602,26 +602,31 @@ h1, h2, h3, h4, h5 {
     min-height: 280px;
     display: flex;
     flex-direction: column;
+    /* Keep the card from expanding with message content. */
+    overflow: hidden;
 }
 
 .panel-speech-tx .speech-tx-body,
 .panel-speech-tx .pxt-chat-body.speech-tx-body {
     flex: 1 1 auto;
     min-height: 0;
+    overflow: hidden;
 }
 
-/* Double-height transcript when the pane spans 2+ grid rows (beside stacked
-   hints + props). Fills the row-span and raises the scroll area cap. */
+/*
+ * Row-span transcript: pane box is sized by sibling rows (absolute panel
+ * fill — see .pxd-pane[class*="pxd-rs-"]). Drop fixed min/max heights so
+ * the log fills whatever height the siblings define and scrolls inside.
+ */
 .pxd-pane[class*="pxd-rs-"] > .panel-speech-tx {
-    height: 100%;
-    min-height: 560px;
+    min-height: 0;
 }
 
 .pxd-pane[class*="pxd-rs-"] > .panel-speech-tx .speech-tx-log,
 .pxd-pane[class*="pxd-rs-"] > .panel-speech-tx .speech-tx-transcript {
     flex: 1 1 auto;
-    max-height: 720px;
-    min-height: 280px;
+    min-height: 0;
+    max-height: none;
 }
 
 .speech-tx-status {
@@ -644,13 +649,22 @@ h1, h2, h3, h4, h5 {
 }
 
 .speech-tx-log {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    /* Fallback cap when the pane is not row-spanned. */
     max-height: 360px;
     /* Single scroll surface: transcript owns overflow; log only clips. */
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .speech-tx-transcript {
+    flex: 1 1 auto;
+    min-height: 0;
     max-height: 360px;
+    height: 100%;
     overflow-y: auto;
     /* Prevent browser scroll-anchoring from nudging history on new rows. */
     overflow-anchor: none;
@@ -1568,13 +1582,31 @@ html.pxd-narrow .pxd-pane {
 .pxd-rs-5 { grid-row: span 5; }
 .pxd-rs-6 { grid-row: span 6; }
 
-/* Tall panes (row-span > 1): fill the spanned rows so nested scroll areas
-   can use the extra height (e.g. transcript beside stacked hints + props). */
+/*
+ * Tall panes (row-span > 1), e.g. transcript beside stacked hints + props.
+ *
+ * Grid tracks must be sized by the non-spanning siblings only. If the
+ * spanning pane keeps in-flow content, its max-content height expands both
+ * tracks as messages arrive. Take the panel out of flow (absolute fill) so
+ * the span-2 slot contributes ~0 content size; stretch still gives it the
+ * combined height of the sibling rows, and overflow scrolls inside.
+ */
 .pxd-pane[class*="pxd-rs-"] {
+    position: relative;
     min-height: 0;
+    align-self: stretch;
+    /* No in-flow height contribution from children (panel is absolute). */
+    overflow: hidden;
 }
 .pxd-pane[class*="pxd-rs-"] > .panel {
-    min-height: 100%;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* Narrow viewport (html.pxd-narrow): optional per-pane width overrides via
