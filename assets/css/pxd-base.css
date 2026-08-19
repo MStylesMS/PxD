@@ -670,6 +670,29 @@ h1, h2, h3, h4, h5 {
     overflow-anchor: none;
 }
 
+/* Simple + Live View: twice the default Player Transcript / Terminal Chat height. */
+body[data-pxd-site="simple"] .panel-speech-tx,
+body[data-pxd-site="live"] .panel-speech-tx {
+    min-height: 560px;
+}
+body[data-pxd-site="simple"] .speech-tx-log,
+body[data-pxd-site="live"] .speech-tx-log,
+body[data-pxd-site="simple"] .speech-tx-transcript,
+body[data-pxd-site="live"] .speech-tx-transcript {
+    max-height: 720px;
+}
+body[data-pxd-site="simple"] .panel-pxt-chat:not(.panel-speech-tx),
+body[data-pxd-site="live"] .panel-pxt-chat:not(.panel-speech-tx) {
+    min-height: 520px;
+}
+body[data-pxd-site="simple"] .panel-pxt-chat:not(.panel-speech-tx) .pxt-chat-log,
+body[data-pxd-site="live"] .panel-pxt-chat:not(.panel-speech-tx) .pxt-chat-log,
+body[data-pxd-site="simple"] .panel-pxt-chat:not(.panel-speech-tx) .pxt-chat-transcript,
+body[data-pxd-site="live"] .panel-pxt-chat:not(.panel-speech-tx) .pxt-chat-transcript {
+    min-height: 280px;
+    max-height: 640px;
+}
+
 /* Borderless rows (keep alignment colors from pxt-chat side classes) */
 .panel-speech-tx .speech-tx-msg.pxt-chat-msg {
     border: none;
@@ -1877,4 +1900,56 @@ html.pxd-narrow .pxd-nrs-6 { grid-row: span 6; }
     border: none;
     box-shadow: none;
     border-radius: 0;
+}
+
+/* Hero lockup: emblem on the left, title text flush against it. */
+.pxd-hero-lockup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    width: 100%;
+    min-height: 140px;
+    height: 100%;
+}
+.pxd-hero-lockup-img {
+    height: 140px;
+    width: auto;
+    max-width: 140px;
+    flex: 0 0 auto;
+    display: block;
+    object-fit: contain;
+    object-position: left center;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+.pxd-hero-lockup-text {
+    text-align: left;
+    min-width: 0;
+    line-height: 1.12;
+}
+.pxd-hero-lockup-title {
+    margin: 0;
+    font-family: var(--pxd-font-title);
+    font-size: clamp(1.55rem, 3vw, 2.55rem);
+    font-weight: normal;
+    letter-spacing: 0.12em;
+    color: #ff9999;
+    text-transform: none;
+}
+.pxd-hero-lockup-sub {
+    margin: 0.15em 0 0;
+    font-family: var(--pxd-font-mono);
+    font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+    letter-spacing: 0.35em;
+    color: #c8d0e0;
+}
+.pxd-hero-lockup-tag {
+    margin: 0.35em 0 0;
+    font-family: var(--pxd-font-mono);
+    font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+    letter-spacing: 0.22em;
+    color: #aa5555;
 }
