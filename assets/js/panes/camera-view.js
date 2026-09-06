@@ -3,8 +3,9 @@
  *
  * Embeds live go2rtc camera streams in the operator dashboard. Talks
  * directly to an existing go2rtc instance (this room's own, per
- * /opt/paradox/config/go2rtc.yaml + go2rtc.service) — this pane is a
- * consumer only; it does not run or manage go2rtc itself.
+ * /opt/paradox/config/go2rtc.yaml + go2rtc.service). Streams are consumed
+ * over MSE; the pane gear menu can also POST go2rtc's own `/api/restart`
+ * (no password) so an operator can recover a wedged camera server.
  *
  * Delivery method: MSE only (v1). MSE was chosen over WebRTC because these
  * cameras' AAC audio isn't carried by WebRTC without an extra transcode
@@ -27,6 +28,7 @@
  *     layout: 1-5,                 // number of camera slots
  *     sidebarPosition: "right",    // left|right|top|bottom (layout > 1 only)
  *     defaultViewMode: "multi",    // "multi" | "single" — initial view mode
+ *     restartUrl?: "/go2rtc/api/restart",  // optional override
  *     cameras: [ { id, label, wsUrl, main?: true, transform?: {...} } ]
  *   }
  *
@@ -36,8 +38,11 @@
  *      persists across page reloads AND repackages. Edit the room's
  *      pxd/camera-view.local.json source file (or the deployed copy) by
  *      hand: { "overrides": { "<camera-id>": "ws://...` } }
- *   3. sessionStorage (gear icon)                       — this browser tab's
+ *   3. sessionStorage (gear → Camera settings)          — this browser tab's
  *      session only, cleared on close. NOT persisted anywhere durable.
+ *
+ * Gear menu also offers "Reset Camera Server": POST to go2rtc `/api/restart`
+ * (default `/go2rtc/api/restart` via nginx). No password; confirm only.
  *
  * Preferred wsUrl form (works over LAN and Tailscale via nginx):
  *   "/go2rtc/api/ws?src=<stream>"   — path-absolute; resolved to
@@ -263,6 +268,10 @@
         var _cameras = Array.isArray(cfg.cameras) ? cfg.cameras.slice(0, 5) : [];
         var _mainId = null;
         var _streams = {};
+        var _gearPopover = null;
+        var _onDocClickCloseGear = function () {
+            if (_gearPopover) _gearPopover.hidden = true;
+        };
 
         // View mode (single/multi) is a runtime-only toggle, not persisted —
         // pane width itself is now controlled by the outer pane framework's
@@ -299,6 +308,91 @@
                 return toWebsocketUrl(_localOverrides.overrides[cam.id]);
             }
             return toWebsocketUrl(cam.wsUrl);
+        }
+
+        function toast(message) {
+            if (PxD.utils && typeof PxD.utils.showToast === 'function') {
+                PxD.utils.showToast(message);
+            }
+        }
+
+        // go2rtc POST /api/restart — same host as the stream URLs when possible.
+        // Path-absolute /go2rtc/api/ws?src=… → /go2rtc/api/restart (nginx proxy).
+        // ws(s)://host:1984/api/ws?src=… → http(s)://host:1984/api/restart.
+        function restartUrl() {
+            if (cfg.restartUrl) return cfg.restartUrl;
+            var sample = _cameras[0] ? resolveCameraUrl(_cameras[0]) : '';
+            if (sample) {
+                var http = sample.replace(/^ws/i, 'http');
+                var idx = http.indexOf('/api/');
+                if (idx !== -1) return http.slice(0, idx) + '/api/restart';
+            }
+            return '/go2rtc/api/restart';
+        }
+
+        function refreshAllStreams() {
+            Object.keys(_streams).forEach(function (id) {
+                if (_streams[id] && _streams[id].handle) _streams[id].handle.refresh();
+            });
+        }
+
+        function resetCameraServer() {
+            if (!confirm('Restart the camera server? Live views will reconnect in a few seconds.')) return;
+            var url = restartUrl();
+            fetch(url, { method: 'POST' })
+                .then(function (r) {
+                    // go2rtc often drops the connection while re-execing; a
+                    // failed HTTP status is the only hard failure.
+                    if (r && !r.ok) throw new Error('HTTP ' + r.status);
+                })
+                .catch(function (err) {
+                    if (err && err.message && err.message.indexOf('HTTP ') === 0) throw err;
+                    // Network error after POST usually means the process restarted.
+                })
+                .then(function () {
+                    toast('Camera server restarting…');
+                    setTimeout(refreshAllStreams, 1500);
+                })
+                .catch(function (err) {
+                    console.error('[camera-view] Reset Camera Server failed', err);
+                    toast('Camera server reset failed');
+                });
+        }
+
+        function ensureGearMenu() {
+            if (_gearPopover) return _gearPopover;
+            var popover = document.createElement('div');
+            popover.className = 'widget-menu-popover';
+            popover.hidden = true;
+
+            function item(label, onClick) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'widget-menu-item';
+                btn.textContent = label;
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    popover.hidden = true;
+                    onClick();
+                });
+                return btn;
+            }
+
+            popover.appendChild(item('Camera settings…', openSettingsModal));
+            popover.appendChild(item('Reset Camera Server', resetCameraServer));
+            document.body.appendChild(popover);
+            _gearPopover = popover;
+            document.addEventListener('click', _onDocClickCloseGear);
+            return popover;
+        }
+
+        function openGearMenu(anchorBtn) {
+            var popover = ensureGearMenu();
+            if (!popover.hidden) { popover.hidden = true; return; }
+            var rect = anchorBtn.getBoundingClientRect();
+            popover.style.top = (rect.bottom + 4) + 'px';
+            popover.style.right = (window.innerWidth - rect.right) + 'px';
+            popover.hidden = false;
         }
 
         function cameraById(id) {
@@ -419,9 +513,13 @@
             var gearBtn = document.createElement('button');
             gearBtn.type = 'button';
             gearBtn.className = 'btn btn-sm btn-outline-light cv-gear-btn';
-            gearBtn.title = 'Camera settings (this session only)';
+            gearBtn.title = 'Camera options';
+            gearBtn.setAttribute('aria-label', 'Camera options');
             gearBtn.innerHTML = GEAR_SVG;
-            gearBtn.addEventListener('click', function () { openSettingsModal(); });
+            gearBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                openGearMenu(gearBtn);
+            });
             toolbar.appendChild(gearBtn);
 
             return toolbar;
@@ -534,7 +632,14 @@
                 _mainId = (defaultMain || _cameras[0] || {}).id || null;
                 render();
             },
-            unmount: function () { teardownStreams(); }
+            unmount: function () {
+                teardownStreams();
+                document.removeEventListener('click', _onDocClickCloseGear);
+                if (_gearPopover && _gearPopover.parentNode) {
+                    _gearPopover.parentNode.removeChild(_gearPopover);
+                }
+                _gearPopover = null;
+            }
         };
     }
 

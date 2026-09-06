@@ -160,8 +160,14 @@ stub as `game-control`).
 - Camera URL overrides: a room-local `pxd/camera-view.local.json` (packaged
   alongside `room.json`) can override `wsUrl` per camera id without editing
   `room.json` — see the file header comment in
-  `assets/js/panes/camera-view.js` for the exact format. A pane's gear icon
-  also allows session-only (non-persisted) URL overrides for testing.
+  `assets/js/panes/camera-view.js` for the exact format. The pane's gear
+  menu has two items:
+  - **Camera settings…** — session-only (non-persisted) URL overrides for
+    testing.
+  - **Reset Camera Server** — `POST`s go2rtc's `/api/restart` (default
+    `/go2rtc/api/restart` via nginx). No password; a confirm dialog only.
+    Optional `config.restartUrl` overrides the endpoint. Streams reconnect
+    automatically after the restart.
 - A page may contain multiple `camera-view` panes; each is fully independent.
 
 ### `pxt-chat`

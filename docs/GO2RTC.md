@@ -127,6 +127,11 @@ After edits:
 curl -sS http://127.0.0.1:1984/api/streams | head
 ```
 
+Operators can also restart go2rtc from the Live View **Cameras** pane:
+gear → **Reset Camera Server**. That sends `POST /go2rtc/api/restart` (no
+password) through the same nginx proxy the streams use. Confirm only.
+Equivalent CLI: `curl -X POST http://127.0.0.1/go2rtc/api/restart`.
+
 ---
 
 ## 3. systemd units

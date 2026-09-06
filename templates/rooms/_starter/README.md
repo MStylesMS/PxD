@@ -28,10 +28,11 @@ cp apps/PxD/templates/rooms/_starter/room.json rooms/<game>/pxd/room.json
     dynamic scene list
 11. `sites` — adjust the pane list for your room (add `camera-view` and/or
     `widget-grid` panes as needed, or split into multiple sites); see
-    `docs/PANES.md` for the full pane library. Keep the external
-    **System Health** site (`/health/`) when this host runs PxH; remove it
-    otherwise (or point at `http://<host>:19090/ui/` if nginx `/health/` is
-    not configured).
+    `docs/PANES.md` for the full pane library. A `camera-view` pane's gear
+    menu includes **Reset Camera Server** (restarts go2rtc, no password).
+    Keep the external **System Health** site (`/health/`) when this host
+    runs PxH; remove it otherwise (or point at `http://<host>:19090/ui/`
+    if nginx `/health/` is not configured).
 
 After editing, run the packager from `apps/PxD/`:
 
