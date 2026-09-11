@@ -13,6 +13,8 @@
  * Reads from: PxD.config.gameControl, PxD.config.topicRoot
  * Publishes to: gameControl.commandTopic (default: topicRoot/commands)
  * Subscribes to: stateTopic, configTopic, checklistStateTopic
+ * Optional media pack (gameControl.showMediaPack): masterStateTopic /
+ *   masterCommandTopic — catalog from retained PxM master state, not room.json
  */
 (function () {
     'use strict';
@@ -32,6 +34,9 @@
     var _hintTopic = '';          // may be overridden by config message
 
     var _checklistState = null;
+
+    var _masterCommandTopic = '';
+    var _defaultMediaId = null;
 
     // DOM refs (set by mount)
     var _root = null;
@@ -336,6 +341,49 @@
         populateGameSelector();
     }
 
+    // ── Optional media pack (retained master state) ────────────────────────
+    function mediaPackEls() {
+        return {
+            wrap: _root && _root.querySelector('#gcMediaPackItem'),
+            sel: _root && _root.querySelector('#gcMediaPackSelect')
+        };
+    }
+
+    function insertMediaPackControl() {
+        var grid = _root && _root.querySelector('.control-grid');
+        if (!grid || grid.querySelector('#gcMediaPackItem')) return;
+        var item = document.createElement('div');
+        item.className = 'control-item';
+        item.id = 'gcMediaPackItem';
+        item.hidden = true;
+        item.innerHTML =
+            '<label for="gcMediaPackSelect" class="form-label">Media pack</label>' +
+            '<select id="gcMediaPackSelect" class="form-select" aria-label="Media pack"></select>';
+        var modeItem = grid.querySelector('.control-item');
+        if (modeItem && modeItem.nextSibling) grid.insertBefore(item, modeItem.nextSibling);
+        else grid.appendChild(item);
+    }
+
+    function onMasterState(payload) {
+        var els = mediaPackEls();
+        var rendered = PxD.utils.mediaPack.render(els.sel, els.wrap, payload);
+        _defaultMediaId = rendered.defaultMediaId;
+    }
+
+    function onMediaPackChange() {
+        var els = mediaPackEls();
+        if (!els.sel) return;
+        var id = PxD.utils.mediaPack.parseId(els.sel.value);
+        if (id === null || id === _defaultMediaId) return;
+        if (PxD.utils.mediaPack.publishSwitch(PxD.mqtt, _masterCommandTopic, id)) {
+            _defaultMediaId = id;
+            var label = els.sel.options[els.sel.selectedIndex]
+                ? els.sel.options[els.sel.selectedIndex].text
+                : String(id);
+            PxD.utils.showToast('Media pack: ' + label);
+        }
+    }
+
     // ── Time adjust (minutes only) ─────────────────────────────────────────
     function clampMinutes(value) {
         var n = parseInt(value, 10);
@@ -514,7 +562,8 @@
             validateTimeSelects: validateTimeSelects,
             adjustTime:         adjustTime,
             emergencyAction:    emergencyAction,
-            confirmIntroAbort:  confirmIntroAbort
+            confirmIntroAbort:  confirmIntroAbort,
+            onMediaPackChange:  onMediaPackChange
         };
 
         // MQTT subscriptions
@@ -525,6 +574,15 @@
         PxD.mqtt.subscribe(stateTopic,     onGameState);
         PxD.mqtt.subscribe(configTopic,    onGameConfig);
         PxD.mqtt.subscribe(checklistTopic, handleChecklistState);
+
+        if (PxD.utils.mediaPack.enabled(_config)) {
+            insertMediaPackControl();
+            var mediaSel = _root.querySelector('#gcMediaPackSelect');
+            if (mediaSel) mediaSel.addEventListener('change', onMediaPackChange);
+            var mediaTopics = PxD.utils.mediaPack.topics(_config, _topicRoot);
+            _masterCommandTopic = mediaTopics.command;
+            PxD.mqtt.subscribe(mediaTopics.state, onMasterState);
+        }
 
         // Heartbeat watchdog — updates status pill every 250ms
         _hbTimer = setInterval(function () {

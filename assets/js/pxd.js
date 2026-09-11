@@ -144,6 +144,97 @@
                 var g = parseInt(hexColor.substr(3, 2), 16);
                 var b = parseInt(hexColor.substr(5, 2), 16);
                 return ((r * 299 + g * 587 + b * 114) / 1000 > 128) ? '#000000' : '#FFFFFF';
+            },
+
+            /**
+             * Optional GM media-pack switcher. Catalog comes from retained
+             * PxM master state (`mediaCatalog` + `defaultMediaId`), not room.json.
+             * Enabled only when gameControl.showMediaPack === true.
+             */
+            mediaPack: {
+                enabled: function (gc) {
+                    return !!(gc && gc.showMediaPack === true);
+                },
+                topics: function (gc, topicRoot) {
+                    gc = gc || {};
+                    var root = topicRoot || '';
+                    var state = (typeof gc.masterStateTopic === 'string') ? gc.masterStateTopic.trim() : '';
+                    var command = (typeof gc.masterCommandTopic === 'string') ? gc.masterCommandTopic.trim() : '';
+                    return {
+                        state: state || (root + '/master/state'),
+                        command: command || (root + '/master/commands')
+                    };
+                },
+                parseId: function (value) {
+                    if (value === null || value === undefined || value === '') return null;
+                    var s = String(value);
+                    if (!/^[1-9][0-9]{0,8}$/.test(s)) return null;
+                    return parseInt(s, 10);
+                },
+                catalogFromState: function (payload) {
+                    var raw = payload && payload.mediaCatalog;
+                    if (!Array.isArray(raw) || !raw.length) return [];
+                    var out = [];
+                    raw.forEach(function (row) {
+                        if (!row || typeof row !== 'object') return;
+                        var id = PxD.utils.mediaPack.parseId(row.id);
+                        if (id === null) return;
+                        var shortName = (row.shortName != null && String(row.shortName).trim())
+                            ? String(row.shortName).trim()
+                            : String(id);
+                        out.push({
+                            id: id,
+                            shortName: shortName,
+                            name: (row.name != null) ? String(row.name).trim() : '',
+                            description: (row.description != null) ? String(row.description).trim() : ''
+                        });
+                    });
+                    out.sort(function (a, b) { return a.id - b.id; });
+                    return out;
+                },
+                detail: function (row) {
+                    if (!row) return '';
+                    return [row.name, row.description].filter(Boolean).join(' — ');
+                },
+                render: function (selectEl, wrapEl, payload) {
+                    var catalog = PxD.utils.mediaPack.catalogFromState(payload);
+                    var defaultId = PxD.utils.mediaPack.parseId(payload && payload.defaultMediaId);
+                    if (!selectEl) return { catalog: catalog, defaultMediaId: defaultId };
+                    if (!catalog.length) {
+                        selectEl.innerHTML = '';
+                        selectEl.title = '';
+                        if (wrapEl) wrapEl.hidden = true;
+                        return { catalog: catalog, defaultMediaId: defaultId };
+                    }
+                    selectEl.innerHTML = '';
+                    catalog.forEach(function (row) {
+                        var opt = document.createElement('option');
+                        opt.value = String(row.id);
+                        opt.textContent = row.shortName;
+                        var tip = PxD.utils.mediaPack.detail(row);
+                        if (tip) opt.title = tip;
+                        selectEl.add(opt);
+                    });
+                    if (defaultId !== null) selectEl.value = String(defaultId);
+                    var selected = null;
+                    var selectedId = PxD.utils.mediaPack.parseId(selectEl.value);
+                    catalog.forEach(function (row) {
+                        if (row.id === selectedId) selected = row;
+                    });
+                    selectEl.title = selected ? PxD.utils.mediaPack.detail(selected) : '';
+                    if (wrapEl) wrapEl.hidden = false;
+                    return { catalog: catalog, defaultMediaId: defaultId };
+                },
+                publishSwitch: function (mqtt, commandTopic, mediaId) {
+                    var id = PxD.utils.mediaPack.parseId(mediaId);
+                    if (!mqtt || !commandTopic || id === null) return false;
+                    mqtt.publish(commandTopic, {
+                        command: 'switchMedia',
+                        mediaId: id,
+                        refresh: true
+                    });
+                    return true;
+                }
             }
         }
     };

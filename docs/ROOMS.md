@@ -188,6 +188,9 @@ or use `http://<host>:19090/ui/` when nginx `/health/` is not configured.
 | `checklistStateTopic` | `topicRoot/checklist/state` | Room checklist state topic |
 | `heartbeatTimeoutMs` | `3000` | State heartbeat watchdog timeout |
 | `emergencyActions` | `[]` | Array of `{ label, command, param? }` quick-action buttons |
+| `showMediaPack` | `false` | When `true`, `game-control` and `game-actions` show a media-pack dropdown bound to retained PxM master state. Absent/false: no UI change. **Do not** copy the pack catalog into `room.json`. |
+| `masterStateTopic` | `topicRoot/master/state` | Retained master snapshot (`mediaCatalog` + `defaultMediaId`). Used only when `showMediaPack` is true. |
+| `masterCommandTopic` | `topicRoot/master/commands` | Publish `{ command: "switchMedia", mediaId, refresh: true }` when the GM picks a pack. Used only when `showMediaPack` is true. |
 
 ### timeLights
 

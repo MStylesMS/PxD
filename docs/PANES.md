@@ -31,9 +31,9 @@ everything full-width. See `docs/ROOMS.md` § grid.
 | Type | Purpose | Multi-instance? |
 |---|---|---|
 | `content` | Static HTML block (hero images, custom text/markup) | Yes |
-| `game-control` | Full control card: status, mode, checklist, start/solve/fail, time adjust, emergency | No — reads global `PxD.config.gameControl` |
+| `game-control` | Full control card: status, mode, optional media pack, checklist, start/solve/fail, time adjust, emergency | No — reads global `PxD.config.gameControl` |
 | `game-status` | Large time/status pill only (no title) | No — same `gameControl` config |
-| `game-actions` | Mode, Main Action, End Game + `⋯` menu (adjust time / checklist / emergency) | No — same `gameControl` config |
+| `game-actions` | Mode, optional media pack, Main Action, End Game + `⋯` menu (adjust time / checklist / emergency) | No — same `gameControl` config |
 | `time-lights` | **Time & Lights** — clock adjust + light scenes (no emergency button) | No — reads global `PxD.config.timeLights` |
 | `hints` | Hint dropdown + free-text send | No — reads global `PxD.config.hints` |
 | `system` | Connection/warning status bar + watch zones | No — reads global `PxD.config.system` |
@@ -105,6 +105,20 @@ etc.). Pair with `game-actions`.
 Compact Mode / Main Action / End Game controls. Top-right `⋯` opens Adjust
 Time, Checklist, and Emergency Controls (same MQTT commands and checklist
 stub as `game-control`).
+
+**Optional media pack** (both `game-control` and `game-actions`): set
+`gameControl.showMediaPack` to `true` in the top-level `room.json` key
+(legacy panes do not read pane `config`). The dropdown binds to retained
+PxM master state — `mediaCatalog` (options sorted by `id`; label
+`shortName`, value `id`, tooltip `name` + `description`) and
+`defaultMediaId` (current selection). Topics default to
+`{topicRoot}/master/state` and `{topicRoot}/master/commands`; override with
+`masterStateTopic` / `masterCommandTopic`. Selecting a pack publishes
+`{ command: "switchMedia", mediaId, refresh: true }` (`refresh` is true
+because this switcher is the idle default pack, used between groups).
+If the catalog is empty or missing, the dropdown is hidden. Absent/false
+`showMediaPack` leaves the UI unchanged (Agent22 / SpyCatcher / Houdini).
+Do **not** put the pack list in page JSON.
 
 ### `widget-grid`
 

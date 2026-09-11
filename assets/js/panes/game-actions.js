@@ -4,6 +4,7 @@
  * Mode selector, Main Action, and End Game (Solve/Fail), plus a "..." menu
  * for Adjust Time, Checklist, and Emergency Controls. Companion to
  * `game-status`. Reads global PxD.config.gameControl (same as game-control).
+ * Optional media pack dropdown when gameControl.showMediaPack is true.
  *
  * Multi-instance: no — do not place beside a full `game-control` pane.
  */
@@ -23,6 +24,8 @@
         var _hbTimer = null;
         var _root = null;
         var _uid = 'ga' + Math.random().toString(36).slice(2, 8);
+        var _masterCommandTopic = '';
+        var _defaultMediaId = null;
 
         function sendCommand(command, params) {
             var payload = Object.assign({ command: command }, params || {});
@@ -358,6 +361,46 @@
             populateGameSelector();
         }
 
+        function mediaPackEls() {
+            return {
+                wrap: q('#gaMediaPackItem'),
+                sel: q('#gaMediaPackSelect')
+            };
+        }
+
+        function insertMediaPackControl() {
+            var controls = _root && _root.querySelector('.ga-controls');
+            if (!controls || controls.querySelector('#gaMediaPackItem')) return;
+            var item = document.createElement('div');
+            item.className = 'control-item';
+            item.id = 'gaMediaPackItem';
+            item.hidden = true;
+            item.innerHTML = '<select id="gaMediaPackSelect" class="form-select" aria-label="Media pack"></select>';
+            var modeItem = controls.querySelector('.control-item');
+            if (modeItem && modeItem.nextSibling) controls.insertBefore(item, modeItem.nextSibling);
+            else controls.appendChild(item);
+        }
+
+        function onMasterState(payload) {
+            var els = mediaPackEls();
+            var rendered = PxD.utils.mediaPack.render(els.sel, els.wrap, payload);
+            _defaultMediaId = rendered.defaultMediaId;
+        }
+
+        function onMediaPackChange() {
+            var els = mediaPackEls();
+            if (!els.sel) return;
+            var id = PxD.utils.mediaPack.parseId(els.sel.value);
+            if (id === null || id === _defaultMediaId) return;
+            if (PxD.utils.mediaPack.publishSwitch(ctx.mqtt, _masterCommandTopic, id)) {
+                _defaultMediaId = id;
+                var label = els.sel.options[els.sel.selectedIndex]
+                    ? els.sel.options[els.sel.selectedIndex].text
+                    : String(id);
+                PxD.utils.showToast('Media pack: ' + label);
+            }
+        }
+
         function wireEvents() {
             var sel = q('#gaSelect');
             if (sel) {
@@ -365,6 +408,8 @@
                     applyGameSelection(sel.value, { sendCommand: true });
                 });
             }
+            var mediaSel = q('#gaMediaPackSelect');
+            if (mediaSel) mediaSel.addEventListener('change', onMediaPackChange);
             var action = q('#gaActionBtn');
             if (action) action.addEventListener('click', sendGameAction);
             var solve = q('#gaSolveBtn');
@@ -450,6 +495,14 @@
 
                 var portal = document.getElementById('pxd-modals');
                 if (portal) portal.insertAdjacentHTML('beforeend', buildModalsHTML());
+
+                if (PxD.utils.mediaPack.enabled(_gc)) {
+                    insertMediaPackControl();
+                    var mediaTopics = PxD.utils.mediaPack.topics(_gc, _topicRoot);
+                    _masterCommandTopic = mediaTopics.command;
+                    ctx.mqtt.subscribe(mediaTopics.state, onMasterState);
+                }
+
                 wireEvents();
 
                 var stateTopic = topic('state', _gc.stateTopic);

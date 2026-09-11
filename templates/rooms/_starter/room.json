@@ -59,6 +59,13 @@
     "//configTopic":  "Default: topicRoot/config",
     "//checklistStateTopic": "Default: topicRoot/checklist/state",
     "//heartbeatTimeoutMs":  "Default: 3000",
+    "//showMediaPack": [
+      "Optional. true shows a media-pack dropdown on game-control / game-actions.",
+      "Options come from retained PxM master state (mediaCatalog + defaultMediaId).",
+      "Do not put the pack list in this file. Absent/false: no UI change."
+    ],
+    "//masterStateTopic": "Default: topicRoot/master/state — used only when showMediaPack is true",
+    "//masterCommandTopic": "Default: topicRoot/master/commands — publishes switchMedia (refresh: true)",
     "//emergencyActions": [
       "Array of quick-action buttons shown in the emergency modal.",
       "Each entry: { 'label': 'Unlock Door', 'command': 'unlock', 'param': 'front' }"
